@@ -15,7 +15,7 @@ function git_upgrader_post_install($res, $hook_extra, $result) {
 
   if (substr($git_dir, 0, strlen(ABSPATH)) == ABSPATH) {
     $git_dir = substr($git_dir, strlen(ABSPATH));
-  } 
+  }
 
   switch($type) {
   case 'theme':
@@ -62,10 +62,19 @@ function git_upgrader_process_complete($upgrader, $hook_extra) {
   global $git_changes;
   ob_start();
   if ($git_changes) {
-    echo "git push origin " . GIT_BRANCH . "\n"; 
+    echo "git push origin " . GIT_BRANCH . "\n";
   }
   $out = ob_get_clean();
   error_log($out);
 }
 add_action('upgrader_process_complete', 'git_upgrader_process_complete', 11, 2);
+
+
+//-----------------------------------------------------------------------------
+function git_init() {
+    $user_ID = get_current_user_id();
+    $transient = "_transient_plugins_delete_result_$user_ID";
+    add_action('set_transient_' . $transient, 'log_all_set_transient_delete');
+}
+//add_action('init', 'init');
 
