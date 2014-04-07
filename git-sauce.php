@@ -4,10 +4,23 @@
  */
 
 define('GIT_BRANCH', 'master');
+require_once(__DIR__ . '/git-wrapper.php');
+
+function _log() {
+	if (func_num_args() == 1 && is_string(func_get_arg(0))) {
+		error_log(func_get_arg(0));
+	} else {
+		ob_start();
+		$args = func_get_args();
+		foreach ($args as $arg)
+			var_dump($arg);
+		$out = ob_get_clean();
+		error_log($out);
+	}
+}
 
 function git_upgrader_post_install($res, $hook_extra, $result) {
-  global $git_changes;
-  ob_start();
+  global $git_changes, $git;
 
   $type = isset($hook_extra['type']) ? $hook_extra['type'] : 'plugin';
   $action = isset($hook_extra['action']) ? $hook_extra['action'] : 'update';
@@ -47,12 +60,10 @@ function git_upgrader_post_install($res, $hook_extra, $result) {
   if ($version)
     $commit_message .= " version $version";
 
-  echo "git add $git_dir\n";
-  echo "git commit -m '$commit_message'\n";
+	$git->add($git_dir);
+	$git->commit($commit_message);
   $git_changes = true;
-  $out = ob_get_clean();
 
-  error_log($out);
   return $res;
 }
 add_filter('upgrader_post_install', 'git_upgrader_post_install', 10, 3);
@@ -60,21 +71,24 @@ add_filter('upgrader_post_install', 'git_upgrader_post_install', 10, 3);
 //-----------------------------------------------------------------------------
 function git_upgrader_process_complete($upgrader, $hook_extra) {
   global $git_changes;
-  ob_start();
   if ($git_changes) {
-    echo "git push origin " . GIT_BRANCH . "\n";
+    _log("git push origin " . GIT_BRANCH);
   }
-  $out = ob_get_clean();
-  error_log($out);
 }
 add_action('upgrader_process_complete', 'git_upgrader_process_complete', 11, 2);
 
 
 //-----------------------------------------------------------------------------
-function git_init() {
-    $user_ID = get_current_user_id();
-    $transient = "_transient_plugins_delete_result_$user_ID";
-    add_action('set_transient_' . $transient, 'log_all_set_transient_delete');
+function git_check_for_plugin_deletions() {
+	if ($_GET['deleted'] == 'true')
+		_log('git check for deletions in wp-content/plugins');
 }
-//add_action('init', 'init');
+add_action('load-plugins.php', 'git_check_for_plugin_deletions');
+
+//-----------------------------------------------------------------------------
+function git_check_for_themes_deletions() {
+	if ($_GET['deleted'] == 'true')
+		_log('git check for deletions in wp-content/plugins');
+}
+add_action('load-themes.php', 'git_check_for_themes_deletions');
 
