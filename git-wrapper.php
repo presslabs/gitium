@@ -3,24 +3,44 @@ class Git_Wrapper {
 	function __construct($repo_dir) {
 		$this->repo_dir = $repo_dir;
 	}
+	
+	protected function _call() {
+	  $args = func_get_args();
+	  $args = join(' ',array_map('escapeshellarg',$args));
+	  exec("cd $this->repo_dir ; git $args", $response, $return);
+		_log($response, $return);
+	  return array($return, $response);
+	}
 
 	function add() {
 		$paths = func_get_args();
 		foreach ($paths as $path) {
-			exec("cd $this->repo_dir ; git add $path", $response, $return);
-			_log($response, $return);
+		  $this->_call('add','--no-ignore-removal', $path);
 		}
 	}
 
 	function commit($message) {
-		$message = escapeshellarg($message);
-		exec("cd $this->repo_dir ; git commit -m $message", $response, $return);
-		_log($response, $return);
+    $this->_call('commit','-m', $message);		
 	}
 
 	function push($repo, $branch) {
-		exec("cd $this->repo_dir ; git push $repo $branch", $response, $return);
-		_log($response, $return);
+	  $this->_call('push', $repo, $branch);
+	}
+
+	/*
+	 * Get uncommited changes
+	 * git status --porcelain
+	 * This should return an array like:
+	 * array (
+	 *   'plugins' => array( OF MODIFIED PLUGINS ),
+	 *   'themes' => array( OF MODIFIED THEMES ),
+	 *   'others' => array( OF MODIFIED MISC FILES )
+   * ) 
+	 *
+	 */
+	function get_uncommited_changes() {
+	  list($return, $response) = $this->_call('status', '--porcelain');
+		return $response;
 	}
 
 	/*
@@ -28,23 +48,28 @@ class Git_Wrapper {
 	 * git status --porcelain
 	 */
 	function is_dirty() {
-
+		return ! empty( $this->get_uncommited_changes() );
 	}
 
 	/*
 	 * Commit local changes
 	 * git add --no-ignore-removal
 	 */
-	function commit_changes($message) {
-
+	function commit_changes() {
+		$paths = func_get_args();
+		if ( 0 == func_num_args() )
+		  $paths = array('.');
+		foreach ($paths as $path) {
+		  $this->add($path);
+		}
 	}
 
 	/*
 	 * Pull changes from remote. By default accept local changes on conflicts
 	 */
 	function pull() {
-
+	  $this->_call('pull');
 	}
 }
 
-$git = new Git_Wrapper('/Users/calin/work/mywp');
+$git = new Git_Wrapper('/home/mario/Documents/wp.lo');
