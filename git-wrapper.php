@@ -22,6 +22,29 @@ class Git_Wrapper {
 		exec("cd $this->repo_dir ; git push $repo $branch", $response, $return);
 		_log($response, $return);
 	}
+
+	/*
+	 * Checks if repo has uncommited changes
+	 * git status --porcelain
+	 */
+	function is_dirty() {
+
+	}
+
+	/*
+	 * Commit local changes
+	 * git add --no-ignore-removal
+	 */
+	function commit_changes($message) {
+
+	}
+
+	/*
+	 * Pull changes from remote. By default accept local changes on conflicts
+	 */
+	function pull() {
+
+	}
 }
 
 $git = new Git_Wrapper('/Users/calin/work/mywp');
