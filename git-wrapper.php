@@ -31,6 +31,13 @@ class Git_Wrapper {
 	 * Get uncommited changes
 	 * git status --porcelain
 	 * This should return an array like:
+	 array(
+	    plugins => autover/autover.php = deleted
+	               toplytics/toplytcs.php = modified
+	    themes => twentyten = modified
+	    others => nasty/cache/script.js = modified
+	              foo/bar.css = deleted
+	 )
 	 * array (
 	 *   'plugins' => array( OF MODIFIED PLUGINS ),
 	 *   'themes' => array( OF MODIFIED THEMES ),
