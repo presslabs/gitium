@@ -247,3 +247,21 @@ function git_block_plugin_and_theme_editor_page( $hook ) {
 }
 add_action('admin_enqueue_scripts', 'git_block_plugin_and_theme_editor_page');
 
+//-----------------------------------------------------------------------------
+// Here we can override the `Edit` link with Github one
+function git_remove_edit_link( $links ) {
+  if ( isset( $links['edit'] ) )
+    unset( $links['edit'] );
+  return $links;
+}
+
+//-----------------------------------------------------------------------------
+// Remove plugin edit link from plugins list
+function git_remove_plugin_edit_link() {
+  if ( ! function_exists( 'get_plugins' ) )
+    require_once ABSPATH . 'wp-admin/includes/plugin.php';
+  $all_plugins = get_plugins();
+  foreach ( $all_plugins as $name => $data )
+    add_filter("plugin_action_links_$name", "git_remove_edit_link");
+}
+add_action('admin_init', 'git_remove_plugin_edit_link');
