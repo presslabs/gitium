@@ -19,3 +19,17 @@ install/update hooks
 * ...
 * install_plugin_complete_actions
 * upgrader_process_complete
+
+delete hooks
+============
+
+* load-plugins.php
+* load-themes.php
+
+
+edit plugins/themes from WP
+===========================
+
+* this functionality will be removed; you can no longer edit plugins/themes from your WP Dashboard
+
+

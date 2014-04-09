@@ -25,12 +25,12 @@ function _log() {
 (
     [themes] => Array
         (
-            [/home/mario/www/wp.lo/wp-content/themes/twentytwelve/twentytwelve] => Twenty Twelve version 1.3
+            [twentytwelve] => `Twenty Twelve` version 1.3
         )
     [plugins] => Array
         (
-            [/home/mario/www/wp.lo/wp-content/plugins/cron-view/cron-gui.php] => Cron GUI version 1.03
-            [/home/mario/www/wp.lo/wp-content/plugins/hello-dolly/hello.php] => Hello Dolly version 1.6
+            [cron-view/cron-gui.php] => `Cron GUI` version 1.03
+            [hello-dolly/hello.php] => `Hello Dolly` version 1.6
         )
 
 ) */
@@ -40,11 +40,10 @@ function git_update_versions() {
   // get all themes from WP
   $all_themes = wp_get_themes( array( 'allowed' => true ) );
   foreach ( $all_themes as $theme ) :
-    $path = trailingslashit( get_template_directory() ) . $theme->Template;
-    $theme_versions[ $path ] = $theme->Name;
+    $theme_versions[ $theme->Template ] = $theme->Name;
     $version = $theme->Version;
     if ( '' < $version )
-      $theme_versions[ $path ] .= " version $version";
+      $theme_versions[ $theme->Template ] .= " version $version";
   endforeach;
   if ( ! empty( $theme_versions ) )
     $new_versions['themes'] = $theme_versions;
@@ -54,10 +53,9 @@ function git_update_versions() {
     require_once ABSPATH . 'wp-admin/includes/plugin.php';
   $all_plugins = get_plugins();
   foreach ( $all_plugins as $name => $data ) :
-    $filepath = trailingslashit( WP_PLUGIN_DIR ) . $name;
-    $plugin_versions[ $filepath ] = $data['Name'];
+    $plugin_versions[ $name ] = $data['Name'];
     if ( '' < $data['Version'] )
-      $plugin_versions[ $filepath ] .= " version " . $data['Version'];
+      $plugin_versions[ $name ] .= " version " . $data['Version'];
   endforeach;
   if ( ! empty( $plugin_versions ) )
     $new_versions['plugins'] = $plugin_versions;
@@ -66,7 +64,7 @@ function git_update_versions() {
 }
 
 //-----------------------------------------------------------------------------
-function _git_commit_changes($message, $dir='.', $push_commits=true) {
+function _git_commit_changes($message, $dir = '.', $push_commits = true) {
   global $git;
   $git->add($dir);
   $git->commit($message);
@@ -78,13 +76,16 @@ function _git_commit_changes($message, $dir='.', $push_commits=true) {
 }
 
 //-----------------------------------------------------------------------------
-function _git_format_message($name, $version=false, $prefix='') {
-  $commit_message = "`name`";
+function _git_format_message($name, $version = false, $prefix = '') {
+  $commit_message = "update";
+  if ( $name && $version ) {
+    $commit_message = "`$name version $version`";
+  } else if ( $name ) {
+    $commit_message = "`$name`";
+  }
   if ( $prefix ) {
     $commit_message = "$prefix $commit_message";
   }
-  if ( $version )
-    $commit_message .= " version $version";
   return $commit_message;
 }
 
@@ -178,46 +179,18 @@ function git_check_post_deactivate_modifications($plugin) {
 add_action('deactivated_plugin','git_check_post_deactivate_modifications',999);
 
 //-----------------------------------------------------------------------------
-function git_admin_enqueue_scripts( $hook ) {
-  // hook in `plugins.php` page
-  if ( ('plugins.php' == $hook) && isset($_REQUEST['action']) && ('delete-selected' == $_REQUEST['action']) ) {
-    $plugins_checked = $_REQUEST['checked'];
-	  $name = array();
-	  foreach ( $plugins_checked as $plugin ) :
-      $plugin_data = get_plugin_data( trailingslashit( WP_PLUGIN_DIR ) . $plugin );
-      if ( $plugin_data['Name'] )
-        $removed_plugins[] = $plugin_data['Name'];
-      else
-        $removed_plugins[] = $plugin;
-    endforeach;
-    update_option('git_removed_plugins', $removed_plugins);
-  }
-  // hook in `themes.php` page
-  if ( ('themes.php' == $hook) && isset($_REQUEST['action']) && ('delete' == $_REQUEST['action']) ) {
-    wp_clean_themes_cache();
-    $theme_data = wp_get_theme( trailingslashit( get_template_directory() ) . $_REQUEST['stylesheet'] );
-    $name = $theme_data->get('Name');
-    $version = $theme_data->get('Version');
-
-    if ( '' < $name )
-      $removed_theme = $name;
-    else
-      $removed_theme = $_REQUEST['stylesheet'];
-
-    if ( '' < $version )
-      $removed_theme .=  " version $version";
-
-    update_option('git_removed_theme', $removed_theme);
-    error_log("theme=`$removed_theme`");
-  }
-}
-add_action('admin_enqueue_scripts', 'git_admin_enqueue_scripts');
-
-//-----------------------------------------------------------------------------
 function git_check_for_plugin_deletions() {
   global $git;
 	if ( 'true' == $_GET['deleted'] ) {
-    $removed_plugins = get_option('git_removed_plugins', array() );
+	  $versions = get_option('git_all_versions', array());
+	  $all_plugins = $versions['plugins'];
+    $uncommited_changes = $git->get_uncommited_changes();
+    $removed_plugins = array();
+    if ( isset( $uncommited_changes['plugins'] ) ) {
+      foreach ( $uncommited_changes['plugins'] as $name => $action )
+        if ( 'deleted' == $action )
+          $removed_plugins[] = $all_plugins[ $name ];
+    }
     $commit_message  = "removed plugin";
     if ( 1 < count( $removed_plugins ) )
       $commit_message .= "s";
@@ -231,8 +204,21 @@ add_action('load-plugins.php', 'git_check_for_plugin_deletions');
 function git_check_for_themes_deletions() {
   global $git;
 	if ( 'true' == $_GET['deleted'] ) {
-	  $stylesheet = get_option('git_removed_theme', '');
-	  _git_commit_changes("removed theme $stylesheet");
+	  $versions = get_option('git_all_versions', array());
+	  $all_themes = $versions['themes'];
+    $uncommited_changes = $git->get_uncommited_changes();
+    $removed_themes = array();
+    if ( isset( $uncommited_changes['themes'] ) ) {
+      foreach ( $uncommited_changes['themes'] as $name => $action )
+        if ( 'deleted' == $action )
+          $removed_themes[] = $all_themes[ $name ];
+    }
+    $commit_message  = "removed theme";
+    if ( 1 < count( $removed_themes ) )
+      $commit_message .= "s";
+	  $removed_themes = '`' . join('`, `', $removed_themes) . '`';
+	  _git_commit_changes("$commit_message $removed_themes");
 	}
 }
 add_action('load-themes.php', 'git_check_for_themes_deletions');
+
