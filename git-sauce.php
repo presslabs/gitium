@@ -121,7 +121,7 @@ function git_upgrader_post_install($res, $hook_extra, $result) {
         break;
       }
     }
-    break;
+  break;
   }
 
   if ( empty( $name ) )
@@ -229,4 +229,21 @@ function git_remove_admin_menu_pages() {
 	remove_submenu_page( 'plugins.php', 'plugin-editor.php' );
 }
 add_action('admin_init', 'git_remove_admin_menu_pages', 102);
+
+//-----------------------------------------------------------------------------
+// Block theme/plugin edit page access from WP Dashboard
+function git_block_plugin_and_theme_editor_page( $hook ) {
+  $message = 'This functionality is blocked on our hosting service. Please use <a href="https://github.com/">Github</a> instead.';
+  switch ($hook) {
+    case 'theme-editor.php':
+      wp_die($message);
+    break;
+
+    case 'plugin-editor.php':
+      wp_die($message);
+    break;
+  }
+  return;
+}
+add_action('admin_enqueue_scripts', 'git_block_plugin_and_theme_editor_page');
 
