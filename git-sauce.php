@@ -222,3 +222,11 @@ function git_check_for_themes_deletions() {
 }
 add_action('load-themes.php', 'git_check_for_themes_deletions');
 
+//-----------------------------------------------------------------------------
+// Remove theme/plugin edit page from WP Dashboard
+function git_remove_admin_menu_pages() {
+	remove_submenu_page( 'themes.php', 'theme-editor.php' );
+	remove_submenu_page( 'plugins.php', 'plugin-editor.php' );
+}
+add_action('admin_init', 'git_remove_admin_menu_pages', 102);
+
