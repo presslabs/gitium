@@ -144,8 +144,12 @@ function git_upgrader_process_complete($upgrader, $hook_extra) {
 add_action('upgrader_process_complete', 'git_upgrader_process_complete', 11, 2);
 
 //-----------------------------------------------------------------------------
-function git_check_post_activate_modifications($plugin) {
+function git_check_post_activate_modifications( $plugin ) {
   global $git;
+
+  $this_plugin = plugin_basename( trailingslashit( WP_PLUGIN_DIR ) . $plugin );
+  if ( $this_plugin == $plugin ) return; // do not hook on activation of this plugin
+
   if ( $git->is_dirty() ) {
     $plugin_data = get_plugin_data( trailingslashit( WP_PLUGIN_DIR ) . $plugin );
     if ( $plugin_data['Name'] ) {
@@ -154,7 +158,6 @@ function git_check_post_activate_modifications($plugin) {
     } else {
       $name = $plugin;
     }
-    
     $commit_message = _git_format_message($name,$version,"post activation of");
     _git_commit_changes($commit_message);
   }
@@ -162,8 +165,12 @@ function git_check_post_activate_modifications($plugin) {
 add_action('activated_plugin','git_check_post_activate_modifications',999);
 
 //-----------------------------------------------------------------------------
-function git_check_post_deactivate_modifications($plugin) {
+function git_check_post_deactivate_modifications( $plugin ) {
   global $git;
+
+  $this_plugin = plugin_basename( trailingslashit( WP_PLUGIN_DIR ) . $plugin );
+  if ( $this_plugin == $plugin ) return; // do not hook on deactivation of this plugin
+
   if ( $git->is_dirty() ) {
     $plugin_data = get_plugin_data( trailingslashit( WP_PLUGIN_DIR ) . $plugin );
     if ( $plugin_data['Name'] ) {
@@ -179,6 +186,7 @@ function git_check_post_deactivate_modifications($plugin) {
 add_action('deactivated_plugin','git_check_post_deactivate_modifications',999);
 
 //-----------------------------------------------------------------------------
+// Handle plugin deletion
 function git_check_for_plugin_deletions() {
   global $git;
 	if ( 'true' == $_GET['deleted'] ) {
@@ -188,19 +196,22 @@ function git_check_for_plugin_deletions() {
     $removed_plugins = array();
     if ( isset( $uncommited_changes['plugins'] ) ) {
       foreach ( $uncommited_changes['plugins'] as $name => $action )
-        if ( 'deleted' == $action )
+        if ( ('deleted' == $action) &&  array_key_exists( $name, $versions['plugins'] ) )
           $removed_plugins[] = $all_plugins[ $name ];
     }
-    $commit_message  = "removed plugin";
-    if ( 1 < count( $removed_plugins ) )
-      $commit_message .= "s";
-	  $removed_plugins = '`' . join('`, `', $removed_plugins) . '`';
+    if ( ! empty( $removed_plugins ) ) :
+      $commit_message  = "removed plugin";
+      if ( 1 < count( $removed_plugins ) )
+        $commit_message .= "s";
+	    $removed_plugins = '`' . join('`, `', $removed_plugins) . '`';
+      _git_commit_changes("$commit_message $removed_plugins");	
+	  endif;
 	}
-  _git_commit_changes("$commit_message $removed_plugins");	
 }
 add_action('load-plugins.php', 'git_check_for_plugin_deletions');
 
 //-----------------------------------------------------------------------------
+// Handle theme deletion
 function git_check_for_themes_deletions() {
   global $git;
 	if ( 'true' == $_GET['deleted'] ) {
@@ -210,58 +221,16 @@ function git_check_for_themes_deletions() {
     $removed_themes = array();
     if ( isset( $uncommited_changes['themes'] ) ) {
       foreach ( $uncommited_changes['themes'] as $name => $action )
-        if ( 'deleted' == $action )
+        if ( ('deleted' == $action) && array_key_exists( dirname($name), $versions['themes'] ) )
           $removed_themes[] = $all_themes[ $name ];
     }
-    $commit_message  = "removed theme";
-    if ( 1 < count( $removed_themes ) )
-      $commit_message .= "s";
-	  $removed_themes = '`' . join('`, `', $removed_themes) . '`';
-	  _git_commit_changes("$commit_message $removed_themes");
+    if ( ! empty( $removed_themes ) ) :
+      $commit_message  = "removed theme";
+      if ( 1 < count( $removed_themes ) )
+        $commit_message .= "s";
+	    $removed_themes = '`' . join('`, `', $removed_themes) . '`';
+	    _git_commit_changes("$commit_message $removed_themes");
+	  endif;
 	}
 }
 add_action('load-themes.php', 'git_check_for_themes_deletions');
-
-//-----------------------------------------------------------------------------
-// Remove theme/plugin edit page from WP Dashboard
-function git_remove_admin_menu_pages() {
-	remove_submenu_page( 'themes.php', 'theme-editor.php' );
-	remove_submenu_page( 'plugins.php', 'plugin-editor.php' );
-}
-add_action('admin_init', 'git_remove_admin_menu_pages', 102);
-
-//-----------------------------------------------------------------------------
-// Block theme/plugin edit page access from WP Dashboard
-function git_block_plugin_and_theme_editor_page( $hook ) {
-  $message = 'This functionality is blocked on our hosting service. Please use <a href="https://github.com/">Github</a> instead.';
-  switch ($hook) {
-    case 'theme-editor.php':
-      wp_die($message);
-    break;
-
-    case 'plugin-editor.php':
-      wp_die($message);
-    break;
-  }
-  return;
-}
-add_action('admin_enqueue_scripts', 'git_block_plugin_and_theme_editor_page');
-
-//-----------------------------------------------------------------------------
-// Here we can override the `Edit` link with Github one
-function git_remove_edit_link( $links ) {
-  if ( isset( $links['edit'] ) )
-    unset( $links['edit'] );
-  return $links;
-}
-
-//-----------------------------------------------------------------------------
-// Remove plugin edit link from plugins list
-function git_remove_plugin_edit_link() {
-  if ( ! function_exists( 'get_plugins' ) )
-    require_once ABSPATH . 'wp-admin/includes/plugin.php';
-  $all_plugins = get_plugins();
-  foreach ( $all_plugins as $name => $data )
-    add_filter("plugin_action_links_$name", "git_remove_edit_link");
-}
-add_action('admin_init', 'git_remove_plugin_edit_link');

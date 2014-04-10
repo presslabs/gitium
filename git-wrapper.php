@@ -24,7 +24,6 @@ class Git_Wrapper {
 	}
 
 	function push($repo, $branch) {
-	  //error_log('push');
 	  $this->_call('push', $repo, $branch);
 	}
 
@@ -48,26 +47,36 @@ class Git_Wrapper {
 	 */
 	function get_uncommited_changes() {
 	  list($return, $response) = $this->_call('status', '--porcelain');
-    $versions = get_option('git_all_versions', array());
 	  $new_response = array();
 	  foreach ( $response as $item ) :
 	    $x = substr($item, 0, 1); // X shows the status of the index
 	    $y = substr($item, 1, 1); // Y shows the status of the work tree
-	    $file   = substr($item, 3);
-	    $new_file   = str_replace('wp-content/plugins/', '', $file);
-	    $new_file   = str_replace('wp-content/themes/', '', $new_file);
+	    $file = substr($item, 3);
 
 	    if ( 'D' == $y )
 	      $action = 'deleted';
 	    else
 	      $action = 'modified';
 
-	    if ( array_key_exists( $new_file, $versions['plugins'] ) )
-	      $new_response['plugins'][ $new_file ] = $action;
-	    else if ( array_key_exists( dirname($new_file), $versions['themes'] ) )
-	      $new_response['themes'][ dirname($new_file) ] = $action;
-	    else if ( $file == $new_file )
-	      $new_response['others'][ $file ] = $action;
+	    $resource_type = "others";
+	    if ( 0 === strpos($file, 'wp-content/plugins/') )
+        $resource_type = "plugins";
+
+	    if ( 0 === strpos($file, 'wp-content/themes/') )
+        $resource_type = "themes";
+
+      switch ( $resource_type ) {
+        case 'plugins':
+          $new_file = substr($file, strlen('wp-content/plugins/'));
+          break;
+        case 'themes';
+          $new_file = substr($file, strlen('wp-content/themes/'));
+          break;
+        case 'others';
+          $new_file = $file;
+          break;
+      }
+      $new_response[ $resource_type ][ $new_file ] = $action;
 	  endforeach;
 		return $new_response;
 	}
