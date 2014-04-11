@@ -9,14 +9,14 @@ require_once __DIR__ . '/git-wrapper.php';
 //-----------------------------------------------------------------------------
 function _log() {
 	if ( func_num_args() == 1 && is_string(func_get_arg(0)) ) {
-		error_log(func_get_arg(0));
+		;//error_log(func_get_arg(0));
 	} else {
 		ob_start();
 		$args = func_get_args();
 		foreach ( $args as $arg )
 			var_dump($arg);
 		$out = ob_get_clean();
-		error_log($out);
+		//error_log($out);
 	}
 }
 
@@ -38,9 +38,9 @@ function git_update_versions() {
   $versions = get_option('git_all_versions', array());
 
   // get all themes from WP
-  $all_themes = wp_get_themes( array( 'allowed' => true ) );
+  $all_themes = wp_get_themes();
   foreach ( $all_themes as $theme ) :
-    $theme_versions[ $theme->Template ] = $theme->Name;
+    $theme_versions[ $theme->Template ] = "`" . $theme->Name . "`";
     $version = $theme->Version;
     if ( '' < $version )
       $theme_versions[ $theme->Template ] .= " version $version";
@@ -53,7 +53,7 @@ function git_update_versions() {
     require_once ABSPATH . 'wp-admin/includes/plugin.php';
   $all_plugins = get_plugins();
   foreach ( $all_plugins as $name => $data ) :
-    $plugin_versions[ $name ] = $data['Name'];
+    $plugin_versions[ $name ] = "`{$data['Name']}`";
     if ( '' < $data['Version'] )
       $plugin_versions[ $name ] .= " version " . $data['Version'];
   endforeach;
@@ -64,7 +64,7 @@ function git_update_versions() {
 }
 
 //-----------------------------------------------------------------------------
-function _git_commit_changes($message, $dir = '.', $push_commits = true) {
+function _git_commit_changes($message, $dir = '.', $push_commits = TRUE) {
   global $git;
   $git->add($dir);
   $git->commit($message);
@@ -76,12 +76,10 @@ function _git_commit_changes($message, $dir = '.', $push_commits = true) {
 }
 
 //-----------------------------------------------------------------------------
-function _git_format_message($name, $version = false, $prefix = '') {
-  $commit_message = "update";
-  if ( $name && $version ) {
-    $commit_message = "`$name version $version`";
-  } else if ( $name ) {
-    $commit_message = "`$name`";
+function _git_format_message($name, $version = FALSE, $prefix = '') {
+  $commit_message = "`$name`";
+  if ( $version ) {
+    $commit_message .= " version $version";
   }
   if ( $prefix ) {
     $commit_message = "$prefix $commit_message";
@@ -91,7 +89,7 @@ function _git_format_message($name, $version = false, $prefix = '') {
 
 //-----------------------------------------------------------------------------
 function git_upgrader_post_install($res, $hook_extra, $result) {
-  global $git_changes, $git;
+  global $git;
 
   $type = isset($hook_extra['type']) ? $hook_extra['type'] : 'plugin';
   $action = isset($hook_extra['action']) ? $hook_extra['action'] : 'update';
@@ -109,18 +107,18 @@ function git_upgrader_post_install($res, $hook_extra, $result) {
     $version = $theme_data->get('Version');
     break;
   case 'plugin':
-    foreach ( $result['source_files'] as $file ) {
+    foreach ( $result['source_files'] as $file ) :
       if ( '.php' != substr($file,-4) ) continue;
       // every .php file is a possible plugin so we check if it's a plugin
       $filepath = trailingslashit($result['destination']) . $file;
       $plugin_data = get_plugin_data( $filepath );
-      if ( $plugin_data['Name'] ) {
+      if ( $plugin_data['Name'] ) :
         $name = $plugin_data['Name'];
         $version = $plugin_data['Version'];
         // We get info from the first plugin in the package
         break;
-      }
-    }
+      endif;
+    endforeach;
   break;
   }
 
@@ -128,18 +126,28 @@ function git_upgrader_post_install($res, $hook_extra, $result) {
     $name = $result['destination_name'];
 
   $commit_message = _git_format_message($name,$version,"$action $type");
-  _git_commit_changes($commit_message, $git_dir, false);
+  _git_commit_changes($commit_message, $git_dir, FALSE);
 
   return $res;
 }
 add_filter('upgrader_post_install', 'git_upgrader_post_install', 10, 3);
 
 //-----------------------------------------------------------------------------
-function git_upgrader_process_complete($upgrader, $hook_extra) {
+function git_check_new_installed_plugins_and_themes() {
+}
+
+//-----------------------------------------------------------------------------
+function git_pull_and_push() {
   global $git;
+  git_check_new_installed_plugins_and_themes();
   $git->pull();
   $git->push('origin', GIT_BRANCH);
   git_update_versions();
+}
+
+//-----------------------------------------------------------------------------
+function git_upgrader_process_complete($upgrader, $hook_extra) {
+  git_pull_and_push();
 }
 add_action('upgrader_process_complete', 'git_upgrader_process_complete', 11, 2);
 
@@ -191,20 +199,29 @@ function git_check_for_plugin_deletions() {
   global $git;
 	if ( 'true' == $_GET['deleted'] ) {
 	  $versions = get_option('git_all_versions', array());
-	  $all_plugins = $versions['plugins'];
     $uncommited_changes = $git->get_uncommited_changes();
     $removed_plugins = array();
     if ( isset( $uncommited_changes['plugins'] ) ) {
-      foreach ( $uncommited_changes['plugins'] as $name => $action )
-        if ( ('deleted' == $action) &&  array_key_exists( $name, $versions['plugins'] ) )
-          $removed_plugins[] = $all_plugins[ $name ];
+      foreach ( $uncommited_changes['plugins'] as $name => $action ) :
+        if ( ('deleted' == $action) &&  array_key_exists( $name, $versions['plugins'] ) ) {
+          $dir = dirname( $name );
+          if ( isset( $removed_plugins[ $dir ] ) )
+            $removed_plugins[ $dir ] .= ", " . $versions['plugins'][ $name ];
+          else
+            $removed_plugins[ $dir ] = $versions['plugins'][ $name ];
+        }
+      endforeach;
     }
     if ( ! empty( $removed_plugins ) ) :
-      $commit_message  = "removed plugin";
-      if ( 1 < count( $removed_plugins ) )
-        $commit_message .= "s";
-	    $removed_plugins = '`' . join('`, `', $removed_plugins) . '`';
-      _git_commit_changes("$commit_message $removed_plugins");	
+      foreach ( $removed_plugins as $dir => $message ) :
+ 	      $git_dir = "wp-content/plugins/$dir";
+        $commit_message = "removed plugins $message";
+        if ( FALSE === strpos($message, ',') ) {
+          $commit_message = "removed plugin $message";
+        }
+   	    _git_commit_changes($commit_message, $git_dir, FALSE);
+      endforeach;
+      git_pull_and_push();
 	  endif;
 	}
 }
@@ -216,20 +233,22 @@ function git_check_for_themes_deletions() {
   global $git;
 	if ( 'true' == $_GET['deleted'] ) {
 	  $versions = get_option('git_all_versions', array());
-	  $all_themes = $versions['themes'];
+    error_log(print_r(array(strtoupper('versions')=>$versions),TRUE));
     $uncommited_changes = $git->get_uncommited_changes();
+    error_log(print_r(array(strtoupper('uncommited_changes')=>$uncommited_changes),TRUE));
     $removed_themes = array();
     if ( isset( $uncommited_changes['themes'] ) ) {
-      foreach ( $uncommited_changes['themes'] as $name => $action )
-        if ( ('deleted' == $action) && array_key_exists( dirname($name), $versions['themes'] ) )
-          $removed_themes[] = $all_themes[ $name ];
+      foreach ( $uncommited_changes['themes'] as $name => $action ) :
+        $stylesheet = dirname( $name );
+        if ( ('deleted' == $action) && array_key_exists( $stylesheet, $versions['themes'] ) )
+          $removed_themes[ $stylesheet ] = $versions['themes'][ $stylesheet ];
+      endforeach;
     }
     if ( ! empty( $removed_themes ) ) :
-      $commit_message  = "removed theme";
-      if ( 1 < count( $removed_themes ) )
-        $commit_message .= "s";
-	    $removed_themes = '`' . join('`, `', $removed_themes) . '`';
-	    _git_commit_changes("$commit_message $removed_themes");
+      foreach ( $removed_themes as $stylesheet => $message ) {
+  	    _git_commit_changes("removed theme $message", "wp-content/themes/$stylesheet", FALSE);
+  	  }
+      git_pull_and_push();
 	  endif;
 	}
 }

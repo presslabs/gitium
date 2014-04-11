@@ -58,25 +58,25 @@ class Git_Wrapper {
 	    else
 	      $action = 'modified';
 
-	    $resource_type = "others";
+	    $group = "others";
 	    if ( 0 === strpos($file, 'wp-content/plugins/') )
-        $resource_type = "plugins";
+        $group = "plugins";
 
 	    if ( 0 === strpos($file, 'wp-content/themes/') )
-        $resource_type = "themes";
+        $group = "themes";
 
-      switch ( $resource_type ) {
+      switch ( $group ) {
         case 'plugins':
           $new_file = substr($file, strlen('wp-content/plugins/'));
           break;
         case 'themes';
-          $new_file = substr($file, strlen('wp-content/themes/'));
+          $new_file = untrailingslashit( substr($file, strlen('wp-content/themes/')) );
           break;
         case 'others';
           $new_file = $file;
           break;
       }
-      $new_response[ $resource_type ][ $new_file ] = $action;
+      $new_response[ $group ][ $new_file ] = $action;
 	  endforeach;
 		return $new_response;
 	}
@@ -109,5 +109,4 @@ class Git_Wrapper {
 	  $this->_call('pull');
 	}
 }
-
 $git = new Git_Wrapper('/home/mario/Documents/wp.lo');
