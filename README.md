@@ -27,9 +27,11 @@ delete hooks
 * load-themes.php
 
 
-edit plugins/themes from WP
-===========================
+edit plugins/themes hooks
+=========================
 
-* this functionality will be removed; you can no longer edit plugins/themes from your WP Dashboard
+* admin_enqueue_scripts
+* plugin-editor.php
+* theme-editor.php
 
 

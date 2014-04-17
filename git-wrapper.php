@@ -31,10 +31,14 @@ class Git_Wrapper {
 	 * Get uncommited changes
 	 * git status --porcelain
 	 * This should return an array like:
+	 
+	 
+	 
 	 array(
 	    plugins => autover/autover.php = deleted
 	               toplytics/toplytcs.php = modified
-	    themes => twentyten = modified
+	    themes => twentyten/style.css = modified
+	              twentyten/foo.php = deleted
 	    others => nasty/cache/script.js = modified
 	              foo/bar.css = deleted
 	 )
@@ -57,23 +61,25 @@ class Git_Wrapper {
 	      $action = 'deleted';
 	    else
 	      $action = 'modified';
-
+	    $new_response[$file] = $action;
+	    continue;
+	    
 	    $group = "others";
 	    if ( 0 === strpos($file, 'wp-content/plugins/') )
         $group = "plugins";
 
 	    if ( 0 === strpos($file, 'wp-content/themes/') )
         $group = "themes";
-
+       
       switch ( $group ) {
         case 'plugins':
-          $new_file = substr($file, strlen('wp-content/plugins/'));
+          $new_file = trim( substr($file, strlen('wp-content/plugins/')), '/' );
           break;
         case 'themes';
-          $new_file = untrailingslashit( substr($file, strlen('wp-content/themes/')) );
+          $new_file = trim( substr($file, strlen('wp-content/themes/')), '/' );
           break;
         case 'others';
-          $new_file = $file;
+          $new_file = trim( $file, '/' );
           break;
       }
       $new_response[ $group ][ $new_file ] = $action;
