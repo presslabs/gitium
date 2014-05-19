@@ -13,6 +13,26 @@ class Git_Wrapper {
 	  return array($return, $response);
 	}
 
+	function can_exec_git() {
+			list( $return, $response ) = $this->_call('version');
+			return ( 0 == $return );
+	}
+
+	function is_versioned() {
+			list( $return, $response ) = $this->_call('status');
+			return ( 0 == $return );
+	}
+
+	function has_remote() {
+			list( $return, $response ) = $this->_call('remote', 'show', '-n');
+			return ( 0 == $return && in_array('origin', $response) );
+	}
+
+	function init() {
+			list( $return, $response ) = $this->_call('init');
+			return ( 0 == $return );
+	}
+
 	function add() {
 		$paths = func_get_args();
 		foreach ($paths as $path) {
