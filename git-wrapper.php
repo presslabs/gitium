@@ -35,8 +35,9 @@ class Git_Wrapper {
 
 	function add() {
 		$paths = func_get_args();
-		foreach ($paths as $path) {
-		  $this->_call('add','--no-ignore-removal', $path);
+		if ( ! empty( $paths ) )
+		  foreach ($paths as $path) {
+			$this->_call('add','--no-ignore-removal', $path);
 		}
 	}
 
@@ -67,12 +68,13 @@ class Git_Wrapper {
 	 *   'plugins' => array( OF MODIFIED PLUGINS ),
 	 *   'themes' => array( OF MODIFIED THEMES ),
 	 *   'others' => array( OF MODIFIED MISC FILES )
-   * ) 
+   * )
 	 *
 	 */
 	function get_uncommited_changes() {
 	  list($return, $response) = $this->_call('status', '--porcelain');
 	  $new_response = array();
+	  if ( ! empty( $response ) )
 	  foreach ( $response as $item ) :
 	    $x = substr($item, 0, 1); // X shows the status of the index
 	    $y = substr($item, 1, 1); // Y shows the status of the work tree
@@ -84,14 +86,14 @@ class Git_Wrapper {
 	      $action = 'modified';
 	    $new_response[$file] = $action;
 	    continue;
-	    
+	
 	    $group = "others";
 	    if ( 0 === strpos($file, 'wp-content/plugins/') )
         $group = "plugins";
 
 	    if ( 0 === strpos($file, 'wp-content/themes/') )
         $group = "themes";
-       
+
       switch ( $group ) {
         case 'plugins':
           $new_file = trim( substr($file, strlen('wp-content/plugins/')), '/' );
