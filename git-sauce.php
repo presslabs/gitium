@@ -16,7 +16,7 @@ function _log() {
 		foreach ( $args as $arg )
 			var_dump($arg);
 		$out = ob_get_clean();
-		//error_log($out);
+		error_log($out);
 	}
 }
 
@@ -333,22 +333,21 @@ add_action('admin_enqueue_scripts', 'git_hook_plugin_and_theme_editor_page');
 
 //---------------------------------------------------------------------------------------------------------------------
 function git_options_page_check() {
-	  global $git;
-	    if ( $git->can_exec_git()  )
-			    wp_die("Cannot exec git");
+	global $git;
+	if ( ! $git->can_exec_git()  )
+		wp_die("Cannot exec git");
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 function git_options_page() {
-	  global $git;
-	  if (!$git->is_versioned()) {
-			  if ($git->has_remote())
-						git_setup_step2();
-				  else
-							git_setup_step1();
-				  return;
-				
-	  }
+	global $git;
+	if ( ! $git->is_versioned() ) {
+		if ( $git->has_remote() )
+			git_setup_step2();
+		else
+			git_setup_step1();
+		return;
+	}
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -383,7 +382,23 @@ function git_setup_step1() { ?>
   </p>
 
 </form>
+</div>
 <?php  }
+
+//---------------------------------------------------------------------------------------------------------------------
+function git_setup_step2() { ?>
+<div class="wrap">
+<div id="icon-options-general" class="icon32">&nbsp;</div>
+<h2>Status</h2>
+<form action="" method="post">
+  <table class="form-table">
+  </table>
+  <p class="submit">
+  <input type="submit" name="SubmitFetch" class="button-primary" value="Fetch" />
+  </p>
+  </form>
+</div>
+<?php };
 
 //---------------------------------------------------------------------------------------------------------------------
 function git_menu() {
