@@ -351,7 +351,10 @@ function git_options_page() {
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-function git_setup_step1() { ?>
+function git_setup_step1() {
+  $remote_url = '';
+  $key_pair   = '';
+?>
 <div class="wrap">
 <div id="icon-options-general" class="icon32">&nbsp;</div>
 <h2>Status</h2>
@@ -406,4 +409,24 @@ function git_menu() {
 	    add_action("load-$page", "git_options_page_check");
 }
 add_action( 'admin_menu', 'git_menu'  );
+
+//---------------------------------------------------------------------------------------------------------------------
+function git_add_menu_bubble() {
+	  global $menu, $git;
+	    $changes = $git->get_uncommited_changes();
+	    if ( ! empty( $changes  )  ) :
+			    $files = array();
+		    foreach ( $changes as $group  )
+				      foreach ( $group as $item  )
+						          $files[] = $item;
+			    $bubble_count = 7; //count( $files  );
+			foreach ( $menu as $key => $value  ) {
+				if ( 'git-sauce/git-sauce.php' == $menu[ $key  ][2]  ) {
+					        $menu[ $key  ][0] .= " <span class='update-plugins count-$bubble_count'><span class='plugin-count'>" . $bubble_count . '</span></span>';
+							        return;
+				}
+			}
+			  endif;
+}
+add_action( 'admin_menu', 'git_add_menu_bubble' );
 
