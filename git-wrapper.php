@@ -116,4 +116,4 @@ class Git_Wrapper {
 	  $this->_call('pull');
 	}
 }
-$git = new Git_Wrapper('/home/mario/Documents/wp.lo');
+$git = new Git_Wrapper( dirname( WP_CONTENT_DIR ) );
