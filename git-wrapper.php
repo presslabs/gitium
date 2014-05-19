@@ -7,8 +7,9 @@ class Git_Wrapper {
 	protected function _call() {
 	  $args = func_get_args();
 	  $args = join(' ',array_map('escapeshellarg',$args));
-	  exec("cd $this->repo_dir ; git $args", $response, $return);
-		_log($response, $return);
+	  $cmd  = "cd $this->repo_dir ; git $args";
+	  exec( $cmd, $response, $return );
+	  _log( $cmd, $response, $return );
 	  return array($return, $response);
 	}
 
