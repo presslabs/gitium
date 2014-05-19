@@ -6,7 +6,7 @@
 define('GIT_BRANCH', 'master');
 require_once __DIR__ . '/git-wrapper.php';
 
-//-----------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
 function _log() {
 	if ( func_num_args() == 1 && is_string(func_get_arg(0)) ) {
 		;//error_log(func_get_arg(0));
@@ -20,7 +20,7 @@ function _log() {
 	}
 }
 
-//-----------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
 /* Array
 (
     [themes] => Array
@@ -78,7 +78,7 @@ function git_update_versions() {
   return $new_versions;
 }
 
-//-----------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
 function git_get_versions() {
   $versions = get_transient('git_versions', array());
   if ( empty( $versions ) )
@@ -86,7 +86,7 @@ function git_get_versions() {
   return $versions;
 }
 
-//-----------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
 function _git_commit_changes( $message, $dir = '.', $push_commits = TRUE ) {
   global $git;
   $git->add($dir);
@@ -98,7 +98,7 @@ function _git_commit_changes( $message, $dir = '.', $push_commits = TRUE ) {
   }
 }
 
-//-----------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
 function _git_format_message( $name, $version = FALSE, $prefix = '' ) {
   $commit_message = "`$name`";
   if ( $version ) {
@@ -110,7 +110,7 @@ function _git_format_message( $name, $version = FALSE, $prefix = '' ) {
   return $commit_message;
 }
 
-//-----------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
 function git_upgrader_post_install( $res, $hook_extra, $result ) {
   global $git;
 
@@ -155,7 +155,7 @@ function git_upgrader_post_install( $res, $hook_extra, $result ) {
 }
 add_filter('upgrader_post_install', 'git_upgrader_post_install', 10, 3);
 
-//-----------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
 /*
   wp-content/themes/twentyten/style.css => array(
     'base_path' => wp-content/themes/twentyten
@@ -229,7 +229,7 @@ function _git_module_by_path( $path ) {
   return $module;
 }
 
-//-----------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
 function git_group_commit_modified_plugins_and_themes( $msg_append = '' ) {
   global $git;
   $versions = git_get_versions();
@@ -251,7 +251,7 @@ function git_group_commit_modified_plugins_and_themes( $msg_append = '' ) {
   }
 }
 
-//-----------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
 function git_pull_and_push( $msg_prepend = '' ) {
   global $git;
   git_group_commit_modified_plugins_and_themes( $msg_prepend );
@@ -261,7 +261,7 @@ function git_pull_and_push( $msg_prepend = '' ) {
 }
 add_action('upgrader_process_complete', 'git_pull_and_push', 11, 0);
 
-//-----------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
 function git_check_post_activate_modifications( $plugin ) {
   global $git;
 
@@ -280,7 +280,7 @@ function git_check_post_activate_modifications( $plugin ) {
 }
 add_action('activated_plugin','git_check_post_activate_modifications',999);
 
-//-----------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
 function git_check_post_deactivate_modifications( $plugin ) {
   global $git;
 
@@ -299,21 +299,21 @@ function git_check_post_deactivate_modifications( $plugin ) {
 }
 add_action('deactivated_plugin','git_check_post_deactivate_modifications',999);
 
-//-----------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
 function git_check_for_plugin_deletions() { // Handle plugin deletion
   if ( isset( $_GET['deleted'] ) && 'true' == $_GET['deleted'] )
 	git_pull_and_push();
 }
 add_action('load-plugins.php', 'git_check_for_plugin_deletions');
 
-//-----------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
 function git_check_for_themes_deletions() { // Handle theme deletion
   if ( isset( $_GET['deleted'] ) && 'true' == $_GET['deleted'] )
 	git_pull_and_push();
 }
 add_action('load-themes.php', 'git_check_for_themes_deletions');
 
-//-----------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
 // Hook to theme/plugin edit page
 function git_hook_plugin_and_theme_editor_page( $hook ) {
   switch ($hook) {
@@ -330,3 +330,65 @@ function git_hook_plugin_and_theme_editor_page( $hook ) {
   return;
 }
 add_action('admin_enqueue_scripts', 'git_hook_plugin_and_theme_editor_page');
+
+//---------------------------------------------------------------------------------------------------------------------
+function git_options_page_check() {
+	  global $git;
+	    if ( $git->can_exec_git()  )
+			    wp_die("Cannot exec git");
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+function git_options_page() {
+	  global $git;
+	  if (!$git->is_versioned()) {
+			  if ($git->has_remote())
+						git_setup_step2();
+				  else
+							git_setup_step1();
+				  return;
+				
+	  }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+function git_setup_step1() { ?>
+<div class="wrap">
+<div id="icon-options-general" class="icon32">&nbsp;</div>
+<h2>Status</h2>
+<h3>unconfigured</h3>
+
+<form action="" method="post">
+
+  <table class="form-table">
+    <tr>
+      <th scope="row"><label for="remote_url">Remote URL</label></th>
+      <td>
+        <input type="text" class="regular-text" name="remote_url" id="remote_url" value="<?php echo $remote_url; ?>">
+        <p class="description">This URL provide access to a Git repository via SSH, HTTPS, or Subversion.</p>
+      </td>
+    </tr>
+
+    <tr>
+      <th scope="row"><label for="key_pair">Key pair</label></th>
+      <td>
+        <input type="text" class="regular-text" name="key_pair" id="key_pair" value="<?php echo $key_pair; ?>" readonly="readonly">
+        <input type="submit" name="SubmitGenerateKeyPair" class="button" value="Generate key pair" /><br />
+      </td>
+    </tr>
+  </table>
+
+  <p class="submit">
+  <input type="submit" name="SubmitFetch" class="button-primary" value="Fetch" />
+  </p>
+
+</form>
+<?php  }
+
+//---------------------------------------------------------------------------------------------------------------------
+function git_menu() {
+	  $page = add_menu_page( 'Git Status', 'Code', 'manage_options', __FILE__, 'git_options_page'  );
+	    add_action("load-$page", "git_options_page_check");
+}
+add_action( 'admin_menu', 'git_menu'  );
+
