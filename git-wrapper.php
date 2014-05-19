@@ -92,7 +92,8 @@ class Git_Wrapper {
 	 * git status --porcelain
 	 */
 	function is_dirty() {
-		return ! empty( $this->get_uncommited_changes() );
+		$changes = $this->get_uncommited_changes();
+		return ! empty( $changes );
 	}
 
 	/*

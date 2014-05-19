@@ -301,15 +301,15 @@ add_action('deactivated_plugin','git_check_post_deactivate_modifications',999);
 
 //-----------------------------------------------------------------------------
 function git_check_for_plugin_deletions() { // Handle plugin deletion
-	if ( 'true' == $_GET['deleted'] )
-    git_pull_and_push();
+  if ( isset( $_GET['deleted'] ) && 'true' == $_GET['deleted'] )
+	git_pull_and_push();
 }
 add_action('load-plugins.php', 'git_check_for_plugin_deletions');
 
 //-----------------------------------------------------------------------------
 function git_check_for_themes_deletions() { // Handle theme deletion
-	if ( 'true' == $_GET['deleted'] )
-    git_pull_and_push();
+  if ( isset( $_GET['deleted'] ) && 'true' == $_GET['deleted'] )
+	git_pull_and_push();
 }
 add_action('load-themes.php', 'git_check_for_themes_deletions');
 
