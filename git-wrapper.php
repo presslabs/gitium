@@ -1,61 +1,61 @@
 <?php
 class Git_Wrapper {
-	function __construct($repo_dir) {
+	function __construct( $repo_dir ) {
 		$this->repo_dir = $repo_dir;
 	}
-	
+
 	protected function _call() {
-	  $args = func_get_args();
-	  $args = join(' ',array_map('escapeshellarg',$args));
-	  $cmd  = "cd $this->repo_dir ; git $args";
-	  exec( $cmd, $response, $return );
-	  _log( $cmd, $response, $return );
-	  return array($return, $response);
+		$args = func_get_args();
+		$args = join( ' ', array_map( 'escapeshellarg', $args ) );
+		$cmd  = "cd $this->repo_dir ; git $args";
+		exec( $cmd, $response, $return );
+		_log( $cmd, $response, $return );
+
+		return array( $return, $response );
 	}
 
 	function can_exec_git() {
-			list( $return, $response ) = $this->_call('version');
-			return ( 0 == $return );
+		list( $return, $response ) = $this->_call( 'version' );
+		return ( 0 == $return );
 	}
 
 	function is_versioned() {
-			list( $return, $response ) = $this->_call('status');
-			return ( 0 == $return );
+		list( $return, $response ) = $this->_call( 'status' );
+		return ( 0 == $return );
 	}
 
 	function has_remote() {
-			list( $return, $response ) = $this->_call('remote', 'show', '-n');
-			return ( 0 == $return && in_array('origin', $response) );
+		list( $return, $response ) = $this->_call( 'remote', 'show', '-n' );
+		return ( 0 == $return && in_array( 'origin', $response ) );
 	}
 
 	function init() {
-			list( $return, $response ) = $this->_call('init');
-			return ( 0 == $return );
+		list( $return, $response ) = $this->_call( 'init' );
+		return ( 0 == $return );
 	}
 
 	function add() {
 		$paths = func_get_args();
-		if ( ! empty( $paths ) )
-		  foreach ($paths as $path) {
-			$this->_call('add','--no-ignore-removal', $path);
+		if ( ! empty( $paths ) ) {
+			foreach ( $paths as $path ) {
+				$this->_call( 'add', '--no-ignore-removal', $path );
+			}
 		}
 	}
 
-	function commit($message) {
-    $this->_call('commit','-m', $message);		
+	function commit( $message ) {
+		$this->_call( 'commit','-m', $message );
 	}
 
-	function push($repo, $branch) {
-	  $this->_call('push', $repo, $branch);
+	function push( $repo, $branch ) {
+		$this->_call( 'push', $repo, $branch );
 	}
 
 	/*
 	 * Get uncommited changes
 	 * git status --porcelain
 	 * This should return an array like:
-	 
-	 
-	 
+	
 	 array(
 	    plugins => autover/autover.php = deleted
 	               toplytics/toplytcs.php = modified
@@ -68,45 +68,46 @@ class Git_Wrapper {
 	 *   'plugins' => array( OF MODIFIED PLUGINS ),
 	 *   'themes' => array( OF MODIFIED THEMES ),
 	 *   'others' => array( OF MODIFIED MISC FILES )
-   * )
-	 *
+	 * )
 	 */
 	function get_uncommited_changes() {
-	  list($return, $response) = $this->_call('status', '--porcelain');
-	  $new_response = array();
-	  if ( ! empty( $response ) )
-	  foreach ( $response as $item ) :
-	    $x = substr($item, 0, 1); // X shows the status of the index
-	    $y = substr($item, 1, 1); // Y shows the status of the work tree
-	    $file = substr($item, 3);
+		list( $return, $response ) = $this->_call( 'status', '--porcelain' );
+		$new_response = array();
+		if ( ! empty( $response ) ) {
+			foreach ( $response as $item ) :
+				$x    = substr( $item, 0, 1 ); // X shows the status of the index
+				$y    = substr( $item, 1, 1 ); // Y shows the status of the work tree
+				$file = substr( $item, 3 );
 
-	    if ( 'D' == $y )
-	      $action = 'deleted';
-	    else
-	      $action = 'modified';
-	    $new_response[$file] = $action;
-	    continue;
-	
-	    $group = "others";
-	    if ( 0 === strpos($file, 'wp-content/plugins/') )
-        $group = "plugins";
+				if ( 'D' == $y )
+					$action = 'deleted';
+				else
+					$action = 'modified';
 
-	    if ( 0 === strpos($file, 'wp-content/themes/') )
-        $group = "themes";
+				$new_response[ $file ] = $action;
+				continue;
 
-      switch ( $group ) {
-        case 'plugins':
-          $new_file = trim( substr($file, strlen('wp-content/plugins/')), '/' );
-          break;
-        case 'themes';
-          $new_file = trim( substr($file, strlen('wp-content/themes/')), '/' );
-          break;
-        case 'others';
-          $new_file = trim( $file, '/' );
-          break;
-      }
-      $new_response[ $group ][ $new_file ] = $action;
-	  endforeach;
+				$group = 'others';
+				if ( 0 === strpos( $file, 'wp-content/plugins/' ) )
+					$group = 'plugins';
+
+				if ( 0 === strpos( $file, 'wp-content/themes/' ) )
+					$group = 'themes';
+
+				switch ( $group ) {
+					case 'plugins':
+						$new_file = trim( substr( $file, strlen( 'wp-content/plugins/' ) ), '/' );
+					break;
+					case 'themes';
+						$new_file = trim( substr( $file, strlen( 'wp-content/themes/' ) ), '/' );
+					break;
+					case 'others';
+						$new_file = trim( $file, '/' );
+					break;
+				}
+				$new_response[ $group ][ $new_file ] = $action;
+			endforeach;
+		}
 		return $new_response;
 	}
 
@@ -126,9 +127,9 @@ class Git_Wrapper {
 	function commit_changes() {
 		$paths = func_get_args();
 		if ( 0 == func_num_args() )
-		  $paths = array('.');
-		foreach ($paths as $path) {
-		  $this->add($path);
+			$paths = array( '.' );
+		foreach ( $paths as $path ) {
+			$this->add( $path );
 		}
 	}
 
@@ -136,7 +137,7 @@ class Git_Wrapper {
 	 * Pull changes from remote. By default accept local changes on conflicts
 	 */
 	function pull() {
-	  $this->_call('pull');
+		$this->_call( 'pull' );
 	}
 }
 $git = new Git_Wrapper( dirname( WP_CONTENT_DIR ) );
