@@ -34,6 +34,12 @@ class Git_Wrapper {
 		return ( 0 == $return );
 	}
 
+	function add_remote_url( $url ) {
+		if ( FALSE === strpos( $url, 'http://' ) ) $url = "ssh://$url";
+		list( $return, $response ) = $this->_call( 'remote', 'add', 'origin', $url );
+		return ( 0 == $return );
+	}
+
 	function add() {
 		$paths = func_get_args();
 		if ( ! empty( $paths ) ) {
