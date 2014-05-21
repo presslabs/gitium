@@ -40,6 +40,13 @@ class Git_Wrapper {
 		return ( 0 == $return );
 	}
 
+	function get_remote_url() {
+		list( $return, $response ) = $this->_call( 'config', '--get', 'remote.origin.url' );
+		if ( isset( $response[0] ) )
+			return $response[0];
+		return '';	
+	}
+
 	function add() {
 		$paths = func_get_args();
 		if ( ! empty( $paths ) ) {
