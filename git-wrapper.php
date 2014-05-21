@@ -47,6 +47,16 @@ class Git_Wrapper {
 		return '';	
 	}
 
+	function fetch_ref() {
+		list( $return, $response ) = $this->_call( 'fetch', 'origin' );
+		return ( 0 == $return );
+	}
+
+	function merge_with_accept_mine() {
+		list( $return, $response ) = $this->_call( 'merge', '-s', 'recursive', '-X', 'ours' );
+		return ( 0 == $return );
+	}
+
 	function add() {
 		$paths = func_get_args();
 		if ( ! empty( $paths ) ) {
