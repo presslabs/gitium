@@ -350,6 +350,21 @@ function git_options_page_check() {
 //---------------------------------------------------------------------------------------------------------------------
 function git_options_page() {
 	global $git;
+
+	if ( isset( $_POST['SubmitFetch'] ) && isset( $_POST['remote_url'] ) ) {
+		$git->init();
+		$git->add_wp_content();
+		$git->commit( 'Initial commit' );
+		$git->add_remote_url( $_POST['remote_url'] );
+		$git->fetch_ref();
+		$remote_branches = $git->get_remote_branches();
+		if ( empty( $remote_branches ) ) {
+			$git->track_branch( 'master' );
+			$git->push( 'origin', GIT_BRANCH );
+		}
+		return;
+	}
+
 	if ( ! $git->is_versioned() ) {
 		if ( $git->has_remote() )
 			git_setup_step2();
@@ -361,7 +376,9 @@ function git_options_page() {
 
 //---------------------------------------------------------------------------------------------------------------------
 function git_setup_step1() {
-	$remote_url = '';
+	global $git;
+
+	$remote_url = $git->get_remote_url();
 	$key_pair   = '';
 	?>
 	<div class="wrap">
@@ -375,7 +392,7 @@ function git_setup_step1() {
 	<tr>
 		<th scope="row"><label for="remote_url">Remote URL</label></th>
 		<td>
-			<input type="text" class="regular-text" name="remote_url" id="remote_url" value="<?php echo esc_url( $remote_url ); ?>">
+			<input type="text" class="regular-text" name="remote_url" id="remote_url" value="<?php echo $remote_url; ?>">
 			<p class="description">This URL provide access to a Git repository via SSH, HTTPS, or Subversion.</p>
 		</td>
 	</tr>
@@ -383,7 +400,7 @@ function git_setup_step1() {
 	<tr>
 		<th scope="row"><label for="key_pair">Key pair</label></th>
 		<td>
-			<input type="text" class="regular-text" name="key_pair" id="key_pair" value="<?php echo esc_url( $key_pair ); ?>" readonly="readonly">
+			<input type="text" class="regular-text" name="key_pair" id="key_pair" value="<?php echo $key_pair; ?>" readonly="readonly">
 			<input type="submit" name="SubmitGenerateKeyPair" class="button" value="Generate key pair" /><br />
 		</td>
 	</tr>
@@ -407,10 +424,17 @@ function git_setup_step2() { ?>
 	<form action="" method="post">
 
 	<table class="form-table">
+	<tr>
+		<th scope="row"><label for="remote_url">Remote URL</label></th>
+		<td>
+			<input type="text" class"regular-text" name="remote_url" id="remote_url" value="<?php echo $remote_url; ?>">
+			<p class="description">This URL provide access to a git repository via SSH, HTTPS, or Subversion.</p>
+		</td>
+	</tr>
 	</table>
 
 	<p class="submit">
-		<input type="submit" name="SubmitFetch" class="button-primary" value="Fetch" />
+		<input type="submit" name="SubmitMergeAndPush" class="button-primary" value="Merge & Push" />
 	</p>
 	</form>
 	</div>
@@ -431,10 +455,14 @@ function git_add_menu_bubble() {
 	$changes = $git->get_uncommited_changes();
 	if ( ! empty( $changes  )  ) :
 		$files = array();
-		foreach ( $changes as $group  )
-			foreach ( $group as $item  )
-				$files[] = $item;
-
+		foreach ( $changes as $group  ) {
+			if ( is_array( $group ) ) {
+				foreach ( $group as $item  )
+					$files[] = $item;
+			} else {
+				$file[] = $group;
+			}
+		}
 		$bubble_count = 7; //count( $files  );
 		foreach ( $menu as $key => $value  ) {
 			if ( 'git-sauce/git-sauce.php' == $menu[ $key ][2] ) {

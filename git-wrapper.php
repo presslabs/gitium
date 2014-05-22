@@ -44,7 +44,7 @@ class Git_Wrapper {
 		list( $return, $response ) = $this->_call( 'config', '--get', 'remote.origin.url' );
 		if ( isset( $response[0] ) )
 			return $response[0];
-		return '';	
+		return '';
 	}
 
 	function fetch_ref() {
@@ -55,6 +55,16 @@ class Git_Wrapper {
 	function merge_with_accept_mine() {
 		list( $return, $response ) = $this->_call( 'merge', '-s', 'recursive', '-X', 'ours' );
 		return ( 0 == $return );
+	}
+
+	function add_wp_content() {
+		list( $return, $response ) = $this->_call( 'add', 'wp-content' );
+		return ( 0 == $return );
+	}
+
+	function get_remote_branches() {
+		list( $return, $response ) = $this->_call( 'branch', '-r' );
+		return $response;
 	}
 
 	function add() {
@@ -72,6 +82,11 @@ class Git_Wrapper {
 
 	function push( $repo, $branch ) {
 		$this->_call( 'push', $repo, $branch );
+	}
+
+	function track_branch( $branch_name ) {
+		list( $return, $response ) = $this->_call( 'branch', '-t', $branch_name );
+		return ( 0 == $return );
 	}
 
 	/*
