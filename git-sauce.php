@@ -1,15 +1,15 @@
 <?php
 /*
- * Plugin Name: Git sauce
+ * Plugin Name: Git Sauce
+ * Version: 0.1-alpha
  */
 
-define( 'GIT_BRANCH', 'master' );
 require_once __DIR__ . '/git-wrapper.php';
 
 //---------------------------------------------------------------------------------------------------------------------
 function _log() {
 	if ( func_num_args() == 1 && is_string( func_get_arg( 0 ) ) ) {
-		;//error_log(func_get_arg(0));
+		error_log( func_get_arg(0) );
 	} else {
 		ob_start();
 		$args = func_get_args();
@@ -97,12 +97,14 @@ function git_get_versions() {
 //---------------------------------------------------------------------------------------------------------------------
 function _git_commit_changes( $message, $dir = '.', $push_commits = TRUE ) {
 	global $git;
+	list( $git_public_key, $git_private_key ) = git_get_keypair();
+	$git->set_key( $git_private_key );
 
 	$git->add( $dir );
 	$git->commit( $message );
 	if ( $push_commits ) {
 		$git->pull();
-		$git->push( 'origin', GIT_BRANCH );
+		$git->push();
 		git_update_versions();
 	}
 }
@@ -264,10 +266,12 @@ function git_group_commit_modified_plugins_and_themes( $msg_append = '' ) {
 //---------------------------------------------------------------------------------------------------------------------
 function git_pull_and_push( $msg_prepend = '' ) {
 	global $git;
+	list( $git_public_key, $git_private_key ) = git_get_keypair();
+	$git->set_key( $git_private_key );
 
 	git_group_commit_modified_plugins_and_themes( $msg_prepend );
 	$git->pull();
-	$git->push( 'origin', GIT_BRANCH );
+	$git->push();
 	git_update_versions();
 }
 add_action( 'upgrader_process_complete', 'git_pull_and_push', 11, 0 );
@@ -343,46 +347,106 @@ add_action( 'admin_enqueue_scripts', 'git_hook_plugin_and_theme_editor_page' );
 //---------------------------------------------------------------------------------------------------------------------
 function git_options_page_check() {
 	global $git;
-
 	if ( ! $git->can_exec_git() ) wp_die( 'Cannot exec git' );
+	_git_get_uncommited_changes( true );
+}
+
+
+function _git_get_uncommited_changes( $update_transient = false ) {
+	global $git;
+	if ( ! $update_transient && ( false !== ( $changes = get_transient( 'git_uncommited_changes' ) ) ) ) {
+		return $changes;
+	}
+	$changes = $git->get_uncommited_changes();
+	set_transient( 'git_uncommited_changes', $changes, 12 * 60 * 60 ); // cache changes for half-a-day
+	return $changes;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 function git_options_page() {
 	global $git;
 
+	list( $git_public_key, $git_private_key ) = git_get_keypair();
+	$git->set_key( $git_private_key );
+
 	if ( isset( $_POST['SubmitFetch'] ) && isset( $_POST['remote_url'] ) ) {
 		$git->init();
-		$git->add_wp_content();
-		$git->commit( 'Initial commit' );
 		$git->add_remote_url( $_POST['remote_url'] );
 		$git->fetch_ref();
-		$remote_branches = $git->get_remote_branches();
-		if ( empty( $remote_branches ) ) {
-			$git->track_branch( 'master' );
-			$git->push( 'origin', GIT_BRANCH );
+		if ( count( $git->get_remote_branches() ) == 0 ) {
+			$git->add_initial_content();
+			$git->commit( 'Initial commit' );
+			if ( ! $git->push( 'master' ) ) {
+				$git->cleanup(); ?>
+					<div class="error">
+						<p><?php echo 'Could not fetch from remote <code>'. esc_html( $_POST['remote_url'] ) . '</code>'; ?></p>
+					</div>
+				<?php
+			}
 		}
-		return;
 	}
 
-	if ( ! $git->is_versioned() ) {
-		if ( $git->has_remote() )
-			git_setup_step2();
-		else
-			git_setup_step1();
-		return;
+	if ( isset( $_POST['SubmitMergeAndPush'] ) && isset( $_POST['tracking_branch'] ) ) {
+		$branch = $_POST['tracking_branch'];
+		$git->add_initial_content();
+		$git->checkout_merge( $branch );
+		$git->commit( 'Merge existing code' );
+		$git->push( $branch );
 	}
+
+	if ( ! $git->is_versioned() )
+		return git_setup_step1();
+
+	$git->fetch_ref();
+	if ( ! $git->get_remote_tracking_branch() )
+		return git_setup_step2();
+
+	_git_get_uncommited_changes( true );
+	git_changes_page();
+}
+
+function _git_ssh_encode_buffer( $buffer ) {
+	$len = strlen( $buffer );
+	if ( ord( $buffer[0] ) & 0x80 ) {
+		$len++;
+		$buffer = "\x00" . $buffer;
+	}
+	return pack( 'Na*', $len, $buffer );
+}
+
+function _git_generate_keypair() {
+	$rsa_key = openssl_pkey_new(
+		array(
+			'private_key_bits' => 2048,
+			'private_key_type' => OPENSSL_KEYTYPE_RSA,
+		)
+	);
+
+	$private_key = openssl_pkey_get_private( $rsa_key );
+	openssl_pkey_export( $private_key, $pem ); //Private Key
+
+	$key_info   = openssl_pkey_get_details( $rsa_key );
+	$buffer     = pack( 'N', 7 ) . 'ssh-rsa' .
+					_git_ssh_encode_buffer( $key_info['rsa']['e'] ) .
+					_git_ssh_encode_buffer( $key_info['rsa']['n'] );
+	$public_key = 'ssh-rsa ' . base64_encode( $buffer ) . ' git-sauce';
+
+	return array( $public_key, $pem );
+}
+
+function git_get_keypair() {
+	if ( false === ( $keypair = get_option( 'git_keypair', false )  ) ) {
+		$keypair = _git_generate_keypair();
+		add_option( 'git_keypair', $keypair, '', $false );
+	}
+	return $keypair;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 function git_setup_step1() {
 	global $git;
-
-	$remote_url = $git->get_remote_url();
-	$key_pair   = '';
-	?>
+	list( $git_public_key, $git_private_key ) = git_get_keypair(); ?>
 	<div class="wrap">
-	<div id="icon-options-general" class="icon32">&nbsp;</div>
 	<h2>Status</h2>
 	<h3>unconfigured</h3>
 
@@ -392,7 +456,7 @@ function git_setup_step1() {
 	<tr>
 		<th scope="row"><label for="remote_url">Remote URL</label></th>
 		<td>
-			<input type="text" class="regular-text" name="remote_url" id="remote_url" value="<?php echo $remote_url; ?>">
+			<input type="text" class="regular-text" name="remote_url" id="remote_url" value="">
 			<p class="description">This URL provide access to a Git repository via SSH, HTTPS, or Subversion.</p>
 		</td>
 	</tr>
@@ -400,8 +464,10 @@ function git_setup_step1() {
 	<tr>
 		<th scope="row"><label for="key_pair">Key pair</label></th>
 		<td>
-			<input type="text" class="regular-text" name="key_pair" id="key_pair" value="<?php echo $key_pair; ?>" readonly="readonly">
-			<input type="submit" name="SubmitGenerateKeyPair" class="button" value="Generate key pair" /><br />
+			<input type="text" class="regular-text" name="key_pair" id="key_pair" value="<?php echo esc_attr( $git_public_key ); ?>" readonly="readonly">
+			<p class="description">If your use ssh keybased authentication for git you need to allow write access to your repository using this key.<br>
+			Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="#" target="_blank">bitbucket</a>.
+			</p>
 		</td>
 	</tr>
 	</table>
@@ -416,19 +482,24 @@ function git_setup_step1() {
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-function git_setup_step2() { ?>
+function git_setup_step2() {
+	global $git;
+	?>
 	<div class="wrap">
-	<div id="icon-options-general" class="icon32">&nbsp;</div>
 	<h2>Status</h2>
 
 	<form action="" method="post">
 
 	<table class="form-table">
 	<tr>
-		<th scope="row"><label for="remote_url">Remote URL</label></th>
+		<th scope="row"><label for="tracking_branch">Choose tracking branch</label></th>
 		<td>
-			<input type="text" class"regular-text" name="remote_url" id="remote_url" value="<?php echo $remote_url; ?>">
-			<p class="description">This URL provide access to a git repository via SSH, HTTPS, or Subversion.</p>
+			<select name="tracking_branch" id="tracking_branch">
+			<?php foreach ( $git->get_remote_branches() as $branch ) : ?>
+				<option value="<?php echo esc_attr( $branch ); ?>"><?php echo esc_html( $branch ); ?></option>
+			<?php endforeach; ?>
+			</select>
+			<p class="description">Your code origin is set to <code><?php echo esc_html( $git->get_remote_url() ); ?></code></p>
 		</td>
 	</tr>
 	</table>
@@ -437,6 +508,24 @@ function git_setup_step2() { ?>
 		<input type="submit" name="SubmitMergeAndPush" class="button-primary" value="Merge & Push" />
 	</p>
 	</form>
+	</div>
+	<?php
+};
+
+//---------------------------------------------------------------------------------------------------------------------
+function git_changes_page() {
+	$changes = _git_get_uncommited_changes(); ?>
+	<div class="wrap">
+	<div id="icon-options-general" class="icon32">&nbsp;</div>
+	<h2>Status <span class="small">Connected</span></h2>
+	<table>
+		<thead><tr><td>Path</td><td>Change type</td></tr></thead>
+		<tbody>
+			<?php foreach ( $changes as $path => $type ): ?>
+				<tr><td><?php echo esc_html( $path ); ?></td><td><?php echo esc_html( $type ); ?></td></tr>	
+			<?php endforeach; ?>
+		</tbody>
+	</table>
 	</div>
 	<?php
 };
@@ -451,19 +540,9 @@ add_action( 'admin_menu', 'git_menu' );
 //---------------------------------------------------------------------------------------------------------------------
 function git_add_menu_bubble() {
 	global $menu, $git;
-
-	$changes = $git->get_uncommited_changes();
-	if ( ! empty( $changes  )  ) :
-		$files = array();
-		foreach ( $changes as $group  ) {
-			if ( is_array( $group ) ) {
-				foreach ( $group as $item  )
-					$files[] = $item;
-			} else {
-				$file[] = $group;
-			}
-		}
-		$bubble_count = 7; //count( $files  );
+	$changes = _git_get_uncommited_changes();
+	if ( ! empty( $changes ) ):
+		$bubble_count = count( $changes );
 		foreach ( $menu as $key => $value  ) {
 			if ( 'git-sauce/git-sauce.php' == $menu[ $key ][2] ) {
 				$menu[ $key ][0] .= " <span class='update-plugins count-$bubble_count'><span class='plugin-count'>" . $bubble_count . '</span></span>';

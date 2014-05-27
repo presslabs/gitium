@@ -1,0 +1,8 @@
+#!/bin/sh
+SSH_AUTH_SOCK=''
+SSH="ssh -q -F /dev/null -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+if [ -z "$GIT_KEY_FILE" ] ; then
+    exec $SSH "$@"
+else
+    exec $SSH -i "$GIT_KEY_FILE" "$@"
+fi
