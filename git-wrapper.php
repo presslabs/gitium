@@ -119,6 +119,7 @@ class Git_Wrapper {
 		return ( 0 == $return );
 	}
 
+
 	function has_remote() {
 		list( $return, $response ) = $this->_call( 'remote', 'show', '-n' );
 		return ( 0 == $return && in_array( 'origin', $response ) );
@@ -163,19 +164,25 @@ class Git_Wrapper {
 		return ( 0 == $return );
 	}
 
-	function merge_with_accept_ours( $branch ) {
-		list( $return, $response ) = $this->_call( 'merge', '-s', 'recursive', '-X', 'ours', $branch );
-		return ( 0 == $return );
-	}
-
-	function merge_with_accept_theirs( $branch ) {
-		list( $return, $response ) = $this->_call( 'merge', '-s', 'recursive', '-X', 'theirs', $branch );
-		return ( 0 == $return );
-	}
-
 	function add_initial_content() {
 		list( $return, $response ) = $this->_call( 'add', 'wp-content', '.gitignore' );
 		return ( 0 == $return );
+	}
+
+	function merge_initial_commit( $commit, $branch ) {
+		list( $return, $response ) = $this->_call( 'branch', '-m', 'initial' );
+		if ( 0 != $return )
+			return false;
+		list( $return, $response ) = $this->_call( 'checkout', $branch );
+		if ( 0 != $return )
+			return false;
+		list( $return, $response ) = $this->_call(
+			'cherry-pick', '--strategy', 'recursive', '--strategy-option', 'theirs', $commit
+		);	
+		if ( 0 != $return )
+			return false;
+		list( $return, $response ) = $this->_call( 'branch', '-D', 'initial' );
+		return true;
 	}
 
 	function get_remote_branches() {
@@ -190,11 +197,6 @@ class Git_Wrapper {
 		return ( $return == 0 );	
 	}
 
-	function checkout_merge( $branch ) {
-		list( $return, $response ) = $this->_call( 'checkout', '-m', $branch );
-		return ( $return == 0 );	
-	}
-
 	function add() {
 		$paths = func_get_args();
 		if ( ! empty( $paths ) ) {
@@ -205,7 +207,10 @@ class Git_Wrapper {
 	}
 
 	function commit( $message ) {
-		$this->_call( 'commit', '-m', $message );
+		list( $return, $response ) = $this->_call( 'commit', '-m', $message );
+		if ( $return !== 0 ) return false;
+		list( $return, $response ) = $this->_call( 'rev-parse', 'HEAD' );
+		return ( $return === 0 ) ? $response[0] : false;
 	}
 
 	function push( $branch = '' ) {
@@ -214,11 +219,6 @@ class Git_Wrapper {
 		else
 			list( $return, $response ) = $this->_call( 'push', '--porcelain', '-u', 'origin' );
 		return ( $return == 0 );
-	}
-
-	function track_branch( $branch_name ) {
-		list( $return, $response ) = $this->_call( 'branch', '--track', 'master' );
-		return ( 0 == $return );
 	}
 
 	/*

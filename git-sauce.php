@@ -376,21 +376,28 @@ function git_options_page() {
 		if ( count( $git->get_remote_branches() ) == 0 ) {
 			$git->add_initial_content();
 			$git->commit( 'Initial commit' );
-			if ( ! $git->push( 'master' ) ) {
-				$git->cleanup(); ?>
-					<div class="error">
-						<p><?php echo 'Could not fetch from remote <code>'. esc_html( $_POST['remote_url'] ) . '</code>'; ?></p>
-					</div>
-				<?php
-			}
+			if ( ! $git->push( 'master' ) ) { $git->cleanup(); ?>
+				<div class="error">
+					<p>Could not fetch from remote <code><?php echo esc_html( $_POST['remote_url'] ); ?></code></p>
+				</div>
+			<?php }
 		}
 	}
 
 	if ( isset( $_POST['SubmitMergeAndPush'] ) && isset( $_POST['tracking_branch'] ) ) {
 		$branch = $_POST['tracking_branch'];
 		$git->add_initial_content();
-		$git->checkout_merge( $branch );
-		$git->commit( 'Merge existing code' );
+		$commit = $git->commit( 'Merge existing code from ' . get_home_url() );
+		if ( ! $commit ) { $git->cleanup(); ?>
+			<div class="error">
+				<p>Could not create initial commit</p>
+			</div>
+		<?php }
+		if ( ! $git->merge_initial_commit( $commit, $branch ) ) { $git->cleanup(); ?>
+			<div class="error">
+				<p>Could not merge the initial commit</p>
+			</div>
+		<?php }
 		$git->push( $branch );
 	}
 
