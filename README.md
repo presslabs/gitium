@@ -4,6 +4,10 @@ git-sauce
 PressLabs git based wordpress deployments
 
 
+ToDos:
+ * git submodules workflow
+ * improve safety when merging with remote branch
+
 install/update hooks
 ====================
 
