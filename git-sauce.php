@@ -9,7 +9,7 @@ require_once __DIR__ . '/git-wrapper.php';
 //---------------------------------------------------------------------------------------------------------------------
 function _log() {
 	if ( func_num_args() == 1 && is_string( func_get_arg( 0 ) ) ) {
-		error_log( func_get_arg(0) );
+		error_log( func_get_arg( 0 ) );
 	} else {
 		ob_start();
 		$args = func_get_args();
@@ -347,18 +347,21 @@ add_action( 'admin_enqueue_scripts', 'git_hook_plugin_and_theme_editor_page' );
 //---------------------------------------------------------------------------------------------------------------------
 function git_options_page_check() {
 	global $git;
+
 	if ( ! $git->can_exec_git() ) wp_die( 'Cannot exec git' );
 	_git_get_uncommited_changes( true );
 }
 
-
+//---------------------------------------------------------------------------------------------------------------------
 function _git_get_uncommited_changes( $update_transient = false ) {
 	global $git;
+
 	if ( ! $update_transient && ( false !== ( $changes = get_transient( 'git_uncommited_changes' ) ) ) ) {
 		return $changes;
 	}
 	$changes = $git->get_uncommited_changes();
 	set_transient( 'git_uncommited_changes', $changes, 12 * 60 * 60 ); // cache changes for half-a-day
+
 	return $changes;
 }
 
@@ -412,6 +415,7 @@ function git_options_page() {
 	git_changes_page();
 }
 
+//---------------------------------------------------------------------------------------------------------------------
 function _git_ssh_encode_buffer( $buffer ) {
 	$len = strlen( $buffer );
 	if ( ord( $buffer[0] ) & 0x80 ) {
@@ -421,6 +425,7 @@ function _git_ssh_encode_buffer( $buffer ) {
 	return pack( 'Na*', $len, $buffer );
 }
 
+//---------------------------------------------------------------------------------------------------------------------
 function _git_generate_keypair() {
 	$rsa_key = openssl_pkey_new(
 		array(
@@ -441,6 +446,7 @@ function _git_generate_keypair() {
 	return array( $public_key, $pem );
 }
 
+//---------------------------------------------------------------------------------------------------------------------
 function git_get_keypair() {
 	if ( false === ( $keypair = get_option( 'git_keypair', false )  ) ) {
 		$keypair = _git_generate_keypair();
@@ -525,14 +531,24 @@ function git_changes_page() {
 	<div class="wrap">
 	<div id="icon-options-general" class="icon32">&nbsp;</div>
 	<h2>Status <span class="small">Connected</span></h2>
-	<table>
-		<thead><tr><td>Path</td><td>Change type</td></tr></thead>
+	<table class="widefat" id="update-plugins-table">
+	<thead><tr><th class="manage-column check-column"><input type="checkbox" id="plugins-select-all"></th><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></thead>
+	<tfoot><tr><th class="manage-column check-column"><input type="checkbox" id="plugins-select-all"></th><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></tfoot>
 		<tbody>
-			<?php foreach ( $changes as $path => $type ): ?>
-				<tr><td><?php echo esc_html( $path ); ?></td><td><?php echo esc_html( $type ); ?></td></tr>	
+			<?php foreach ( $changes as $path => $type ) : ?>
+				<tr><th scope="row" class="check-column"><input type="checkbox" name="checked[]" value="<?php echo esc_html( $path  ); ?>"></th><td><strong><?php echo esc_html( $path ); ?></strong></td><td><?php echo esc_html( $type ); ?></td></tr>	
 			<?php endforeach; ?>
 		</tbody>
 	</table>
+
+	<p>
+		Commit message: <input type="text" name="commitmsg" value="" placeholder="Update some changes" />
+	</p>
+
+	<p>
+		<input type="submit" name="SubmiPush" class="button" value="Push" />&nbsp;&nbsp;
+		<input type="submit" name="SubmitPull" class="button" value="Pull" />
+	</p>
 	</div>
 	<?php
 };
@@ -547,8 +563,9 @@ add_action( 'admin_menu', 'git_menu' );
 //---------------------------------------------------------------------------------------------------------------------
 function git_add_menu_bubble() {
 	global $menu, $git;
+
 	$changes = _git_get_uncommited_changes();
-	if ( ! empty( $changes ) ):
+	if ( ! empty( $changes ) ) :
 		$bubble_count = count( $changes );
 		foreach ( $menu as $key => $value  ) {
 			if ( 'git-sauce/git-sauce.php' == $menu[ $key ][2] ) {
