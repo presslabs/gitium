@@ -349,17 +349,16 @@ function git_options_page_check() {
 	global $git;
 
 	if ( ! $git->can_exec_git() ) wp_die( 'Cannot exec git' );
-	_git_get_uncommited_changes( true );
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-function _git_get_uncommited_changes( $update_transient = false ) {
+function _git_status( $update_transient = false ) {
 	global $git;
 
 	if ( ! $update_transient && ( false !== ( $changes = get_transient( 'git_uncommited_changes' ) ) ) ) {
 		return $changes;
 	}
-	$changes = $git->get_uncommited_changes();
+	$changes = $git->status();
 	set_transient( 'git_uncommited_changes', $changes, 12 * 60 * 60 ); // cache changes for half-a-day
 
 	return $changes;
@@ -404,6 +403,19 @@ function git_options_page() {
 		$git->push( $branch );
 	}
 
+	if ( isset( $_POST['SubmitSave'] ) ) {
+		//
+		// COMMIT
+		//
+		if ( isset( $_POST['checked'] ) ) {
+			$git->add( $_POST['checked'] );
+			$commitmsg = 'Update some changes';
+			if ( isset( $_POST['commitmsg'] ) )
+				$commitmsg = $_POST['commitmsg'];
+			$git->commit( $commitmsg );
+		}
+	}
+
 	if ( ! $git->is_versioned() )
 		return git_setup_step1();
 
@@ -411,7 +423,8 @@ function git_options_page() {
 	if ( ! $git->get_remote_tracking_branch() )
 		return git_setup_step2();
 
-	_git_get_uncommited_changes( true );
+	
+	_git_status( true );
 	git_changes_page();
 }
 
@@ -463,7 +476,7 @@ function git_setup_step1() {
 	<h2>Status</h2>
 	<h3>unconfigured</h3>
 
-	<form action="" method="post">
+	<form action="" method="POST">
 
 	<table class="form-table">
 	<tr>
@@ -501,7 +514,7 @@ function git_setup_step2() {
 	<div class="wrap">
 	<h2>Status</h2>
 
-	<form action="" method="post">
+	<form action="" method="POST">
 
 	<table class="form-table">
 	<tr>
@@ -527,28 +540,49 @@ function git_setup_step2() {
 
 //---------------------------------------------------------------------------------------------------------------------
 function git_changes_page() {
-	$changes = _git_get_uncommited_changes(); ?>
+	global $git;
+	list ( $branch_status, $changes ) = _git_status(); ?>
 	<div class="wrap">
 	<div id="icon-options-general" class="icon32">&nbsp;</div>
 	<h2>Status <span class="small">Connected</span></h2>
-	<table class="widefat" id="update-plugins-table">
+
+	<p>Following branch <code><?php echo esc_html( str_replace( 'origin/','',$git->get_remote_tracking_branch() ) );?></code>
+	  from <code><?php echo esc_html( $git->get_remote_url() ); ?></code>. <br>
+	  <code><?php echo esc_html( $branch_status ); ?></code></p>
+	<form action="" method="POST">
+
+	<table class="widefat" id="git-changes-table">
 	<thead><tr><th class="manage-column check-column"><input type="checkbox" id="plugins-select-all"></th><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></thead>
 	<tfoot><tr><th class="manage-column check-column"><input type="checkbox" id="plugins-select-all"></th><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></tfoot>
 		<tbody>
 			<?php foreach ( $changes as $path => $type ) : ?>
-				<tr><th scope="row" class="check-column"><input type="checkbox" name="checked[]" value="<?php echo esc_html( $path  ); ?>"></th><td><strong><?php echo esc_html( $path ); ?></strong></td><td><?php echo esc_html( $type ); ?></td></tr>	
+				<tr>
+					<th scope="row" class="check-column">
+						<?php if ( 'r' == $type[0] ) { ?>
+						<input type="checkbox" name="checked[]" value="<?php echo esc_attr( $path  ); ?>" checked="checked" onclick="return false">
+						<?php } else { ?>
+						<input type="checkbox" name="checked[]" value="<?php echo esc_attr( $path   ); ?>">
+						<?php } ?>
+					</th>
+					<td>
+						<strong><?php echo esc_html( $path ); ?></strong>
+					</td>
+					<td><?php echo esc_html( $type ); ?>
+					</td>
+				</tr>	
 			<?php endforeach; ?>
 		</tbody>
 	</table>
 
 	<p>
-		Commit message: <input type="text" name="commitmsg" value="" placeholder="Update some changes" />
+		<label for="save-changes">Commit message:</label>
+		<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="Update some changes" />
 	</p>
 
 	<p>
-		<input type="submit" name="SubmiPush" class="button" value="Push" />&nbsp;&nbsp;
-		<input type="submit" name="SubmitPull" class="button" value="Pull" />
+		<input type="submit" name="SubmitSave" class="button-primary button" value="Save changes" />
 	</p>
+	</form>
 	</div>
 	<?php
 };
@@ -564,12 +598,13 @@ add_action( 'admin_menu', 'git_menu' );
 function git_add_menu_bubble() {
 	global $menu, $git;
 
-	$changes = _git_get_uncommited_changes();
+	list ( $branch_status, $changes ) = _git_status();
 	if ( ! empty( $changes ) ) :
 		$bubble_count = count( $changes );
 		foreach ( $menu as $key => $value  ) {
 			if ( 'git-sauce/git-sauce.php' == $menu[ $key ][2] ) {
-				$menu[ $key ][0] .= " <span class='update-plugins count-$bubble_count'><span class='plugin-count'>" . $bubble_count . '</span></span>';
+				$menu[ $key ][0] .= " <span class='update-plugins count-$bubble_count'><span class='plugin-count'>" 
+					. $bubble_count . '</span></span>';
 				return;
 			}
 		}

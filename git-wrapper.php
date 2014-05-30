@@ -159,6 +159,13 @@ class Git_Wrapper {
 		return false;
 	}
 
+	function get_local_branch() {
+		list( $return, $response ) = $this->_call( 'rev-parse', '--abbrev-ref' );
+		if ( 0 == $return )
+			return $response[0];
+		return false;
+	}
+
 	function fetch_ref() {
 		list( $return, $response ) = $this->_call( 'fetch', 'origin' );
 		return ( 0 == $return );
@@ -232,26 +239,65 @@ class Git_Wrapper {
 	)
 
 	 */
+
 	function get_uncommited_changes() {
-		list( $return, $response ) = $this->_call( 'status', '--porcelain' );
+		list( $branch_status, $changes ) = $this->status();
+		return $changes;
+	}
+
+	function status() {
+		list( $return, $response ) = $this->_call( 'status', '-z', '-b', '-u' );
 		if ( 0 !== $return )
-			return array();
+			return array( '', array() );
+
+		$response     = $response[0];
 		$new_response = array();
+
 		if ( ! empty( $response ) ) {
-			foreach ( $response as $item ) :
-				$x    = substr( $item, 0, 1 ); // X shows the status of the index
-				$y    = substr( $item, 1, 1 ); // Y shows the status of the work tree
-				$file = substr( $item, 3 );
+			$response = explode( chr( 0 ), $response );
+			$branch_status = array_shift( $response );
+			foreach ( $response as $idx => $item ) :
+				if ( ! empty( $from ) ) {
+					unset( $from );
+					continue;
+				}
+				unset($x, $y, $to, $from);
+				if ( empty($item) ) continue; // ignore empty elements like the last item
+				if ( '#' == $item[0] ) continue; // ignore branch status
 
-				if ( 'D' == $y )
-					$action = 'deleted';
-				else
-					$action = 'modified';
+				$x  = substr( $item, 0, 1 ); // X shows the status of the index
+				$y  = substr( $item, 1, 1 ); // Y shows the status of the work tree
+				$to = substr( $item, 3 );
+				if ( 'R' == $x )
+					$from = $response[ $idx + 1 ];
 
-				$new_response[ $file ] = $action;
+				$new_response[ $to ] = "$x$y $from";
 			endforeach;
 		}
-		return $new_response;
+		if ( preg_match( '/## ([^.]+)\.+([^ ]+)/', $branch_status, $matches ) ) {
+			$local_branch  = $matches[1];
+			$remote_branch = $matches[2];
+
+			list( $retrn, $response ) = $this->_call( 'rev-list', "$local_branch..$remote_branch", '--count' );
+			$behind_count = (int)$response[0];
+
+			list( $retrn, $response ) = $this->_call( 'rev-list', "$remote_branch..$local_branch", '--count' );
+			$ahead_count = (int)$response[0];
+		}
+
+		if ( $behind_count ) {
+			list( $retrn, $response ) = $this->_call( 'diff', '-z', '--name-status', "$local_branch~$ahead_count", $remote_branch );
+			$response = explode( chr( 0 ), $response[0] );
+			array_pop( $response );
+			for ( $idx = 0 ; $idx < count( $response ) / 2 ; $idx++ ) {
+				$file   = $response[ $idx * 2 + 1 ];
+				$change = $response[ $idx * 2 ];
+				if ( ! isset( $new_response[$file] ) )
+					$new_response[$file] = "r$change";
+			}
+		}
+
+		return array( $branch_status, $new_response );
 	}
 
 	/*
