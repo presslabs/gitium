@@ -308,7 +308,7 @@ class Git_Wrapper {
 		return $changes;
 	}
 
-	function status() {
+	function status( $local_only = false ) {
 		list( $return, $response ) = $this->_call( 'status', '-z', '-b', '-u' );
 		if ( 0 !== $return )
 			return array( '', array() );
@@ -328,15 +328,18 @@ class Git_Wrapper {
 				if ( empty($item) ) continue; // ignore empty elements like the last item
 				if ( '#' == $item[0] ) continue; // ignore branch status
 
-				$x  = substr( $item, 0, 1 ); // X shows the status of the index
-				$y  = substr( $item, 1, 1 ); // Y shows the status of the work tree
-				$to = substr( $item, 3 );
+				$x    = substr( $item, 0, 1 ); // X shows the status of the index
+				$y    = substr( $item, 1, 1 ); // Y shows the status of the work tree
+				$to   = substr( $item, 3 );
+				$from = '';
 				if ( 'R' == $x )
 					$from = $response[ $idx + 1 ];
 
-				$new_response[ $to ] = "$x$y $from";
+				$new_response[ $to ] = trim( "$x$y $from" );
 			endforeach;
 		}
+		if ( $local_only ) return $new_response;
+
 		if ( preg_match( '/## ([^.]+)\.+([^ ]+)/', $branch_status, $matches ) ) {
 			$local_branch  = $matches[1];
 			$remote_branch = $matches[2];
