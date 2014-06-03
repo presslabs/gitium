@@ -210,12 +210,12 @@ class Git_Wrapper {
 	}
 
 	function add() {
-		$paths = func_get_args()[0];
-		if ( ! empty( $paths ) ) {
-			foreach ( $paths as $path ) {
-				$this->_call( 'add', '--no-ignore-removal', $path );
-			}
-		}
+		$args = func_get_args();
+		if ( 1 == func_num_args() && is_array( $args[0] ) )
+			$args = $args[0];
+
+		$params = array_merge( array( 'add', '--no-ignore-removal' ), $args );
+		list ( $return, $response ) = call_user_func_array( array( $this, '_call' ), $params );
 	}
 
 	function commit( $message ) {
