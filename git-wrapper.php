@@ -243,7 +243,7 @@ class Git_Wrapper {
 		...
 	)
 	 */
-	function status_porcelain() {
+	function get_local_changes() {
 		list( $return, $response ) = $this->_call( 'status', '--porcelain'  );
 
 		if ( 0 !== $return )
