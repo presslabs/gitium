@@ -171,6 +171,11 @@ class Git_Wrapper {
 		return ( 0 == $return );
 	}
 
+	function merge_with_accept_mine() {
+		list( $return, $response ) = $this->_call( 'merge', '-s', 'recursive', '-X', 'ours' );
+		return ( 0 == $return );
+	}
+
 	function add_initial_content() {
 		list( $return, $response ) = $this->_call( 'add', 'wp-content', '.gitignore' );
 		return ( 0 == $return );
