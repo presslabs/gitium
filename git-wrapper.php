@@ -160,7 +160,7 @@ class Git_Wrapper {
 	}
 
 	function get_local_branch() {
-		list( $return, $response ) = $this->_call( 'rev-parse', '--abbrev-ref' );
+		list( $return, $response ) = $this->_call( 'rev-parse', '--abbrev-ref', 'HEAD' );
 		if ( 0 == $return )
 			return $response[0];
 		return false;
