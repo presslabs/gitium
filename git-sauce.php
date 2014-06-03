@@ -244,8 +244,7 @@ function _git_module_by_path( $path ) {
 function git_group_commit_modified_plugins_and_themes( $msg_append = '' ) {
 	global $git;
 
-	$versions = git_get_versions();
-	$uncommited_changes = $git->status_porcelain();
+	$uncommited_changes = $git->get_local_changes();
 	$commit_groups = array();
 
 	if ( ! empty( $msg_append ) )
