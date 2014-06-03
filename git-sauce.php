@@ -85,7 +85,7 @@ function git_update_versions() {
 
 	return $new_versions;
 }
-
+add_action( 'load-plugins.php', 'git_update_versions', 999 );
 //---------------------------------------------------------------------------------------------------------------------
 function git_get_versions() {
 	$versions = get_transient( 'git_versions', array() );
