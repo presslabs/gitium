@@ -350,6 +350,11 @@ function git_show_error( $message ) {
 }
 
 //---------------------------------------------------------------------------------------------------------------------
+function git_show_update( $message  ) {
+	?><div class="updated"><p><?php echo esc_html( $message  ); ?></p></div><?php
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 function git_options_page_check() {
 	global $git;
 
@@ -412,9 +417,16 @@ function git_options_page() {
 		if ( isset( $_POST['checked'] ) ) {
 			$git->add( $_POST['checked'] );
 			$commitmsg = 'Update some changes';
-			if ( isset( $_POST['commitmsg'] ) )
+			if ( isset( $_POST['commitmsg'] ) && ! empty( $_POST['commitmsg'] ) ) {
 				$commitmsg = $_POST['commitmsg'];
-			//$git->commit( $commitmsg );
+			}
+			$commit = $git->commit( $commitmsg );
+			if ( ! $commit ) {
+				git_show_error( 'Could not commit!' );
+			} else {
+				git_show_update( "One commit has been made: `$commitmsg`" );
+			}
+			$git->push( $branch );
 		}
 	}
 
@@ -425,7 +437,6 @@ function git_options_page() {
 	if ( ! $git->get_remote_tracking_branch() )
 		return git_setup_step2();
 
-	
 	_git_status( true );
 	git_changes_page();
 }
