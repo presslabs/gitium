@@ -345,6 +345,11 @@ function git_hook_plugin_and_theme_editor_page( $hook ) {
 add_action( 'admin_enqueue_scripts', 'git_hook_plugin_and_theme_editor_page' );
 
 //---------------------------------------------------------------------------------------------------------------------
+function git_show_error( $message ) {
+	?><div class="error"><p><?php echo esc_html( $message ); ?></p></div><?php
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 function git_options_page_check() {
 	global $git;
 
@@ -378,11 +383,10 @@ function git_options_page() {
 		if ( count( $git->get_remote_branches() ) == 0 ) {
 			$git->add_initial_content();
 			$git->commit( 'Initial commit' );
-			if ( ! $git->push( 'master' ) ) { $git->cleanup(); ?>
-				<div class="error">
-					<p>Could not fetch from remote <code><?php echo esc_html( $_POST['remote_url'] ); ?></code></p>
-				</div>
-			<?php }
+			if ( ! $git->push( 'master' ) ) {
+				$git->cleanup();
+				git_show_error( 'Could not fetch from remote <code>' . esc_html( $_POST['remote_url'] ) . '</code>' );
+			}
 		}
 	}
 
@@ -390,16 +394,14 @@ function git_options_page() {
 		$branch = $_POST['tracking_branch'];
 		$git->add_initial_content();
 		$commit = $git->commit( 'Merge existing code from ' . get_home_url() );
-		if ( ! $commit ) { $git->cleanup(); ?>
-			<div class="error">
-				<p>Could not create initial commit</p>
-			</div>
-		<?php }
-		if ( ! $git->merge_initial_commit( $commit, $branch ) ) { $git->cleanup(); ?>
-			<div class="error">
-				<p>Could not merge the initial commit</p>
-			</div>
-		<?php }
+		if ( ! $commit ) {
+			$git->cleanup();
+			git_show_error( 'Could not create initial commit' );
+		}
+		if ( ! $git->merge_initial_commit( $commit, $branch ) ) {
+			$git->cleanup();
+			git_show_error( 'Could not merge the initial commit' );
+		}
 		$git->push( $branch );
 	}
 
@@ -412,7 +414,7 @@ function git_options_page() {
 			$commitmsg = 'Update some changes';
 			if ( isset( $_POST['commitmsg'] ) )
 				$commitmsg = $_POST['commitmsg'];
-			$git->commit( $commitmsg );
+			//$git->commit( $commitmsg );
 		}
 	}
 
