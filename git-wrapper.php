@@ -337,19 +337,6 @@ class Git_Wrapper {
 	}
 
 	/*
-	 * Commit local changes
-	 * git add --no-ignore-removal
-	 */
-	function commit_changes() {
-		$paths = func_get_args();
-		if ( 0 == func_num_args() )
-			$paths = array( '.' );
-		foreach ( $paths as $path ) {
-			$this->add( $path );
-		}
-	}
-
-	/*
 	 * Pull changes from remote. By default accept local changes on conflicts
 	 */
 	function pull() {
