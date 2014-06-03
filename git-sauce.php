@@ -569,10 +569,9 @@ function git_changes_page() {
 	list ( $branch_status, $changes ) = _git_status(); ?>
 	<div class="wrap">
 	<div id="icon-options-general" class="icon32">&nbsp;</div>
-	<h2>Status <span class="small">Connected</span></h2>
+	<h2>Status <code class="small">connected to <strong><?php echo esc_html( $git->get_remote_url()  ); ?></strong></code></h2>
 
-	<p>Following branch <code><?php echo esc_html( str_replace( 'origin/','',$git->get_remote_tracking_branch() ) );?></code>
-	  from <code><?php echo esc_html( $git->get_remote_url() ); ?></code>.</p>
+	<p>Following branch <code><?php echo esc_html( str_replace( 'origin/','',$git->get_remote_tracking_branch() ) );?></code>.</p>
 	<p><code><?php echo esc_html( $branch_status ); ?></code></p>
 	<form action="" method="POST">
 
