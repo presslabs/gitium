@@ -171,9 +171,45 @@ class Git_Wrapper {
 		return ( 0 == $return );
 	}
 
+	protected function _resolve_merge_conflicts( $message ) {
+		$changes = $this->status( true );
+		_log( $changes );
+		foreach ( $changes as $path => $change ) {
+			if ( 'UD' == $change ) {
+				$this->_call( 'rm', $path );
+				$message .= "\n\tConflicts: $path";
+			}
+		}
+		$this->commit( $message );
+	}
+
+	function get_commit_message( $commit ) {
+		list( $return, $response ) = $this->_call( 'log', '--format=%B', '-n', '1', $commit );
+		return ( $return !== 0 ? false : join( "\n", $response ) );
+	}
+
 	function merge_with_accept_mine() {
-		list( $return, $response ) = $this->_call( 'merge', '-s', 'recursive', '-X', 'ours' );
-		return ( 0 == $return );
+		$commits = func_get_args();
+		if ( 1 == func_num_args() && is_array( $commits[0] ) )
+			$commits = $commits[0];
+
+		$remote_branch = $this->get_remote_tracking_branch();
+		$local_branch  = $this->get_local_branch();
+
+		$this->_call( 'branch', '-m', 'merge_local' );
+		$this->_call( 'branch', $local_branch, $remote_branch );
+		$this->_call( 'checkout', $local_branch );
+		foreach ( $commits as $commit ) {
+			list( $return, $response ) = $this->_call(
+				'cherry-pick', '--strategy', 'recursive', '--strategy-option', 'theirs', $commit
+			);
+			if ( $return != 0 ) {
+				$this->_resolve_merge_conflicts( $this->get_commit_message( $commit ) );
+			}
+		}
+
+		$this->_call( 'branch', '-D', 'merge_local' );
+		return true;
 	}
 
 	function add_initial_content() {
