@@ -245,7 +245,7 @@ function git_group_commit_modified_plugins_and_themes( $msg_append = '' ) {
 	global $git;
 
 	$versions = git_get_versions();
-	$uncommited_changes = $git->get_uncommited_changes();
+	$uncommited_changes = $git->status_porcelain();
 	$commit_groups = array();
 
 	if ( ! empty( $msg_append ) )
@@ -560,8 +560,8 @@ function git_changes_page() {
 	<h2>Status <span class="small">Connected</span></h2>
 
 	<p>Following branch <code><?php echo esc_html( str_replace( 'origin/','',$git->get_remote_tracking_branch() ) );?></code>
-	  from <code><?php echo esc_html( $git->get_remote_url() ); ?></code>. <br>
-	  <code><?php echo esc_html( $branch_status ); ?></code></p>
+	  from <code><?php echo esc_html( $git->get_remote_url() ); ?></code>.</p>
+	<p><code><?php echo esc_html( $branch_status ); ?></code></p>
 	<form action="" method="POST">
 
 	<table class="widefat" id="git-changes-table">

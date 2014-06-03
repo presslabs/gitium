@@ -234,7 +234,7 @@ class Git_Wrapper {
 	}
 
 	/*
-	 * Get uncommited changes
+	 * Get uncommited changes with status porcelain
 	 * git status --porcelain
 	 * It returns an array like this:
 	
@@ -242,8 +242,30 @@ class Git_Wrapper {
 		file => deleted|modified
 		...
 	)
-
 	 */
+	function status_porcelain() {
+		list( $return, $response ) = $this->_call( 'status', '--porcelain'  );
+
+		if ( 0 !== $return )
+			return array();
+
+		$new_response = array();
+		if ( ! empty( $response ) ) {
+			foreach ( $response as $item ) :
+				$x    = substr( $item, 0, 1 ); // X shows the status of the index
+				$y    = substr( $item, 1, 1 ); // Y shows the status of the work tree
+				$file = substr( $item, 3 );
+
+				if ( 'D' == $y )
+					$action = 'deleted';
+				else
+					$action = 'modified';
+
+				$new_response[ $file ] = $action;
+			endforeach;
+		}
+		return $new_response;
+	}
 
 	function get_uncommited_changes() {
 		list( $branch_status, $changes ) = $this->status();
