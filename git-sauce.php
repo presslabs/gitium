@@ -95,18 +95,14 @@ function git_get_versions() {
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-function _git_commit_changes( $message, $dir = '.', $push_commits = TRUE ) {
+function _git_commit_changes( $message, $dir = '.' ) {
 	global $git;
 	list( $git_public_key, $git_private_key ) = git_get_keypair();
 	$git->set_key( $git_private_key );
 
 	$git->add( $dir );
-	$git->commit( $message );
-	if ( $push_commits ) {
-		$git->pull();
-		$git->push();
-		git_update_versions();
-	}
+	git_update_versions();
+	return $git->commit( $message );
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -160,7 +156,8 @@ function git_upgrader_post_install( $res, $hook_extra, $result ) {
 		$name = $result['destination_name'];
 
 	$commit_message = _git_format_message( $name,$version,"$action $type" );
-	_git_commit_changes( $commit_message, $git_dir, FALSE );
+	$commit = _git_commit_changes( $commit_message, $git_dir, FALSE );
+	git_merge_and_push( $commit );
 
 	return $res;
 }
@@ -246,6 +243,7 @@ function git_group_commit_modified_plugins_and_themes( $msg_append = '' ) {
 
 	$uncommited_changes = $git->get_local_changes();
 	$commit_groups = array();
+	$commits = array();
 
 	if ( ! empty( $msg_append ) )
 		$msg_append = "($msg_append)";
@@ -258,22 +256,37 @@ function git_group_commit_modified_plugins_and_themes( $msg_append = '' ) {
 
 	foreach ( $commit_groups as $base_path => $change ) {
 		$commit_message = _git_format_message( $change['name'], $change['version'], "${change['action']} ${change['type']}" );
-		_git_commit_changes( "$commit_message $msg_append", $base_path, FALSE );
+		$commit = _git_commit_changes( "$commit_message $msg_append", $base_path, FALSE );
+		if ( $commit )
+			$commits[] = $commit;
 	}
+
+	return $commits;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-function git_pull_and_push( $msg_prepend = '' ) {
+
+
+// Merges the commits with remote and pushes them back
+function git_merge_and_push( $commits ) {
+	global $git;
+	$git->fetch_ref();
+	$git->merge_with_accept_mine( $commits );
+	$git->push();
+}
+
+// Checks for local changes, tries to group them by plugin/theme and pushes the changes
+function git_auto_push( $msg_prepend = '' ) {
 	global $git;
 	list( $git_public_key, $git_private_key ) = git_get_keypair();
 	$git->set_key( $git_private_key );
 
-	git_group_commit_modified_plugins_and_themes( $msg_prepend );
-	$git->pull();
-	$git->push();
+	$remote_branch = $git->get_remote_tracking_branch();
+	$commits = git_group_commit_modified_plugins_and_themes( $msg_prepend );
+	git_merge_and_push( $commits );
 	git_update_versions();
 }
-add_action( 'upgrader_process_complete', 'git_pull_and_push', 11, 0 );
+add_action( 'upgrader_process_complete', 'git_auto_push', 11, 0 );
 
 //---------------------------------------------------------------------------------------------------------------------
 function git_check_post_activate_modifications( $plugin ) {
@@ -289,7 +302,7 @@ function git_check_post_activate_modifications( $plugin ) {
 		} else {
 			$name = $plugin;
 		}
-		git_pull_and_push( _git_format_message( $name, $version, 'post activation of' ) );
+		git_auto_push( _git_format_message( $name, $version, 'post activation of' ) );
 	}
 }
 add_action( 'activated_plugin', 'git_check_post_activate_modifications', 999 );
@@ -308,7 +321,7 @@ function git_check_post_deactivate_modifications( $plugin ) {
 		} else {
 			$name = $plugin;
 		}
-		git_pull_and_push( _git_format_message( $name, $version, 'post deactivation of' ) );
+		git_auto_push( _git_format_message( $name, $version, 'post deactivation of' ) );
 	}
 }
 add_action( 'deactivated_plugin', 'git_check_post_deactivate_modifications', 999 );
@@ -316,14 +329,14 @@ add_action( 'deactivated_plugin', 'git_check_post_deactivate_modifications', 999
 //---------------------------------------------------------------------------------------------------------------------
 function git_check_for_plugin_deletions() { // Handle plugin deletion
 	if ( isset( $_GET['deleted'] ) && 'true' == $_GET['deleted'] )
-		git_pull_and_push();
+		git_auto_push();
 }
 add_action( 'load-plugins.php', 'git_check_for_plugin_deletions' );
 
 //---------------------------------------------------------------------------------------------------------------------
 function git_check_for_themes_deletions() { // Handle theme deletion
 	if ( isset( $_GET['deleted'] ) && 'true' == $_GET['deleted'] )
-		git_pull_and_push();
+		git_auto_push();
 }
 add_action( 'load-themes.php', 'git_check_for_themes_deletions' );
 
@@ -332,11 +345,11 @@ add_action( 'load-themes.php', 'git_check_for_themes_deletions' );
 function git_hook_plugin_and_theme_editor_page( $hook ) {
 	switch ( $hook ) {
 		case 'plugin-editor.php':
-			if ( 'te' == $_GET['a'] ) git_pull_and_push();
+			if ( 'te' == $_GET['a'] ) git_auto_push();
 		break;
 
 		case 'theme-editor.php':
-			if ( 'true' == $_GET['updated'] ) git_pull_and_push();
+			if ( 'true' == $_GET['updated'] ) git_auto_push();
 		break;
 	}
 	return;
