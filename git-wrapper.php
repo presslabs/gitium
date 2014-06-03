@@ -210,7 +210,7 @@ class Git_Wrapper {
 	}
 
 	function add() {
-		$paths = func_get_args();
+		$paths = func_get_args()[0];
 		if ( ! empty( $paths ) ) {
 			foreach ( $paths as $path ) {
 				$this->_call( 'add', '--no-ignore-removal', $path );
