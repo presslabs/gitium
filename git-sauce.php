@@ -616,12 +616,14 @@ function git_changes_page() {
 	if ( ! $ahead && ! $behind ) {
 		?><p>Your branch is up-to-date with <code>'origin/<?php echo esc_html( $branch ); ?>'</code>.</p><?php
 	}
-	?>
-	<form action="" method="POST">
 
-	<table class="widefat" id="git-changes-table">
-	<thead><tr><th class="manage-column check-column"><input type="checkbox" id="plugins-select-all"></th><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></thead>
-	<tfoot><tr><th class="manage-column check-column"><input type="checkbox" id="plugins-select-all"></th><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></tfoot>
+	if ( empty( $changes ) ) {
+		?><p>Nothing to commit, working directory clean.</p><?php
+	} else { ?>
+		<form action="" method="POST">
+		<table class="widefat" id="git-changes-table">
+		<thead><tr><th class="manage-column check-column"><input type="checkbox" id="plugins-select-all"></th><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></thead>
+		<tfoot><tr><th class="manage-column check-column"><input type="checkbox" id="plugins-select-all"></th><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></tfoot>
 		<tbody>
 			<?php foreach ( $changes as $path => $type ) : $submodule = false; ?>
 				<?php if ( is_dir( ABSPATH . '/' . $path ) && is_dir( ABSPATH . '/' . trailingslashit( $path ) . '.git' ) )
@@ -645,17 +647,16 @@ function git_changes_page() {
 				</tr>
 			<?php endforeach; ?>
 		</tbody>
-	</table>
-
-	<p>
+		</table>
+		<p>
 		<label for="save-changes">Commit message:</label>
 		<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="Update some changes" />
-	</p>
-
-	<p>
+		</p>
+		<p>
 		<input type="submit" name="SubmitSave" class="button-primary button" value="Save changes" />
-	</p>
-	</form>
+		</p>
+		</form>
+	<?php } ?>
 	</div>
 	<?php
 };
