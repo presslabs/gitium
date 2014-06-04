@@ -86,6 +86,7 @@ function git_update_versions() {
 	return $new_versions;
 }
 add_action( 'load-plugins.php', 'git_update_versions', 999 );
+
 //---------------------------------------------------------------------------------------------------------------------
 function git_get_versions() {
 	$versions = get_transient( 'git_versions', array() );
@@ -265,8 +266,6 @@ function git_group_commit_modified_plugins_and_themes( $msg_append = '' ) {
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-
-
 // Merges the commits with remote and pushes them back
 function git_merge_and_push( $commits ) {
 	global $git;
@@ -275,6 +274,7 @@ function git_merge_and_push( $commits ) {
 	$git->push();
 }
 
+//---------------------------------------------------------------------------------------------------------------------
 // Checks for local changes, tries to group them by plugin/theme and pushes the changes
 function git_auto_push( $msg_prepend = '' ) {
 	global $git;
@@ -376,6 +376,8 @@ function git_options_page_check() {
 //---------------------------------------------------------------------------------------------------------------------
 function _git_status( $update_transient = false ) {
 	global $git;
+
+	$git->pull(); // pull all remote commits first
 
 	if ( ! $update_transient && ( false !== ( $changes = get_transient( 'git_uncommited_changes' ) ) ) ) {
 		return $changes;
