@@ -606,7 +606,10 @@ function git_changes_page() {
 		?><p><code>Your branch is ahead of '<?php echo esc_html( $branch ); ?>' by <?php echo esc_html( $ahead ); ?> commits.</code></p><?php
 	}
 	if ( $behind  ) {
-		?><p><code>Your branch is behind of '<?php echo esc_html( $branch  ); ?>' by <?php echo esc_html( $behind ); ?> commits.</code></p><?php
+		?><p><code>Your branch is behind of '<?php echo esc_html( $branch ); ?>' by <?php echo esc_html( $behind ); ?> commits.</code></p><?php
+	}
+	if ( ! $ahead && ! $behind ) {
+		?><p>Your branch is up-to-date with <code>'origin/<?php echo esc_html( $branch ); ?>'</code>.</p><?php
 	}
 	?>
 	<form action="" method="POST">
