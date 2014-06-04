@@ -591,23 +591,28 @@ function get_type_meaning( $type ) {
 //---------------------------------------------------------------------------------------------------------------------
 function git_changes_page() {
 	global $git;
+
 	list ( $branch_status, $changes ) = _git_status(); ?>
+
 	<div class="wrap">
 	<div id="icon-options-general" class="icon32">&nbsp;</div>
-	<h2>Status <code class="small">connected to <strong><?php echo esc_html( $git->get_remote_url()  ); ?></strong></code></h2>
+	<h2>Status <code class="small">connected to <strong><?php echo esc_html( $git->get_remote_url() ); ?></strong></code></h2>
 	<?php
-	$branch = str_replace( 'origin/', '', $git->get_remote_tracking_branch() );
+		$branch = str_replace( 'origin/', '', $git->get_remote_tracking_branch() );
 	?>
-	<p>Following branch <code><?php echo esc_html( $branch );?></code>.</p>
+	<p>Following branch <code><?php echo esc_html( $branch ); ?></code>.</p>
 	<?php
-	$ahead  = count( $git->how_much_the_branch_is_ahead() );
-	$behind = count( $git->how_much_the_branch_is_behind() );
+		$ahead  = count( $git->how_much_the_branch_is_ahead() );
+		$behind = count( $git->how_much_the_branch_is_behind() );
+	
 	if ( $ahead ) {
 		?><p><code>Your branch is ahead of '<?php echo esc_html( $branch ); ?>' by <?php echo esc_html( $ahead ); ?> commits.</code></p><?php
 	}
+	
 	if ( $behind  ) {
 		?><p><code>Your branch is behind of '<?php echo esc_html( $branch ); ?>' by <?php echo esc_html( $behind ); ?> commits.</code></p><?php
 	}
+	
 	if ( ! $ahead && ! $behind ) {
 		?><p>Your branch is up-to-date with <code>'origin/<?php echo esc_html( $branch ); ?>'</code>.</p><?php
 	}
