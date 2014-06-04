@@ -120,6 +120,17 @@ class Git_Wrapper {
 		return ( 0 == $return );
 	}
 
+	// git rev-list @{u}..
+	function how_much_the_branch_is_ahead() {
+		list( $return, $commits ) = $this->_call( 'rev-list', '@{u}..' );
+		return $commits;
+	}
+
+	// git rev-list ..@{u}
+	function how_much_the_branch_is_behind() {
+		list( $return, $commits  ) = $this->_call( 'rev-list', '..@{u}' );
+		return $commits;
+	}
 
 	function has_remote() {
 		list( $return, $response ) = $this->_call( 'remote', 'show', '-n' );

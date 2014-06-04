@@ -596,9 +596,20 @@ function git_changes_page() {
 	<div class="wrap">
 	<div id="icon-options-general" class="icon32">&nbsp;</div>
 	<h2>Status <code class="small">connected to <strong><?php echo esc_html( $git->get_remote_url()  ); ?></strong></code></h2>
-
-	<p>Following branch <code><?php echo esc_html( str_replace( 'origin/','',$git->get_remote_tracking_branch() ) );?></code>.</p>
-	<p><code><?php echo esc_html( $branch_status ); ?></code></p>
+	<?php
+	$branch = str_replace( 'origin/', '', $git->get_remote_tracking_branch() );
+	?>
+	<p>Following branch <code><?php echo esc_html( $branch );?></code>.</p>
+	<?php
+	$ahead  = count( $git->how_much_the_branch_is_ahead() );
+	$behind = count( $git->how_much_the_branch_is_behind() );
+	if ( $ahead ) {
+		?><p><code>Your branch is ahead of '<?php echo esc_html( $branch ); ?>' by <?php echo esc_html( $ahead ); ?> commits.</code></p><?php
+	}
+	if ( $behind  ) {
+		?><p><code>Your branch is behind of '<?php echo esc_html( $branch  ); ?>' by <?php echo esc_html( $behind ); ?> commits.</code></p><?php
+	}
+	?>
 	<form action="" method="POST">
 
 	<table class="widefat" id="git-changes-table">
