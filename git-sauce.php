@@ -568,15 +568,14 @@ function git_setup_step2() {
 function get_type_meaning( $type ) {
 	$meaning = array(
 		'??' => 'untracked',
-		'rM' => 'updated in index',
-		'rA' => 'added to index',
-		'rD' => 'deleted from index',
-		'rR' => 'renamed in index',
+		'rM' => 'modified to remote',
+		'rA' => 'added to remote',
+		'rD' => 'deleted from remote',
 		'D'  => 'deleted from work tree',
 		'M'  => 'updated in work tree',
 		'A'  => 'added to work tree',
 		'AM' => 'added to work tree',
-		'R'  => 'deleted in work tree',
+		'R'  => 'deleted from work tree',
 	);
 
 	if ( isset( $meaning[ $type ] ) )
