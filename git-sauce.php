@@ -440,7 +440,7 @@ function git_options_page() {
 			} else {
 				git_show_update( "One commit has been made: `$commitmsg`" );
 			}
-			$git->push( $branch );
+			$git->merge_with_accept_mine();
 		}
 	}
 
