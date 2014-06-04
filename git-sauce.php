@@ -424,11 +424,14 @@ function git_options_page() {
 	}
 
 	if ( isset( $_POST['SubmitSave'] ) ) {
-		//
-		// COMMIT
-		//
-		if ( isset( $_POST['checked'] ) ) {
-			$git->add( $_POST['checked'] );
+		list ( $branch_status, $changes ) = _git_status();
+		if ( ! empty( $changes ) ) {
+			$changes_without_submodules = null;
+			foreach ( $changes as $path => $type ) {
+				if ( is_dir( ABSPATH . '/' . $path  ) && is_dir( ABSPATH . '/' . trailingslashit( $path  ) . '.git'  )  ) continue;
+				$changes_without_submodules[ $type ] = $path;
+			}
+			$git->add( $changes_without_submodules );
 			$commitmsg = 'Update some changes';
 			if ( isset( $_POST['commitmsg'] ) && ! empty( $_POST['commitmsg'] ) ) {
 				$commitmsg = $_POST['commitmsg'];
@@ -622,23 +625,16 @@ function git_changes_page() {
 	} else { ?>
 		<form action="" method="POST">
 		<table class="widefat" id="git-changes-table">
-		<thead><tr><th class="manage-column check-column"><input type="checkbox" id="plugins-select-all"></th><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></thead>
-		<tfoot><tr><th class="manage-column check-column"><input type="checkbox" id="plugins-select-all"></th><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></tfoot>
+		<thead><tr><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></thead>
+		<tfoot><tr><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></tfoot>
 		<tbody>
-			<?php foreach ( $changes as $path => $type ) : $submodule = false; ?>
-				<?php if ( is_dir( ABSPATH . '/' . $path ) && is_dir( ABSPATH . '/' . trailingslashit( $path ) . '.git' ) )
-						$submodule = true; ?>
+			<?php foreach ( $changes as $path => $type ) : ?>
 				<tr>
-					<th scope="row" class="check-column">
-						<?php if ( ! $submodule && 'r' != $type[0] ) { ?>
-							<input type="checkbox" name="checked[]" value="<?php echo esc_attr( $path   ); ?>">
-						<?php } ?>
-					</th>
 					<td>
 						<strong><?php echo esc_html( $path ); ?></strong>
 					</td>
 					<td>
-						<?php if ( $submodule ) { ?>
+						<?php if ( is_dir( ABSPATH . '/' . $path ) && is_dir( ABSPATH . '/' . trailingslashit( $path ) . '.git' ) ) { // test if is submodule ?>
 							Submodules are not supported in this version.
 						<?php } else { ?>
 							<span title="<?php echo esc_html( $type ); ?>"><?php echo esc_html( get_type_meaning( $type ) ); ?></span>
