@@ -432,7 +432,7 @@ function git_options_page() {
 				$changes_without_submodules[ $type ] = $path;
 			}
 			$git->add( $changes_without_submodules );
-			$commitmsg = 'Update some changes';
+			$commitmsg = 'Update changes at ' . esc_url( trailingslashit( get_site_url() ) ) . ' on ' . esc_html( date( 'm.d.Y' ) );
 			if ( isset( $_POST['commitmsg'] ) && ! empty( $_POST['commitmsg'] ) ) {
 				$commitmsg = $_POST['commitmsg'];
 			}
@@ -646,7 +646,7 @@ function git_changes_page() {
 		</table>
 		<p>
 		<label for="save-changes">Commit message:</label>
-		<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="Update some changes" />
+		<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="Update changes at <?php echo esc_url( trailingslashit( get_site_url() ) ); ?> on <?php echo esc_html( date('m.d.Y') ); ?>" />
 		</p>
 		<p>
 		<input type="submit" name="SubmitSave" class="button-primary button" value="Save changes" />
