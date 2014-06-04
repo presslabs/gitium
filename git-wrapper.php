@@ -92,7 +92,8 @@ class Git_Wrapper {
 			$response[] = rtrim( $line, "\n\r" );
 
 		$return = (int)proc_close( $proc );
-		_log( $cmd, $env, $response, $return );
+		/* _log( $cmd, $env, $response, $return ); */
+		_log( "$return $cmd", join( "\n", $response ) );
 		if ( $key_file )
 			unlink( $key_file );
 
