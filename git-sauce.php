@@ -377,11 +377,10 @@ function git_options_page_check() {
 function _git_status( $update_transient = false ) {
 	global $git;
 
-	$git->pull(); // pull all remote commits first
-
 	if ( ! $update_transient && ( false !== ( $changes = get_transient( 'git_uncommited_changes' ) ) ) ) {
 		return $changes;
 	}
+	$git->fetch_ref();
 	$changes = $git->status();
 	set_transient( 'git_uncommited_changes', $changes, 12 * 60 * 60 ); // cache changes for half-a-day
 
@@ -581,19 +580,24 @@ function git_changes_page() {
 	<thead><tr><th class="manage-column check-column"><input type="checkbox" id="plugins-select-all"></th><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></thead>
 	<tfoot><tr><th class="manage-column check-column"><input type="checkbox" id="plugins-select-all"></th><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></tfoot>
 		<tbody>
-			<?php foreach ( $changes as $path => $type ) : ?>
+			<?php foreach ( $changes as $path => $type ) : $submodule = false; ?>
+				<?php if ( is_dir( ABSPATH . '/' . $path ) && is_dir( ABSPATH . '/' . trailingslashit( $path ) . '.git' ) )
+						$submodule = true; ?>
 				<tr>
 					<th scope="row" class="check-column">
-						<?php if ( 'r' == $type[0] ) { ?>
-						<input type="checkbox" name="checked[]" value="<?php echo esc_attr( $path  ); ?>" checked="checked" onclick="return false">
-						<?php } else { ?>
-						<input type="checkbox" name="checked[]" value="<?php echo esc_attr( $path   ); ?>">
+						<?php if ( ! $submodule && 'r' != $type[0] ) { ?>
+							<input type="checkbox" name="checked[]" value="<?php echo esc_attr( $path   ); ?>">
 						<?php } ?>
 					</th>
 					<td>
 						<strong><?php echo esc_html( $path ); ?></strong>
 					</td>
-					<td><?php echo esc_html( $type ); ?>
+					<td>
+						<?php if ( $submodule ) { ?>
+							Submodules are not supported in this version.
+						<?php } else { ?>
+							<?php echo esc_html( $type ); ?>
+						<?php } ?>		
 					</td>
 				</tr>	
 			<?php endforeach; ?>
