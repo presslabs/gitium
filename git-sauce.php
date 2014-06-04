@@ -565,6 +565,31 @@ function git_setup_step2() {
 };
 
 //---------------------------------------------------------------------------------------------------------------------
+function get_type_meaning( $type ) {
+	$meaning = array(
+		'??' => 'untracked',
+		'rM' => 'updated in index',
+		'rA' => 'added to index',
+		'rD' => 'deleted from index',
+		'rR' => 'renamed in index',
+		'D'  => 'deleted from work tree',
+		'M'  => 'updated in work tree',
+		'A'  => 'added to work tree',
+		'AM' => 'added to work tree',
+		'R'  => 'deleted in work tree',
+	);
+
+	if ( isset( $meaning[ $type ] ) )
+		return $meaning[ $type ];
+
+	if ( 0 === strpos( $type, 'R ' ) ) {
+		$old_filename = substr( $type, 2 );
+		$type = "renamed from `$old_filename`";
+	}
+	return $type;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 function git_changes_page() {
 	global $git;
 	list ( $branch_status, $changes ) = _git_status(); ?>
@@ -596,10 +621,10 @@ function git_changes_page() {
 						<?php if ( $submodule ) { ?>
 							Submodules are not supported in this version.
 						<?php } else { ?>
-							<?php echo esc_html( $type ); ?>
-						<?php } ?>		
+							<span title="<?php echo esc_html( $type ); ?>"><?php echo esc_html( get_type_meaning( $type ) ); ?></span>
+						<?php } ?>
 					</td>
-				</tr>	
+				</tr>
 			<?php endforeach; ?>
 		</tbody>
 	</table>
