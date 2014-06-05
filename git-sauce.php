@@ -424,26 +424,19 @@ function git_options_page() {
 	}
 
 	if ( isset( $_POST['SubmitSave'] ) ) {
-		list ( $branch_status, $changes ) = _git_status();
-		if ( ! empty( $changes ) ) {
-			$changes_without_submodules = null;
-			foreach ( $changes as $path => $type ) {
-				if ( is_dir( ABSPATH . '/' . $path  ) && is_dir( ABSPATH . '/' . trailingslashit( $path  ) . '.git'  )  ) continue;
-				$changes_without_submodules[ $type ] = $path;
-			}
-			$git->add( $changes_without_submodules );
-			$commitmsg = 'Update changes at ' . esc_url( trailingslashit( get_site_url() ) ) . ' on ' . esc_html( date( 'm.d.Y' ) );
-			if ( isset( $_POST['commitmsg'] ) && ! empty( $_POST['commitmsg'] ) ) {
-				$commitmsg = $_POST['commitmsg'];
-			}
-			$commit = $git->commit( $commitmsg );
-			if ( ! $commit ) {
-				git_show_error( 'Could not commit!' );
-			} else {
-				git_show_update( "One commit has been made: `$commitmsg`" );
-			}
-			$git->merge_with_accept_mine();
+		$git->add();
+		$commitmsg = 'Update changes at ' . esc_url( trailingslashit( get_site_url() ) ) . ' on ' . esc_html( date( 'm.d.Y' ) );
+		if ( isset( $_POST['commitmsg'] ) && ! empty( $_POST['commitmsg'] ) ) {
+			$commitmsg = $_POST['commitmsg'];
 		}
+		$commit = $git->commit( $commitmsg );
+		if ( ! $commit ) {
+			git_show_error( 'Could not commit!' );
+		} else {
+			git_show_update( "One commit has been made: `$commitmsg`" );
+		}
+		$git->merge_with_accept_mine();
+		$git->push();
 	}
 
 	if ( ! $git->is_versioned() )
@@ -605,8 +598,8 @@ function git_changes_page() {
 	?>
 	<p>Following branch <code><?php echo esc_html( $branch ); ?></code>.</p>
 	<?php
-		$ahead  = count( $git->how_much_the_branch_is_ahead() );
-		$behind = count( $git->how_much_the_branch_is_behind() );
+		$ahead  = count( $git->get_ahead_commits() );
+		$behind = count( $git->get_behind_commits() );
 	
 	if ( $ahead ) {
 		?><p><code>Your branch is ahead of '<?php echo esc_html( $branch ); ?>' by <?php echo esc_html( $ahead ); ?> commits.</code></p><?php

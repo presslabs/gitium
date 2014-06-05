@@ -121,17 +121,22 @@ class Git_Wrapper {
 	}
 
 	// git rev-list @{u}..
-	function how_much_the_branch_is_ahead() {
+	function get_ahead_commits() {
 		list( $return, $commits ) = $this->_call( 'rev-list', '@{u}..' );
 		return $commits;
 	}
 
 	// git rev-list ..@{u}
-	function how_much_the_branch_is_behind() {
+	function get_behind_commits() {
 		list( $return, $commits  ) = $this->_call( 'rev-list', '..@{u}' );
 		return $commits;
 	}
 
+	function is_already_up_to_date() {
+		$ahead  = count( $git->get_ahead_commits() );
+		$behind = count( $git->get_behind_commits() );
+		return ( ! $ahead && ! $behind );
+	}
 	function has_remote() {
 		list( $return, $response ) = $this->_call( 'remote', 'show', '-n' );
 		return ( 0 == $return && in_array( 'origin', $response ) );
@@ -254,7 +259,7 @@ class Git_Wrapper {
 
 	function checkout( $branch ) {
 		list( $return, $response ) = $this->_call( 'checkout', '-b', $branch );
-		return ( $return == 0 );	
+		return ( $return == 0 );
 	}
 
 	function add() {
