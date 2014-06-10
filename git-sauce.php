@@ -595,6 +595,7 @@ function git_changes_page() {
 	<div class="wrap">
 	<div id="icon-options-general" class="icon32">&nbsp;</div>
 	<h2>Status <code class="small">connected to <strong><?php echo esc_html( $git->get_remote_url() ); ?></strong></code></h2>
+	<p>Webhook URL: <code><?php echo esc_url( trailingslashit( get_site_url() ) ); ?>wp-content/plugins/git-sauce/git-hook.php?pull=true</code></p>
 	<?php
 		$branch = str_replace( 'origin/', '', $git->get_remote_tracking_branch() );
 	?>
