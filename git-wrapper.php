@@ -149,6 +149,7 @@ class Git_Wrapper {
 		$behind = count( $git->get_behind_commits() );
 		return ( ! $ahead && ! $behind );
 	}
+
 	function has_remote() {
 		list( $return, $response ) = $this->_call( 'remote', 'show', '-n' );
 		return ( 0 == $return && in_array( 'origin', $response ) );

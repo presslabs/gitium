@@ -398,7 +398,7 @@ function git_options_page() {
 	if ( isset( $_POST['SubmitMergeAndPush'] ) && isset( $_POST['tracking_branch'] ) ) {
 		$branch = $_POST['tracking_branch'];
 		$git->add_initial_content();
-		$commit = $git->commit( 'Merge existing code from ' . get_home_url() );
+		$commit = $git->commit( 'Merged existing code from ' . get_home_url() );
 		if ( ! $commit ) {
 			$git->cleanup();
 			git_show_error( 'Could not create initial commit' );
@@ -412,7 +412,7 @@ function git_options_page() {
 
 	if ( isset( $_POST['SubmitSave'] ) ) {
 		$git->add();
-		$commitmsg = 'Merged changes from ' . esc_url( trailingslashit( get_site_url() ) ) . ' on ' . esc_html( date( 'm.d.Y' ) );
+		$commitmsg = 'Merged changes from ' . get_site_url() . ' on ' . date( 'm.d.Y' );
 		if ( isset( $_POST['commitmsg'] ) && ! empty( $_POST['commitmsg'] ) ) {
 			$commitmsg = $_POST['commitmsg'];
 		}
@@ -660,7 +660,7 @@ function git_changes_page() {
 		</table>
 		<p>
 		<label for="save-changes">Commit message:</label>
-		<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="Merged changes from <?php echo esc_url( trailingslashit( get_site_url() ) ); ?> on <?php echo esc_html( date( 'm.d.Y' ) ); ?>" />
+		<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="Merged changes from <?php echo esc_url( get_site_url() ); ?> on <?php echo esc_html( date( 'm.d.Y' ) ); ?>" />
 		</p>
 		<p>
 		<input type="submit" name="SubmitSave" class="button-primary button" value="Save changes" />
