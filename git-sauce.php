@@ -269,9 +269,10 @@ function git_group_commit_modified_plugins_and_themes( $msg_append = '' ) {
 // Merges the commits with remote and pushes them back
 function git_merge_and_push( $commits ) {
 	global $git;
-	$git->fetch_ref();
-	$git->merge_with_accept_mine( $commits );
-	$git->push();
+
+	$git->fetch_ref() or git_show_error( 'fetch_ref failed!' );
+	$git->merge_with_accept_mine( $commits ) or git_show_error( 'merge_with_accept_mine failed!' );
+	$git->push() or git_show_error( 'push failed!' );
 }
 
 //---------------------------------------------------------------------------------------------------------------------

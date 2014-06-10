@@ -229,8 +229,21 @@ class Git_Wrapper {
 			}
 		}
 
-		$this->_call( 'branch', '-D', 'merge_local' );
-		return true;
+		if ( $this->successfully_merged() ) { // git status without states: AA, DD, UA, AU ...
+			$this->_call( 'branch', '-D', 'merge_local' );
+			return TRUE;
+		} else {
+			$this->_call( 'cherry-pick', '--abort' );
+			$this->checkout( 'merge_local' );
+			$this->_call( 'branch', '-D', $local_branch );
+			$this->_call( 'branch', '-m', $local_branch );
+			return FALSE;
+		}
+	}
+
+	function successfully_merged() {
+		$changes = array_values( $this->status( true ) );
+		return ( 0 == count( array_intersect( $changes, array( 'DD', 'AU', 'UD', 'UA', 'DU', 'AA', 'UU' ) ) ) );
 	}
 
 	function add_initial_content() {
