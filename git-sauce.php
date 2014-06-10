@@ -425,18 +425,19 @@ function git_options_page() {
 
 	if ( isset( $_POST['SubmitSave'] ) ) {
 		$git->add();
-		$commitmsg = 'Update changes at ' . esc_url( trailingslashit( get_site_url() ) ) . ' on ' . esc_html( date( 'm.d.Y' ) );
+		$commitmsg = 'Merged changes from ' . esc_url( trailingslashit( get_site_url() ) ) . ' on ' . esc_html( date( 'm.d.Y' ) );
 		if ( isset( $_POST['commitmsg'] ) && ! empty( $_POST['commitmsg'] ) ) {
 			$commitmsg = $_POST['commitmsg'];
 		}
+
 		$commit = $git->commit( $commitmsg );
 		if ( ! $commit ) {
 			git_show_error( 'Could not commit!' );
 		} else {
 			git_show_update( "One commit has been made: `$commitmsg`" );
 		}
-		$git->merge_with_accept_mine();
-		$git->push();
+
+		git_merge_and_push( $commit );
 	}
 
 	if ( ! $git->is_versioned() )
@@ -639,7 +640,7 @@ function git_changes_page() {
 		</table>
 		<p>
 		<label for="save-changes">Commit message:</label>
-		<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="Update changes at <?php echo esc_url( trailingslashit( get_site_url() ) ); ?> on <?php echo esc_html( date('m.d.Y') ); ?>" />
+		<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="Merged changes from <?php echo esc_url( trailingslashit( get_site_url() ) ); ?> on <?php echo esc_html( date( 'm.d.Y' ) ); ?>" />
 		</p>
 		<p>
 		<input type="submit" name="SubmitSave" class="button-primary button" value="Save changes" />

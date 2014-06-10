@@ -194,7 +194,11 @@ class Git_Wrapper {
 		foreach ( $changes as $path => $change ) {
 			if ( 'UD' == $change ) {
 				$this->_call( 'rm', $path );
-				$message .= "\n\tConflicts: $path";
+				$message .= "\n\tConflict: $path [removed]";
+			}
+			if ( 'DU' == $change ) {
+				$this->_call( 'add', $path );
+				$message .= "\n\tConflict: $path [added]";
 			}
 		}
 		$this->commit( $message );
