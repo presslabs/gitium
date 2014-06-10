@@ -33,6 +33,18 @@ wp-config.php
 /wp-trackback.php
 /xmlrpc.php
 EOF;
+function _log() {
+	if ( func_num_args() == 1 && is_string( func_get_arg( 0 ) ) ) {
+		error_log( func_get_arg( 0 ) );
+	} else {
+		ob_start();
+		$args = func_get_args();
+		foreach ( $args as $arg )
+			var_dump( $arg );
+		$out = ob_get_clean();
+		error_log( $out );
+	}
+}
 
 function _git_rrmdir( $dir ) {
 	if ( ! empty( $dir ) && is_dir( $dir ) ) {
@@ -284,8 +296,14 @@ class Git_Wrapper {
 		if ( 1 == func_num_args() && is_array( $args[0] ) )
 			$args = $args[0];
 
+		$params = array_merge( array( 'add', '-n', '--no-ignore-removal' ), $args );
+		list ( $return, $response ) = call_user_func_array( array( $this, '_call' ), $params );
+		$count = count( $response );
+
 		$params = array_merge( array( 'add', '--no-ignore-removal' ), $args );
 		list ( $return, $response ) = call_user_func_array( array( $this, '_call' ), $params );
+
+		return $count;
 	}
 
 	function commit( $message ) {

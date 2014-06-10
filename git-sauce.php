@@ -7,20 +7,6 @@
 require_once __DIR__ . '/git-wrapper.php';
 
 //---------------------------------------------------------------------------------------------------------------------
-function _log() {
-	if ( func_num_args() == 1 && is_string( func_get_arg( 0 ) ) ) {
-		error_log( func_get_arg( 0 ) );
-	} else {
-		ob_start();
-		$args = func_get_args();
-		foreach ( $args as $arg )
-			var_dump( $arg );
-		$out = ob_get_clean();
-		error_log( $out );
-	}
-}
-
-//---------------------------------------------------------------------------------------------------------------------
 /* Array
 (
     [themes] => Array
@@ -441,6 +427,9 @@ function git_options_page() {
 		git_merge_and_push( $commit );
 	}
 
+	if ( isset( $_POST['SubmitGenerateWebhook'] ) )
+		git_get_webhook_key( TRUE );
+
 	if ( ! $git->is_versioned() )
 		return git_setup_step1();
 
@@ -485,11 +474,37 @@ function _git_generate_keypair() {
 
 //---------------------------------------------------------------------------------------------------------------------
 function git_get_keypair() {
-	if ( false === ( $keypair = get_option( 'git_keypair', false )  ) ) {
+	if ( FALSE === ( $keypair = get_option( 'git_keypair', FALSE )  ) ) {
 		$keypair = _git_generate_keypair();
-		add_option( 'git_keypair', $keypair, '', $false );
+		add_option( 'git_keypair', $keypair, '', FALSE );
 	}
 	return $keypair;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+function _git_generate_webhook_key() {
+	return md5( str_shuffle( 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.()[]{}-_=+!@#%^&*~<>:;' ) );
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+function git_get_webhook_key( $generate_new_hash = FALSE ) {
+	if ( $generate_new_hash ) {
+		$hash = _git_generate_webhook_key();
+		delete_option( 'git_webhook_key' );
+		add_option( 'git_webhook_key', $hash, '', FALSE );
+		git_show_update( 'Webhook URL was regenerated!' );
+		return $hash;
+	}
+	if ( FALSE === ( $hash = get_option( 'git_webhook_key', FALSE ) ) ) {
+		$hash = _git_generate_webhook_key();
+		add_option( 'git_webhook_key', $hash, '', FALSE );
+	}
+	return $hash;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+function git_get_webhook() {
+	return trailingslashit( get_site_url() ) . 'wp-content/plugins/git-sauce/git-hook.php?' . git_get_webhook_key();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -595,7 +610,11 @@ function git_changes_page() {
 	<div class="wrap">
 	<div id="icon-options-general" class="icon32">&nbsp;</div>
 	<h2>Status <code class="small">connected to <strong><?php echo esc_html( $git->get_remote_url() ); ?></strong></code></h2>
-	<p>Webhook URL: <code><?php echo esc_url( trailingslashit( get_site_url() ) ); ?>wp-content/plugins/git-sauce/git-hook.php?pull=true</code></p>
+
+	<form action="" method="POST">
+
+	<p>Webhook URL: <code><?php echo esc_url( git_get_webhook() ); ?></code>
+	<input type="submit" name="SubmitGenerateWebhook" class="button" value="Generate Webhook" /></p>
 	<?php
 		$branch = str_replace( 'origin/', '', $git->get_remote_tracking_branch() );
 	?>
@@ -619,7 +638,6 @@ function git_changes_page() {
 	if ( empty( $changes ) ) {
 		?><p>Nothing to commit, working directory clean.</p><?php
 	} else { ?>
-		<form action="" method="POST">
 		<table class="widefat" id="git-changes-table">
 		<thead><tr><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></thead>
 		<tfoot><tr><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></tfoot>
