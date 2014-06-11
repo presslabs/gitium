@@ -307,10 +307,23 @@ class Git_Wrapper {
 		return $count;
 	}
 
-	function commit( $message ) {
-		list( $return, $response ) = $this->_call( 'commit', '-m', $message );
+	function commit( $message, $author_name = '', $author_email = '' ) {
+		$author = '';
+		if ( $author_email ) {
+			if ( empty( $author_name ) )
+				$author_name = $author_email;
+			$author = "$author_name <$author_email>";
+		}
+
+		if ( ! empty( $author ) )
+			list( $return, $response ) = $this->_call( 'commit', '-m', $message, '--author', $author );
+		else
+			list( $return, $response ) = $this->_call( 'commit', '-m', $message );
+
 		if ( $return !== 0 ) return false;
+
 		list( $return, $response ) = $this->_call( 'rev-parse', 'HEAD' );
+
 		return ( $return === 0 ) ? $response[0] : false;
 	}
 

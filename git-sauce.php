@@ -84,12 +84,14 @@ function git_get_versions() {
 //---------------------------------------------------------------------------------------------------------------------
 function _git_commit_changes( $message, $dir = '.' ) {
 	global $git;
+
 	list( $git_public_key, $git_private_key ) = git_get_keypair();
 	$git->set_key( $git_private_key );
 
 	$git->add( $dir );
 	git_update_versions();
-	return $git->commit( $message );
+	$current_user = wp_get_current_user();
+	return $git->commit( $message, $current_user->display_name, $current_user->user_email );
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -387,7 +389,8 @@ function git_options_page() {
 		$git->fetch_ref();
 		if ( count( $git->get_remote_branches() ) == 0 ) {
 			$git->add_initial_content();
-			$git->commit( 'Initial commit' );
+			$current_user = wp_get_current_user();
+			$git->commit( 'Initial commit', $current_user->display_name, $current_user->user_email );
 			if ( ! $git->push( 'master' ) ) {
 				$git->cleanup();
 				git_show_error( 'Could not fetch from remote <code>' . esc_html( $_POST['remote_url'] ) . '</code>' );
@@ -398,7 +401,8 @@ function git_options_page() {
 	if ( isset( $_POST['SubmitMergeAndPush'] ) && isset( $_POST['tracking_branch'] ) ) {
 		$branch = $_POST['tracking_branch'];
 		$git->add_initial_content();
-		$commit = $git->commit( 'Merged existing code from ' . get_home_url() );
+		$current_user = wp_get_current_user();
+		$commit = $git->commit( 'Merged existing code from ' . get_home_url(), $current_user->display_name, $current_user->user_email );
 		if ( ! $commit ) {
 			$git->cleanup();
 			git_show_error( 'Could not create initial commit' );
@@ -417,7 +421,8 @@ function git_options_page() {
 			$commitmsg = $_POST['commitmsg'];
 		}
 
-		$commit = $git->commit( $commitmsg );
+		$current_user = wp_get_current_user();
+		$commit = $git->commit( $commitmsg, $current_user->display_name, $current_user->user_email );
 		if ( ! $commit ) {
 			git_show_error( 'Could not commit!' );
 		} else {
