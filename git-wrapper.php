@@ -450,4 +450,8 @@ class Git_Wrapper {
 		$this->_call( 'pull', '-s', 'recursive', '-X', 'ours' );
 	}
 }
-$git = new Git_Wrapper( dirname( WP_CONTENT_DIR ) );
+
+if ( ! defined( 'GIT_DIR' ) )
+	define( 'GIT_DIR', dirname( WP_CONTENT_DIR ) );
+
+$git = new Git_Wrapper( GIT_DIR );
