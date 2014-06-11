@@ -234,6 +234,8 @@ class Git_Wrapper {
 		$this->_call( 'branch', $local_branch, $remote_branch );
 		$this->_call( 'checkout', $local_branch );
 		foreach ( $commits as $commit ) {
+			if ( empty( $commit ) ) return FALSE;
+
 			list( $return, $response ) = $this->_call(
 				'cherry-pick', '--strategy', 'recursive', '--strategy-option', 'theirs', $commit
 			);
