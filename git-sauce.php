@@ -1,7 +1,7 @@
 <?php
 /*
  * Plugin Name: Git Sauce
- * Version: 0.1-alpha
+ * Version: 0.2-alpha
  */
 
 require_once __DIR__ . '/git-wrapper.php';
