@@ -678,7 +678,7 @@ function git_changes_page() {
 
 //---------------------------------------------------------------------------------------------------------------------
 function git_menu() {
-	$page = add_menu_page( 'Git Status', 'Code', 'manage_options', __FILE__, 'git_options_page' );
+	$page = add_menu_page( 'Git Status', 'Code', 'manage_options', 'git-sauce/git-sauce.php', 'git_options_page' );
 	add_action( "load-$page", 'git_options_page_check' );
 }
 add_action( 'admin_menu', 'git_menu' );
