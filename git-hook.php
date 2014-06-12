@@ -7,7 +7,7 @@ require_once $wordpress_loader;
 require_once __DIR__ . '/git-wrapper.php';
 
 $webhook_key = get_option( 'git_webhook_key', '' );
-if ( ! empty ( $webhook_key ) && isset( $_GET[ $webhook_key ] ) ) :
+if ( ! empty ( $webhook_key ) && isset( $_GET['key'] ) && $webhook_key == $_GET['key'] ) :
 	enable_maintenance_mode() or wp_die( 'Could not enable the maintenance mode!' );
 	$commitmsg = 'Merged changes from ' . $_SERVER['SERVER_NAME'] . ' on ' . date( 'm.d.Y' );
 	$commits   = array();

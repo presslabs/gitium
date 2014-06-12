@@ -520,7 +520,9 @@ function git_get_webhook_key( $generate_new_webhook_key = FALSE ) {
 
 //---------------------------------------------------------------------------------------------------------------------
 function git_get_webhook() {
-	return trailingslashit( get_site_url() ) . 'wp-content/plugins/git-sauce/git-hook.php?' . git_get_webhook_key();
+	$key = git_get_webhook_key();
+	$url =  add_query_arg( 'key', $key, plugins_url( 'git-webhook.php', __FILE__ ) );
+	return apply_filters( 'git_webhook_url', $url, $key );
 }
 
 //---------------------------------------------------------------------------------------------------------------------
