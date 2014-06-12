@@ -566,7 +566,10 @@ function git_setup_step1() {
 	<tr>
 		<th scope="row"><label for="key_pair">Key pair</label></th>
 		<td>
+			<p>
 			<input type="text" class="regular-text" name="key_pair" id="key_pair" value="<?php echo esc_attr( $git_public_key ); ?>" readonly="readonly">
+			<input type="submit" name="SubmitRegenerateKeypair" class="button" value="Regenerate Key" />
+			</p>
 			<p class="description">If your use ssh keybased authentication for git you need to allow write access to your repository using this key.<br>
 			Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="#" target="_blank">bitbucket</a>.
 			</p>
