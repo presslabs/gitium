@@ -691,7 +691,7 @@ function git_changes_page() {
 		<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="Merged changes from <?php echo esc_url( get_site_url() ); ?> on <?php echo esc_html( date( 'm.d.Y' ) ); ?>" />
 		</p>
 		<p>
-		<input type="submit" name="SubmitSave" class="button-primary button" value="Save changes" />
+		<input type="submit" name="SubmitSave" class="button-primary button" value="Save changes" <?php if ( get_transient( 'git_remote_disconnected', TRUE ) ) echo 'disabled="disabled" '; ?>/>
 		</p>
 		</form>
 	<?php endif; ?>
