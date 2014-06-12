@@ -365,7 +365,7 @@ class Git_Wrapper {
 	}
 
 	function push( $branch = '' ) {
-		if ( $branch )
+		if ( ! empty( $branch ) )
 			list( $return, $response ) = $this->_call( 'push', '--porcelain', '-u', 'origin', $branch );
 		else
 			list( $return, $response ) = $this->_call( 'push', '--porcelain', '-u', 'origin' );

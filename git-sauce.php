@@ -288,7 +288,7 @@ function git_check_post_activate_modifications( $plugin ) {
 
 	if ( $git->is_dirty() ) {
 		$versions = git_update_versions();
-		if ( isset( $versions['plugins'][ $plugin ]) ) {
+		if ( isset( $versions['plugins'][ $plugin ] ) ) {
 			$name    = $versions['plugins'][ $plugin ]['name'];
 			$version = $versions['plugins'][ $plugin ]['version'];
 		} else {
@@ -539,7 +539,7 @@ function git_get_webhook_key( $generate_new_webhook_key = FALSE ) {
 //---------------------------------------------------------------------------------------------------------------------
 function git_get_webhook() {
 	$key = git_get_webhook_key();
-	$url =  add_query_arg( 'key', $key, plugins_url( 'git-webhook.php', __FILE__ ) );
+	$url = add_query_arg( 'key', $key, plugins_url( 'git-webhook.php', __FILE__ ) );
 	return apply_filters( 'git_webhook_url', $url, $key );
 }
 
@@ -653,7 +653,7 @@ function git_changes_page() {
 	<p>
 	  Following remote branch <code><?php echo esc_html( $branch ); ?></code>.
 	  <?php
-		if ( ! $ahead && ! $behind && empty( $changes ) ) echo "Everything is up to date";
+		if ( ! $ahead && ! $behind && empty( $changes ) ) echo 'Everything is up to date';
 		if ( $ahead && $behind ) echo "You are $ahead commits ahead and $behind behind remote.";
 		elseif ( $ahead ) echo "You are $ahead commits ahead remote.";
 		elseif ( $behind ) echo "You are $behind commits behind remote.";
@@ -682,6 +682,7 @@ function git_changes_page() {
 				</tr>
 			<?php endforeach; ?>
 		<?php endif; ?>
+	<form action="" method="POST">
 	</tbody>
 	</table>
 	<?php if ( ! empty( $changes ) ) : ?>
@@ -694,7 +695,6 @@ function git_changes_page() {
 		</p>
 		</form>
 	<?php endif; ?>
-	<form action="" method="POST">
 	<table class="form-table">
 	  <tr>
 		<th><label for="webhook-url">Webhook URL:</label></th>
@@ -761,7 +761,7 @@ function git_add_admin_notice() {
 }
 add_action( 'admin_init', 'git_add_admin_notice' );
 
-
+//---------------------------------------------------------------------------------------------------------------------
 function git_remote_disconnected_notice() {
 	if ( current_user_can( 'manage_options' ) && $message = get_transient( 'git_remote_disconnected', null ) ) : ?>
 		<div class="error-nag error">
@@ -773,4 +773,3 @@ function git_remote_disconnected_notice() {
 	<?php endif;
 }
 add_action( 'admin_notices', 'git_remote_disconnected_notice' );
-
