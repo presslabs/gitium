@@ -8,6 +8,8 @@ require_once __DIR__ . '/git-wrapper.php';
 
 $webhook_key = get_option( 'git_webhook_key', '' );
 if ( ! empty ( $webhook_key ) && isset( $_GET['key'] ) && $webhook_key == $_GET['key'] ) :
+	( '1.7' <= substr( $git->get_version(), 0, 3 ) ) or wp_die( 'Git Sauce plugin require minimum `git version 1.7`!' );
+
 	enable_maintenance_mode() or wp_die( 'Could not enable the maintenance mode!' );
 
 	$commitmsg = 'Merged changes from ' . $_SERVER['SERVER_NAME'] . ' on ' . date( 'm.d.Y' );
