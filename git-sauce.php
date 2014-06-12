@@ -622,50 +622,31 @@ function git_changes_page() {
 	global $git;
 
 	list( $branch_status, $changes ) = _git_status();
-	list( $git_public_key, $git_private_key ) = git_get_keypair(); ?>
+	list( $git_public_key, $git_private_key ) = git_get_keypair();
+	$branch = $git->get_remote_tracking_branch();
+	$ahead  = count( $git->get_ahead_commits() );
+	$behind = count( $git->get_behind_commits() ); ?>
 
 	<div class="wrap">
 	<div id="icon-options-general" class="icon32">&nbsp;</div>
 	<h2>Status <code class="small">connected to <strong><?php echo esc_html( $git->get_remote_url() ); ?></strong></code></h2>
-
-	<form action="" method="POST">
-
-	<p>Webhook URL: <code><?php echo esc_url( git_get_webhook() ); ?></code>
-	<input type="submit" name="SubmitRegenerateWebhook" class="button" value="Regenerate Webhook" /></p>
-
-	<p><input type="text" class="regular-text" name="key_pair" id="key_pair" value="<?php echo esc_attr( $git_public_key ); ?>" readonly="readonly">
-	<input type="submit" name="SubmitRegenerateKeypair" class="button" value="Regenerate Key" /></p>
-	<p class="description">If your use ssh keybased authentication for git you need to allow write access to your repository using this key.<br>
-	Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="#" target="_blank">bitbucket</a>.
+	<p>
+	  Following remote branch <code><?php echo esc_html( $branch ); ?></code>.
+	  <?php
+		if ( ! $ahead && ! $behind && empty( $changes ) ) echo "Everything is up to date";
+		if ( $ahead && $behind ) echo "You are $ahead commits ahead and $behind behind remote.";
+		elseif ( $ahead ) echo "You are $ahead commits ahead remote.";
+		elseif ( $behind ) echo "You are $behind commits behind remote.";
+	  ?>
 	</p>
-
-	<?php
-		$branch = str_replace( 'origin/', '', $git->get_remote_tracking_branch() );
-	?>
-	<p>Following branch <code><?php echo esc_html( $branch ); ?></code>.</p>
-	<?php
-		$ahead  = count( $git->get_ahead_commits() );
-		$behind = count( $git->get_behind_commits() );
 	
-	if ( $ahead ) {
-		?><p><code>Your branch is ahead of '<?php echo esc_html( $branch ); ?>' by <?php echo esc_html( $ahead ); ?> commits.</code></p><?php
-	}
-	
-	if ( $behind  ) {
-		?><p><code>Your branch is behind of '<?php echo esc_html( $branch ); ?>' by <?php echo esc_html( $behind ); ?> commits.</code></p><?php
-	}
-	
-	if ( ! $ahead && ! $behind ) {
-		?><p>Your branch is up-to-date with <code>'origin/<?php echo esc_html( $branch ); ?>'</code>.</p><?php
-	}
-
-	if ( empty( $changes ) ) {
-		?><p>Nothing to commit, working directory clean.</p><?php
-	} else { ?>
-		<table class="widefat" id="git-changes-table">
-		<thead><tr><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></thead>
-		<tfoot><tr><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></tfoot>
-		<tbody>
+	<table class="widefat" id="git-changes-table">
+	<thead><tr><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></thead>
+	<tfoot><tr><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></tfoot>
+	<tbody>
+		<?php if ( empty( $changes ) ) : ?>
+			<tr><td><p>Nothing to commit, working directory clean.</p></td></tr>
+		<?php else: ?>
 			<?php foreach ( $changes as $path => $type ) : ?>
 				<tr>
 					<td>
@@ -680,8 +661,10 @@ function git_changes_page() {
 					</td>
 				</tr>
 			<?php endforeach; ?>
-		</tbody>
-		</table>
+		<?php endif; ?>
+	</tbody>
+	</table>
+	<?php if ( !empty( $changes ) ) : ?>
 		<p>
 		<label for="save-changes">Commit message:</label>
 		<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="Merged changes from <?php echo esc_url( get_site_url() ); ?> on <?php echo esc_html( date( 'm.d.Y' ) ); ?>" />
@@ -690,7 +673,27 @@ function git_changes_page() {
 		<input type="submit" name="SubmitSave" class="button-primary button" value="Save changes" />
 		</p>
 		</form>
-	<?php } ?>
+	<?php endif; ?>
+	<form action="" method="POST">
+	<table class="form-table">
+	  <tr>
+		<th><label for="webhook-url">Webhook URL:</label></th>
+		<td>
+		  <p><code id="webhook-url"><?php echo esc_url( git_get_webhook() ); ?></code>
+		  <input type="submit" name="SubmitRegenerateWebhook" class="button" value="Regenerate Webhook" /></p>
+		</td>
+	  </tr>
+	  <tr>
+		<th><label for="public-key">Public Key:</label></th>
+		<td>
+		  <p><input type="text" class="regular-text" name="public_key" id="public-key" value="<?php echo esc_attr( $git_public_key ); ?>" readonly="readonly">
+		  <input type="submit" name="SubmitRegenerateKeypair" class="button" value="Regenerate Key" /></p>
+		  <p class="description">If your use ssh keybased authentication for git you need to allow write access to your repository using this key.<br>
+		  Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="#" target="_blank">bitbucket</a>.
+		  </p>
+		</td>
+	  </tr>
+	</table>
 	</div>
 	<?php
 };
@@ -711,7 +714,7 @@ function git_add_menu_bubble() {
 		$bubble_count = count( $changes );
 		foreach ( $menu as $key => $value  ) {
 			if ( 'git-sauce/git-sauce.php' == $menu[ $key ][2] ) {
-				$menu[ $key ][0] .= " <span class='update-plugins count-$bubble_count'><span class='plugin-count'>" 
+				$menu[ $key ][0] .= " <span class='update-plugins count-$bubble_count'><span class='plugin-count'>"
 					. $bubble_count . '</span></span>';
 				return;
 			}
