@@ -654,7 +654,7 @@ function git_changes_page() {
 		if ( $ahead && $behind ) echo "You are $ahead commits ahead and $behind behind remote.";
 		elseif ( $ahead ) echo "You are $ahead commits ahead remote.";
 		elseif ( $behind ) echo "You are $behind commits behind remote.";
-	  ?>
+		?>
 	</p>
 	
 	<table class="widefat" id="git-changes-table">
@@ -663,7 +663,7 @@ function git_changes_page() {
 	<tbody>
 		<?php if ( empty( $changes ) ) : ?>
 			<tr><td><p>Nothing to commit, working directory clean.</p></td></tr>
-		<?php else: ?>
+		<?php else : ?>
 			<?php foreach ( $changes as $path => $type ) : ?>
 				<tr>
 					<td>
@@ -681,7 +681,7 @@ function git_changes_page() {
 		<?php endif; ?>
 	</tbody>
 	</table>
-	<?php if ( !empty( $changes ) ) : ?>
+	<?php if ( ! empty( $changes ) ) : ?>
 		<p>
 		<label for="save-changes">Commit message:</label>
 		<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="Merged changes from <?php echo esc_url( get_site_url() ); ?> on <?php echo esc_html( date( 'm.d.Y' ) ); ?>" />
