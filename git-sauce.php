@@ -262,7 +262,7 @@ function git_merge_and_push( $commits ) {
 	$git->merge_with_accept_mine( $commits ) or git_show_error( 'merge_with_accept_mine failed!' );
 
 	if ( ! $git->push() ) {
-		git_show_error( 'push failed -> <pre>' . $git->get_last_error() . '</pre>' );
+		git_show_error( 'push failed -> ' . $git->get_last_error() );
 	}
 }
 
@@ -350,12 +350,12 @@ add_action( 'admin_enqueue_scripts', 'git_hook_plugin_and_theme_editor_page' );
 
 //---------------------------------------------------------------------------------------------------------------------
 function git_show_error( $message ) {
-	?><div class="error"><p><?php echo esc_html( $message ); ?></p></div><?php
+	?><div class="error"><p><pre><?php echo esc_html( $message ); ?></pre></p></div><?php
 }
 
 //---------------------------------------------------------------------------------------------------------------------
 function git_show_update( $message  ) {
-	?><div class="updated"><p><?php echo esc_html( $message  ); ?></p></div><?php
+	?><div class="updated"><p><pre><?php echo esc_html( $message  ); ?></pre></p></div><?php
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -423,11 +423,11 @@ function git_options_page() {
 		$commit = $git->commit( 'Merged existing code from ' . get_home_url(), $current_user->display_name, $current_user->user_email );
 		if ( ! $commit ) {
 			$git->cleanup();
-			git_show_error( 'Could not create initial commit' );
+			git_show_error( 'Could not create initial commit -> ' . $git->get_last_error() );
 		}
 		if ( ! $git->merge_initial_commit( $commit, $branch ) ) {
 			$git->cleanup();
-			git_show_error( 'Could not merge the initial commit' );
+			git_show_error( 'Could not merge the initial commit -> ' . $git->get_last_error() );
 		}
 		$git->push( $branch );
 	}
