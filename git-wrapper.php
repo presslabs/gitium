@@ -32,6 +32,7 @@ wp-config.php
 /wp-signup.php
 /wp-trackback.php
 /xmlrpc.php
+.maintenance
 EOF;
 function _log() {
 	if ( func_num_args() == 1 && is_string( func_get_arg( 0 ) ) ) {
@@ -54,6 +55,27 @@ function _git_rrmdir( $dir ) {
 		}
 		return rmdir( $dir );
 	}
+}
+
+function enable_maintenance_mode() {
+	global $file;
+
+	$file = WP_CONTENT_DIR;
+	if ( '/' == $file[ strlen( $file ) -1 ] )
+		$file .= '../.maintenance';
+	else
+		$file .= '/../.maintenance';
+
+	if ( FALSE === file_put_contents( $file, '<?php $upgrading = ' . time() .';' ) )
+		return FALSE;
+	else
+		return TRUE;
+}
+
+function disable_maintenance_mode() {
+	global $file;
+
+	return unlink( $file );
 }
 
 function _git_temp_key_file() {

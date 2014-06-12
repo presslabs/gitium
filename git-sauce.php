@@ -415,6 +415,7 @@ function git_options_page() {
 	}
 
 	if ( isset( $_POST['SubmitSave'] ) ) {
+		enable_maintenance_mode() or wp_die( 'Could not enable the maintenance mode!' );
 		$git->add();
 		$commitmsg = 'Merged changes from ' . get_site_url() . ' on ' . date( 'm.d.Y' );
 		if ( isset( $_POST['commitmsg'] ) && ! empty( $_POST['commitmsg'] ) ) {
@@ -430,6 +431,7 @@ function git_options_page() {
 		}
 
 		git_merge_and_push( $commit );
+		disable_maintenance_mode();
 	}
 
 	if ( isset( $_POST['SubmitGenerateWebhook'] ) )
