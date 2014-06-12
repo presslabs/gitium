@@ -256,6 +256,10 @@ class Git_Wrapper {
 		if ( 1 == func_num_args() && is_array( $commits[0] ) )
 			$commits = $commits[0];
 
+		$ahead_commits = $this->get_ahead_commits();
+		$commits = array_unique( array_merge( array_reverse( $commits ), $ahead_commits ) );
+		$commits = array_reverse( $commits );
+
 		$remote_branch = $this->get_remote_tracking_branch();
 		$local_branch  = $this->get_local_branch();
 
