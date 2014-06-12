@@ -154,6 +154,13 @@ class Git_Wrapper {
 		return ( 0 == $return );
 	}
 
+	function get_version() {
+		list( $return, $version ) = $this->_call( 'version' );
+		if ( ! empty( $version[0] ) )
+			return substr( $version[0], 12 );
+		return '';
+	}
+
 	// git rev-list @{u}..
 	function get_ahead_commits() {
 		list( $return, $commits ) = $this->_call( 'rev-list', '@{u}..' );

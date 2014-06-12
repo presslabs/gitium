@@ -448,7 +448,9 @@ function git_options_page() {
 		return git_setup_step2();
 
 	_git_status( true );
-	git_changes_page();
+
+	if ( git_has_the_minimum_version() )
+		git_changes_page();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -719,3 +721,21 @@ function git_add_menu_bubble() {
 	endif;
 }
 add_action( 'admin_menu', 'git_add_menu_bubble' );
+
+//---------------------------------------------------------------------------------------------------------------------
+function git_has_the_minimum_version() {
+	global $git;
+
+	return '1.7' <= substr( $git->get_version(), 0, 3 );
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+function git_add_admin_notice() {
+	if ( ! git_has_the_minimum_version() ) {
+		add_action(
+			'admin_notices',
+			create_function( '', "echo '<div class=\"error\"><p>Git Sauce plugin require minimum `git version 1.7`!</p></div>';" )
+		);
+	}
+}
+add_action( 'admin_init', 'git_add_admin_notice' );
