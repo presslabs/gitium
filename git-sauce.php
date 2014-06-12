@@ -389,6 +389,7 @@ function _git_status( $update_transient = false ) {
 
 	$changes = $git->status();
 	set_transient( 'git_uncommited_changes', $changes, 12 * 60 * 60 ); // cache changes for half-a-day
+	set_transient( 'git_version', $git->get_version(), 12 * 60 * 60 );
 
 	return $changes;
 }
@@ -747,19 +748,18 @@ add_action( 'admin_menu', 'git_add_menu_bubble' );
 function git_has_the_minimum_version() {
 	global $git;
 
-	return '1.7' <= substr( $git->get_version(), 0, 3 );
+	return '1.7' <= substr( get_transient( 'git_version', '' ), 0, 3 );
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-function git_add_admin_notice() {
-	if ( ! git_has_the_minimum_version() ) {
-		add_action(
-			'admin_notices',
-			create_function( '', "echo '<div class=\"error\"><p>Git Sauce plugin require minimum `git version 1.7`!</p></div>';" )
-		);
-	}
+function git_require_minimum_version() {
+	if ( current_user_can( 'manage_options' ) && ( ! git_has_the_minimum_version() ) ) : ?>
+		<div class="error-nag error">
+			<p>Git Sauce plugin require minimum `git version 1.7`!</p>
+		</div>
+	<?php endif;
 }
-add_action( 'admin_init', 'git_add_admin_notice' );
+add_action( 'admin_notices', 'git_require_minimum_version' );
 
 //---------------------------------------------------------------------------------------------------------------------
 function git_remote_disconnected_notice() {
