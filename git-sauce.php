@@ -479,7 +479,7 @@ function _git_generate_keypair() {
 	$buffer     = pack( 'N', 7 ) . 'ssh-rsa' .
 					_git_ssh_encode_buffer( $key_info['rsa']['e'] ) .
 					_git_ssh_encode_buffer( $key_info['rsa']['n'] );
-	$public_key = 'ssh-rsa ' . base64_encode( $buffer ) . ' git-sauce';
+	$public_key = 'ssh-rsa ' . base64_encode( $buffer ) . ' git-sauce@' . parse_url( get_home_url(), PHP_URL_HOST );
 
 	return array( $public_key, $pem );
 }
