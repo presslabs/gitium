@@ -362,6 +362,14 @@ function git_options_page_check() {
 	if ( ! $git->can_exec_git() ) wp_die( 'Cannot exec git' );
 }
 
+function git_remote_disconnected( $message ) {
+	set_transient( 'git_remote_disconnected', $message );
+}
+
+function git_remote_connected() {
+	delete_transient( 'git_remote_disconnected' );
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 function _git_status( $update_transient = false ) {
 	global $git;
@@ -369,7 +377,13 @@ function _git_status( $update_transient = false ) {
 	if ( ! $update_transient && ( false !== ( $changes = get_transient( 'git_uncommited_changes' ) ) ) ) {
 		return $changes;
 	}
-	$git->fetch_ref();
+
+	if ( ! $git->fetch_ref() ) {
+		git_remote_disconnected( $git->get_last_error() );
+	} else {
+		git_remote_connected();
+	}
+
 	$changes = $git->status();
 	set_transient( 'git_uncommited_changes', $changes, 12 * 60 * 60 ); // cache changes for half-a-day
 
@@ -443,7 +457,6 @@ function git_options_page() {
 	if ( ! $git->is_versioned() )
 		return git_setup_step1();
 
-	$git->fetch_ref();
 	if ( ! $git->get_remote_tracking_branch() )
 		return git_setup_step2();
 
@@ -744,3 +757,17 @@ function git_add_admin_notice() {
 	}
 }
 add_action( 'admin_init', 'git_add_admin_notice' );
+
+
+function git_remote_disconnected_notice() {
+	if ( current_user_can( 'manage_options' ) && $message = get_transient( 'git_remote_disconnected', null ) ) : ?>
+		<div class="error-nag error">
+			<p>
+				Could not connect to remote repository.
+				<pre><?php echo esc_html( $message ); ?></pre>
+			</p>
+		</div>
+	<?php endif;
+}
+add_action( 'admin_notices', 'git_remote_disconnected_notice' );
+

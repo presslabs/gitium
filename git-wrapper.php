@@ -84,6 +84,9 @@ function _git_temp_key_file() {
 }
 
 class Git_Wrapper {
+
+	private $last_error = '';
+
 	function __construct( $repo_dir ) {
 		$this->repo_dir    = $repo_dir;
 		$this->private_key = '';
@@ -131,17 +134,16 @@ class Git_Wrapper {
 		if ( $key_file )
 			unlink( $key_file );
 
+		if ( 0 != $return )
+			$this->last_error = join( "\n", $response );
+		else
+			$this->last_error = null;
+
 		return array( $return, $response );
 	}
 
-	protected function _call2() {
-		$args = func_get_args();
-		$args = join( ' ', array_map( 'escapeshellarg', $args ) );
-		$cmd  = "cd $this->repo_dir ; git $args 2>&1";
-		exec( $cmd, $response, $return );
-		_log( $cmd, $response, $return );
-
-		return array( $return, $response );
+	function get_last_error() {
+		return $this->last_error;
 	}
 
 	function can_exec_git() {
