@@ -321,11 +321,11 @@ class Git_Wrapper {
 		if ( 1 == func_num_args() && is_array( $args[0] ) )
 			$args = $args[0];
 
-		$params = array_merge( array( 'add', '-n', '--no-ignore-removal' ), $args );
+		$params = array_merge( array( 'add', '-n', '--all' ), $args );
 		list ( $return, $response ) = call_user_func_array( array( $this, '_call' ), $params );
 		$count = count( $response );
 
-		$params = array_merge( array( 'add', '--no-ignore-removal' ), $args );
+		$params = array_merge( array( 'add', '--all' ), $args );
 		list ( $return, $response ) = call_user_func_array( array( $this, '_call' ), $params );
 
 		return $count;
