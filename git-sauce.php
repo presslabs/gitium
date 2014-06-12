@@ -260,7 +260,10 @@ function git_merge_and_push( $commits ) {
 
 	$git->fetch_ref() or git_show_error( 'fetch_ref failed!' );
 	$git->merge_with_accept_mine( $commits ) or git_show_error( 'merge_with_accept_mine failed!' );
-	$git->push() or git_show_error( 'push failed!' );
+
+	if ( ! $git->push() ) {
+		git_show_error( 'push failed -> <pre>' . $git->get_last_error() . '</pre>' );
+	}
 }
 
 //---------------------------------------------------------------------------------------------------------------------
