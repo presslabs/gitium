@@ -434,8 +434,11 @@ function git_options_page() {
 		disable_maintenance_mode();
 	}
 
-	if ( isset( $_POST['SubmitGenerateWebhook'] ) )
+	if ( isset( $_POST['SubmitRegenerateWebhook'] ) )
 		git_get_webhook_key( TRUE );
+
+	if ( isset( $_POST['SubmitRegenerateKeypair'] ) )
+		git_get_keypair( TRUE );
 
 	if ( ! $git->is_versioned() )
 		return git_setup_step1();
@@ -480,8 +483,14 @@ function _git_generate_keypair() {
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-function git_get_keypair() {
-	if ( FALSE === ( $keypair = get_option( 'git_keypair', FALSE )  ) ) {
+function git_get_keypair( $generate_new_keypair = FALSE ) {
+	if ( $generate_new_keypair ) {
+		$keypair = _git_generate_keypair();
+		delete_option( 'git_keypair' );
+		add_option( 'git_keypair', $keypair, '', FALSE );
+		git_show_update( 'Keypair was regenerated!' );
+	}
+	if ( FALSE === ( $keypair = get_option( 'git_keypair', FALSE ) ) ) {
 		$keypair = _git_generate_keypair();
 		add_option( 'git_keypair', $keypair, '', FALSE );
 	}
@@ -494,19 +503,19 @@ function _git_generate_webhook_key() {
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-function git_get_webhook_key( $generate_new_hash = FALSE ) {
-	if ( $generate_new_hash ) {
-		$hash = _git_generate_webhook_key();
+function git_get_webhook_key( $generate_new_webhook_key = FALSE ) {
+	if ( $generate_new_webhook_key ) {
+		$key = _git_generate_webhook_key();
 		delete_option( 'git_webhook_key' );
-		add_option( 'git_webhook_key', $hash, '', FALSE );
+		add_option( 'git_webhook_key', $key, '', FALSE );
 		git_show_update( 'Webhook URL was regenerated!' );
-		return $hash;
+		return $key;
 	}
-	if ( FALSE === ( $hash = get_option( 'git_webhook_key', FALSE ) ) ) {
-		$hash = _git_generate_webhook_key();
-		add_option( 'git_webhook_key', $hash, '', FALSE );
+	if ( FALSE === ( $key = get_option( 'git_webhook_key', FALSE ) ) ) {
+		$key = _git_generate_webhook_key();
+		add_option( 'git_webhook_key', $key, '', FALSE );
 	}
-	return $hash;
+	return $key;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -612,7 +621,8 @@ function get_type_meaning( $type ) {
 function git_changes_page() {
 	global $git;
 
-	list ( $branch_status, $changes ) = _git_status(); ?>
+	list( $branch_status, $changes ) = _git_status();
+	list( $git_public_key, $git_private_key ) = git_get_keypair(); ?>
 
 	<div class="wrap">
 	<div id="icon-options-general" class="icon32">&nbsp;</div>
@@ -621,7 +631,14 @@ function git_changes_page() {
 	<form action="" method="POST">
 
 	<p>Webhook URL: <code><?php echo esc_url( git_get_webhook() ); ?></code>
-	<input type="submit" name="SubmitGenerateWebhook" class="button" value="Generate Webhook" /></p>
+	<input type="submit" name="SubmitRegenerateWebhook" class="button" value="Regenerate Webhook" /></p>
+
+	<p><input type="text" class="regular-text" name="key_pair" id="key_pair" value="<?php echo esc_attr( $git_public_key ); ?>" readonly="readonly">
+	<input type="submit" name="SubmitRegenerateKeypair" class="button" value="Regenerate Key" /></p>
+	<p class="description">If your use ssh keybased authentication for git you need to allow write access to your repository using this key.<br>
+	Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="#" target="_blank">bitbucket</a>.
+	</p>
+
 	<?php
 		$branch = str_replace( 'origin/', '', $git->get_remote_tracking_branch() );
 	?>
