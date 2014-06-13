@@ -389,7 +389,9 @@ function _git_status( $update_transient = false ) {
 
 	$changes = $git->status();
 	set_transient( 'git_uncommited_changes', $changes, 12 * 60 * 60 ); // cache changes for half-a-day
-	set_transient( 'git_version', $git->get_version(), 12 * 60 * 60 );
+	
+	if ( empty( get_transient( 'git_version', '' ) ) )
+		set_transient( 'git_version', $git->get_version(), 12 * 60 * 60 );
 
 	return $changes;
 }
