@@ -305,16 +305,25 @@ class Git_Wrapper {
 		list( $return, $response ) = $this->_call( 'branch', '-m', 'initial' );
 		if ( 0 != $return )
 			return false;
+
 		list( $return, $response ) = $this->_call( 'checkout', $branch );
 		if ( 0 != $return )
 			return false;
+
 		list( $return, $response ) = $this->_call(
 			'cherry-pick', '--strategy', 'recursive', '--strategy-option', 'theirs', $commit
-		);	
-		if ( 0 != $return )
-			return false;
-		list( $return, $response ) = $this->_call( 'branch', '-D', 'initial' );
-		return true;
+		);
+		if ( $return != 0 ) {
+			$this->_resolve_merge_conflicts( $this->get_commit_message( $commit ) );
+		}
+		if ( $this->successfully_merged() ) { // git status without states: AA, DD, UA, AU ...
+			$this->_call( 'branch', '-D', 'initial' );
+			return TRUE;
+		} else {
+			$this->_call( 'cherry-pick', '--abort' );
+			$this->checkout( 'initial' );
+			return FALSE;
+		}
 	}
 
 	function get_remote_branches() {
