@@ -413,7 +413,7 @@ function git_options_page() {
 			$git->commit( 'Initial commit', $current_user->display_name, $current_user->user_email );
 			if ( ! $git->push( 'master' ) ) {
 				$git->cleanup();
-				git_show_error( 'Could not fetch from remote <code>' . esc_html( $_POST['remote_url'] ) . '</code>' );
+				git_show_error( 'Could not fetch from remote ' . esc_html( $_POST['remote_url'] ) );
 			}
 		}
 	}
