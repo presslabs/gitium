@@ -542,6 +542,7 @@ function git_get_webhook_key( $generate_new_webhook_key = FALSE ) {
 
 //---------------------------------------------------------------------------------------------------------------------
 function git_get_webhook() {
+	if ( defined( 'GIT_WEBHOOK_URL' ) && GIT_WEBHOOK_URL ) return GIT_WEBHOOK_URL;
 	$key = git_get_webhook_key();
 	$url = add_query_arg( 'key', $key, plugins_url( 'git-webhook.php', __FILE__ ) );
 	return apply_filters( 'git_webhook_url', $url, $key );
@@ -566,6 +567,7 @@ function git_setup_step1() {
 		</td>
 	</tr>
 
+	<?php if ( ! defined( 'GIT_KEY_FILE' ) || GIT_KEY_FILE == '' ) : ?>
 	<tr>
 		<th scope="row"><label for="key_pair">Key pair</label></th>
 		<td>
@@ -578,6 +580,8 @@ function git_setup_step1() {
 			</p>
 		</td>
 	</tr>
+	<?php endif; ?>
+
 	</table>
 
 	<p class="submit">
@@ -707,9 +711,14 @@ function git_changes_page() {
 		<th><label for="webhook-url">Webhook URL:</label></th>
 		<td>
 		  <p><code id="webhook-url"><?php echo esc_url( git_get_webhook() ); ?></code>
+		  <?php if ( ! defined( 'GIT_WEBHOOK_URL' ) || GIT_WEBHOOK_URL == '' ) : ?>
 		  <input type="submit" name="SubmitRegenerateWebhook" class="button" value="Regenerate Webhook" /></p>
+		  <?php endif; ?>
+		  <p class="description">Pinging this URL triggers an update from remote repository.</p>
 		</td>
 	  </tr>
+
+	  <?php if ( ! defined( 'GIT_KEY_FILE' ) || GIT_KEY_FILE == '' ) : ?>
 	  <tr>
 		<th><label for="public-key">Public Key:</label></th>
 		<td>
@@ -720,6 +729,8 @@ function git_changes_page() {
 		  </p>
 		</td>
 	  </tr>
+	  <?php endif; ?>
+
 	</table>
 	</div>
 	<?php
