@@ -1,14 +1,30 @@
 <?php
+/*  Copyright 2014 PressLabs SRL <ping@presslabs.com>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License, version 2, as
+    published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+*/
+
 class Gitium_Admin {
 	private $options;
-	private $menu_slug = 'git-sauce/git-sauce.php';
+	private $menu_slug = 'gitium/gitium.php';
 	private $git = null;
 
 	public function __construct() {
 		global $git;
 		$this->git = $git;
 
-		list( $git_public_key, $git_private_key ) = git_get_keypair();
+		list( $git_public_key, $git_private_key ) = gitium_get_keypair();
 		$git->set_key( $git_private_key );
 
 		add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
@@ -139,18 +155,18 @@ class Gitium_Admin {
 			$this->redirect( 'Could not commit!' );
 		}
 
-		$merge_success = git_merge_and_push( $commit );
+		$merge_success = gitium_merge_and_push( $commit );
 		disable_maintenance_mode();
 		if ( ! $merge_success )
 			$this->redirect( 'Merge failed: ' . $git->get_last_error() );
-		$this->success_redirect( "Pushed commit $commit: `$commitmsg`" );
+		$this->success_redirect( "Pushed commit: `$commitmsg`" );
 	}
 
 	public function regenerate_webhook() {
 		if ( ! isset( $_POST['SubmitRegenerateWebhook'] ) ) return;
 		check_admin_referer( 'gitium-admin' );
 
-		git_get_webhook_key( TRUE );
+		gitium_get_webhook_key( TRUE );
 		$this->success_redirect( 'Webhook URL regenrates. Please make sure you update any external references.' );
 	}
 
@@ -158,7 +174,7 @@ class Gitium_Admin {
 		if ( ! isset( $_POST['SubmitRegenerateKeypair'] ) ) return;
 		check_admin_referer( 'gitium-admin' );
 
-		git_get_keypair( TRUE );
+		gitium_get_keypair( TRUE );
 		$this->success_redirect( 'Keypair successfully regenerated.' );
 	}
 
@@ -179,8 +195,8 @@ class Gitium_Admin {
 		if ( ! $git->get_remote_tracking_branch() )
 			return $this->setup_step_2();
 
-		_git_status( true );
-		if ( git_has_the_minimum_version() )
+		_gitium_status( true );
+		if ( gitium_has_the_minimum_version() )
 			$this->changes_page();
 
 	}
@@ -188,7 +204,7 @@ class Gitium_Admin {
 	public function add_menu_bubble() {
 		global $menu;
 		$git = $this->git;
-		list( $branch_status, $changes ) = _git_status();
+		list( $branch_status, $changes ) = _gitium_status();
 		if ( ! empty( $changes ) ) :
 			$bubble_count = count( $changes );
 			foreach ( $menu as $key => $value  ) {
@@ -203,7 +219,7 @@ class Gitium_Admin {
 
 	private function setup_step_1() {
 		$git = $this->git;
-		list( $git_public_key, $git_private_key ) = git_get_keypair(); ?>
+		list( $git_public_key, $git_private_key ) = gitium_get_keypair(); ?>
 		<div class="wrap">
 		<h2>Status <code>unconfigured</code></h2>
 		
@@ -278,8 +294,8 @@ class Gitium_Admin {
 	private function changes_page() {
 		$git = $this->git;
 
-		list( $branch_status, $changes ) = _git_status();
-		list( $git_public_key, $git_private_key ) = git_get_keypair();
+		list( $branch_status, $changes ) = _gitium_status();
+		list( $git_public_key, $git_private_key ) = gitium_get_keypair();
 		$branch = $git->get_remote_tracking_branch();
 		$ahead  = count( $git->get_ahead_commits() );
 		$behind = count( $git->get_behind_commits() ); ?>
@@ -330,14 +346,14 @@ class Gitium_Admin {
 			<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="Merged changes from <?php echo esc_url( get_site_url() ); ?> on <?php echo esc_html( date( 'm.d.Y' ) ); ?>" />
 			</p>
 			<p>
-			<input type="submit" name="SubmitSave" class="button-primary button" value="Save changes" <?php if ( get_transient( 'git_remote_disconnected', TRUE ) ) echo 'disabled="disabled" '; ?>/>
+			<input type="submit" name="SubmitSave" class="button-primary button" value="Save changes" <?php if ( get_transient( 'gitium_remote_disconnected', TRUE ) ) echo 'disabled="disabled" '; ?>/>
 			</p>
 		<?php endif; ?>
 		<table class="form-table">
 		  <tr>
 			<th><label for="webhook-url">Webhook URL:</label></th>
 			<td>
-			  <p><code id="webhook-url"><?php echo esc_url( git_get_webhook() ); ?></code>
+			  <p><code id="webhook-url"><?php echo esc_url( gitium_get_webhook() ); ?></code>
 			  <?php if ( ! defined( 'GIT_WEBHOOK_URL' ) || GIT_WEBHOOK_URL == '' ) : ?>
 			  <input type="submit" name="SubmitRegenerateWebhook" class="button" value="Regenerate Webhook" /></p>
 			  <?php endif; ?>

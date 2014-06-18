@@ -1,4 +1,20 @@
 <?php
+/*  Copyright 2014 PressLabs SRL <ping@presslabs.com>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License, version 2, as
+    published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+*/
+
 header( 'Content-Type: text/html' );
 define( 'SHORTINIT', TRUE );
 $wordpress_loader = $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php';
@@ -6,7 +22,7 @@ $wordpress_loader = $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php';
 require_once $wordpress_loader;
 require_once __DIR__ . '/git-wrapper.php';
 
-$webhook_key = get_option( 'git_webhook_key', '' );
+$webhook_key = get_option( 'gitium_webhook_key', '' );
 if ( ! empty ( $webhook_key ) && isset( $_GET['key'] ) && $webhook_key == $_GET['key'] ) :
 	( '1.7' <= substr( $git->get_version(), 0, 3 ) ) or wp_die( 'Git Sauce plugin require minimum `git version 1.7`!' );
 
