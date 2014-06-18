@@ -104,9 +104,15 @@ class Git_Wrapper {
 		$return   = -1;
 		$response = array();
 		$key_file = null;
-		
-		$env['GIT_SSH'] = dirname( __FILE__ ) . '/ssh-git';
-		if ( $this->private_key ) {
+
+		if ( defined( 'GIT_SSH' ) && GIT_SSH )
+			$env['GIT_SSH'] = GIT_SSH;
+		else
+			$env['GIT_SSH'] = dirname( __FILE__ ) . '/ssh-git';
+
+		if ( defined( 'GIT_KEY_FILE' ) && GIT_KEY_FILE ) {
+			$env['GIT_KEY_FILE'] = GIT_KEY_FILE;
+		} elseif ( $this->private_key ) {
 			$key_file = _git_temp_key_file();
 			chmod( $key_file, 0600 );
 			file_put_contents( $key_file, $this->private_key );
