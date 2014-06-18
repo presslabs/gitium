@@ -5,8 +5,8 @@
  */
 
 require_once __DIR__ . '/git-wrapper.php';
+require_once __DIR__ . '/gitium-admin.php';
 
-//---------------------------------------------------------------------------------------------------------------------
 /* Array
 (
     [themes] => Array
@@ -19,10 +19,8 @@ require_once __DIR__ . '/git-wrapper.php';
             [hello-dolly/hello.php] => `Hello Dolly` version 1.6
         )
 
-) */
+	) */
 function git_update_versions() {
-	$versions = get_transient( 'git_versions', array() );
-
 	//
 	// get all themes from WP
 	//
@@ -73,7 +71,6 @@ function git_update_versions() {
 }
 add_action( 'load-plugins.php', 'git_update_versions', 999 );
 
-//---------------------------------------------------------------------------------------------------------------------
 function git_get_versions() {
 	$versions = get_transient( 'git_versions', array() );
 	if ( empty( $versions ) )
@@ -81,7 +78,6 @@ function git_get_versions() {
 	return $versions;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
 function _git_commit_changes( $message, $dir = '.' ) {
 	global $git;
 
@@ -94,7 +90,6 @@ function _git_commit_changes( $message, $dir = '.' ) {
 	return $git->commit( $message, $current_user->display_name, $current_user->user_email );
 }
 
-//---------------------------------------------------------------------------------------------------------------------
 function _git_format_message( $name, $version = FALSE, $prefix = '' ) {
 	$commit_message = "`$name`";
 	if ( $version ) {
@@ -106,7 +101,6 @@ function _git_format_message( $name, $version = FALSE, $prefix = '' ) {
 	return $commit_message;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
 function git_upgrader_post_install( $res, $hook_extra, $result ) {
 	global $git;
 
@@ -152,7 +146,6 @@ function git_upgrader_post_install( $res, $hook_extra, $result ) {
 }
 add_filter( 'upgrader_post_install', 'git_upgrader_post_install', 10, 3 );
 
-//---------------------------------------------------------------------------------------------------------------------
 /*
   wp-content/themes/twentyten/style.css => array(
     'base_path' => wp-content/themes/twentyten
@@ -226,7 +219,6 @@ function _git_module_by_path( $path ) {
 	return $module;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
 function git_group_commit_modified_plugins_and_themes( $msg_append = '' ) {
 	global $git;
 
@@ -253,20 +245,20 @@ function git_group_commit_modified_plugins_and_themes( $msg_append = '' ) {
 	return $commits;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
 // Merges the commits with remote and pushes them back
 function git_merge_and_push( $commits ) {
 	global $git;
 
-	$git->fetch_ref() or git_show_error( 'fetch_ref failed!' );
-	$git->merge_with_accept_mine( $commits ) or git_show_error( 'merge_with_accept_mine failed!' );
+	if ( ! $git->fetch_ref() )
+		return false;
 
-	if ( ! $git->push() ) {
-		git_show_error( 'push failed -> ' . $git->get_last_error() );
-	}
+	if ( ! $git->merge_with_accept_mine( $commits ) )
+		return false;
+
+	if ( ! $git->push() )
+		return false;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
 // Checks for local changes, tries to group them by plugin/theme and pushes the changes
 function git_auto_push( $msg_prepend = '' ) {
 	global $git;
@@ -280,7 +272,6 @@ function git_auto_push( $msg_prepend = '' ) {
 }
 add_action( 'upgrader_process_complete', 'git_auto_push', 11, 0 );
 
-//---------------------------------------------------------------------------------------------------------------------
 function git_check_post_activate_modifications( $plugin ) {
 	global $git;
 
@@ -299,7 +290,6 @@ function git_check_post_activate_modifications( $plugin ) {
 }
 add_action( 'activated_plugin', 'git_check_post_activate_modifications', 999 );
 
-//---------------------------------------------------------------------------------------------------------------------
 function git_check_post_deactivate_modifications( $plugin ) {
 	global $git;
 
@@ -318,21 +308,18 @@ function git_check_post_deactivate_modifications( $plugin ) {
 }
 add_action( 'deactivated_plugin', 'git_check_post_deactivate_modifications', 999 );
 
-//---------------------------------------------------------------------------------------------------------------------
 function git_check_for_plugin_deletions() { // Handle plugin deletion
 	if ( isset( $_GET['deleted'] ) && 'true' == $_GET['deleted'] )
 		git_auto_push();
 }
 add_action( 'load-plugins.php', 'git_check_for_plugin_deletions' );
 
-//---------------------------------------------------------------------------------------------------------------------
 function git_check_for_themes_deletions() { // Handle theme deletion
 	if ( isset( $_GET['deleted'] ) && 'true' == $_GET['deleted'] )
 		git_auto_push();
 }
 add_action( 'load-themes.php', 'git_check_for_themes_deletions' );
 
-//---------------------------------------------------------------------------------------------------------------------
 // Hook to theme/plugin edit page
 function git_hook_plugin_and_theme_editor_page( $hook ) {
 	switch ( $hook ) {
@@ -348,32 +335,12 @@ function git_hook_plugin_and_theme_editor_page( $hook ) {
 }
 add_action( 'admin_enqueue_scripts', 'git_hook_plugin_and_theme_editor_page' );
 
-//---------------------------------------------------------------------------------------------------------------------
-function git_show_error( $message ) {
-	?><div class="error"><p><pre><?php echo esc_html( $message ); ?></pre></p></div><?php
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-function git_show_update( $message  ) {
-	?><div class="updated"><p><pre><?php echo esc_html( $message  ); ?></pre></p></div><?php
-}
-
-//---------------------------------------------------------------------------------------------------------------------
 function git_options_page_check() {
 	global $git;
 
 	if ( ! $git->can_exec_git() ) wp_die( 'Cannot exec git' );
 }
 
-function git_remote_disconnected( $message ) {
-	set_transient( 'git_remote_disconnected', $message );
-}
-
-function git_remote_connected() {
-	delete_transient( 'git_remote_disconnected' );
-}
-
-//---------------------------------------------------------------------------------------------------------------------
 function _git_status( $update_transient = false ) {
 	global $git;
 
@@ -381,99 +348,26 @@ function _git_status( $update_transient = false ) {
 		return $changes;
 	}
 
-	if ( ! $git->fetch_ref() ) {
-		git_remote_disconnected( $git->get_last_error() );
+	$git_version = get_transient( 'git_version', '' );
+	if ( empty( $git_version ) )
+		set_transient( 'git_version', $git->get_version() );
+
+	if ( $git->is_versioned() && $git->get_remote_tracking_branch() ) {
+		if ( ! $git->fetch_ref() ) {
+			set_transient( 'git_remote_disconnected', $git->get_last_error() );
+		} else {
+			delete_transient( 'git_remote_disconnected' );
+		}
+		$changes = $git->status();
 	} else {
-		git_remote_connected();
+		delete_transient( 'git_remote_disconnected' );
+		$changes = array();
 	}
 
-	$changes = $git->status();
 	set_transient( 'git_uncommited_changes', $changes, 12 * 60 * 60 ); // cache changes for half-a-day
-
-	$git_version = get_transient( 'git_version', ''  );
-	if ( empty( $git_version ) )
-		set_transient( 'git_version', $git->get_version(), 12 * 60 * 60 );
-
 	return $changes;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-function git_options_page() {
-	global $git;
-
-	list( $git_public_key, $git_private_key ) = git_get_keypair();
-	$git->set_key( $git_private_key );
-
-	if ( isset( $_POST['SubmitFetch'] ) && isset( $_POST['remote_url'] ) ) {
-		$git->init();
-		$git->add_remote_url( $_POST['remote_url'] );
-		$git->fetch_ref();
-		if ( count( $git->get_remote_branches() ) == 0 ) {
-			$git->add_initial_content();
-			$current_user = wp_get_current_user();
-			$git->commit( 'Initial commit', $current_user->display_name, $current_user->user_email );
-			if ( ! $git->push( 'master' ) ) {
-				$git->cleanup();
-				git_show_error( 'Could not fetch from remote ' . esc_html( $_POST['remote_url'] ) );
-			}
-		}
-	}
-
-	if ( isset( $_POST['SubmitMergeAndPush'] ) && isset( $_POST['tracking_branch'] ) ) {
-		$branch = $_POST['tracking_branch'];
-		$git->add_initial_content();
-		$current_user = wp_get_current_user();
-		$commit = $git->commit( 'Merged existing code from ' . get_home_url(), $current_user->display_name, $current_user->user_email );
-		if ( ! $commit ) {
-			$git->cleanup();
-			git_show_error( 'Could not create initial commit -> ' . $git->get_last_error() );
-		}
-		if ( ! $git->merge_initial_commit( $commit, $branch ) ) {
-			$git->cleanup();
-			git_show_error( 'Could not merge the initial commit -> ' . $git->get_last_error() );
-		}
-		$git->push( $branch );
-	}
-
-	if ( isset( $_POST['SubmitSave'] ) ) {
-		enable_maintenance_mode() or wp_die( 'Could not enable the maintenance mode!' );
-		$git->add();
-		$commitmsg = 'Merged changes from ' . get_site_url() . ' on ' . date( 'm.d.Y' );
-		if ( isset( $_POST['commitmsg'] ) && ! empty( $_POST['commitmsg'] ) ) {
-			$commitmsg = $_POST['commitmsg'];
-		}
-
-		$current_user = wp_get_current_user();
-		$commit = $git->commit( $commitmsg, $current_user->display_name, $current_user->user_email );
-		if ( ! $commit ) {
-			git_show_error( 'Could not commit!' );
-		} else {
-			git_show_update( "One commit has been made: `$commitmsg`" );
-		}
-
-		git_merge_and_push( $commit );
-		disable_maintenance_mode();
-	}
-
-	if ( isset( $_POST['SubmitRegenerateWebhook'] ) )
-		git_get_webhook_key( TRUE );
-
-	if ( isset( $_POST['SubmitRegenerateKeypair'] ) )
-		git_get_keypair( TRUE );
-
-	if ( ! $git->is_versioned() )
-		return git_setup_step1();
-
-	if ( ! $git->get_remote_tracking_branch() )
-		return git_setup_step2();
-
-	_git_status( true );
-
-	if ( git_has_the_minimum_version() )
-		git_changes_page();
-}
-
-//---------------------------------------------------------------------------------------------------------------------
 function _git_ssh_encode_buffer( $buffer ) {
 	$len = strlen( $buffer );
 	if ( ord( $buffer[0] ) & 0x80 ) {
@@ -483,7 +377,6 @@ function _git_ssh_encode_buffer( $buffer ) {
 	return pack( 'Na*', $len, $buffer );
 }
 
-//---------------------------------------------------------------------------------------------------------------------
 function _git_generate_keypair() {
 	$rsa_key = openssl_pkey_new(
 		array(
@@ -504,13 +397,11 @@ function _git_generate_keypair() {
 	return array( $public_key, $pem );
 }
 
-//---------------------------------------------------------------------------------------------------------------------
 function git_get_keypair( $generate_new_keypair = FALSE ) {
 	if ( $generate_new_keypair ) {
 		$keypair = _git_generate_keypair();
 		delete_option( 'git_keypair' );
 		add_option( 'git_keypair', $keypair, '', FALSE );
-		git_show_update( 'Keypair was regenerated!' );
 	}
 	if ( FALSE === ( $keypair = get_option( 'git_keypair', FALSE ) ) ) {
 		$keypair = _git_generate_keypair();
@@ -519,18 +410,15 @@ function git_get_keypair( $generate_new_keypair = FALSE ) {
 	return $keypair;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
 function _git_generate_webhook_key() {
 	return md5( str_shuffle( 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.()[]{}-_=+!@#%^&*~<>:;' ) );
 }
 
-//---------------------------------------------------------------------------------------------------------------------
 function git_get_webhook_key( $generate_new_webhook_key = FALSE ) {
 	if ( $generate_new_webhook_key ) {
 		$key = _git_generate_webhook_key();
 		delete_option( 'git_webhook_key' );
 		add_option( 'git_webhook_key', $key, '', FALSE );
-		git_show_update( 'Webhook URL was regenerated!' );
 		return $key;
 	}
 	if ( FALSE === ( $key = get_option( 'git_webhook_key', FALSE ) ) ) {
@@ -540,7 +428,6 @@ function git_get_webhook_key( $generate_new_webhook_key = FALSE ) {
 	return $key;
 }
 
-//---------------------------------------------------------------------------------------------------------------------
 function git_get_webhook() {
 	if ( defined( 'GIT_WEBHOOK_URL' ) && GIT_WEBHOOK_URL ) return GIT_WEBHOOK_URL;
 	$key = git_get_webhook_key();
@@ -548,227 +435,12 @@ function git_get_webhook() {
 	return apply_filters( 'git_webhook_url', $url, $key );
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-function git_setup_step1() {
-	global $git;
-	list( $git_public_key, $git_private_key ) = git_get_keypair(); ?>
-	<div class="wrap">
-	<h2>Status</h2>
-	<h3>unconfigured</h3>
-
-	<form action="" method="POST">
-
-	<table class="form-table">
-	<tr>
-		<th scope="row"><label for="remote_url">Remote URL</label></th>
-		<td>
-			<input type="text" class="regular-text" name="remote_url" id="remote_url" value="">
-			<p class="description">This URL provide access to a Git repository via SSH, HTTPS, or Subversion.</p>
-		</td>
-	</tr>
-
-	<?php if ( ! defined( 'GIT_KEY_FILE' ) || GIT_KEY_FILE == '' ) : ?>
-	<tr>
-		<th scope="row"><label for="key_pair">Key pair</label></th>
-		<td>
-			<p>
-			<input type="text" class="regular-text" name="key_pair" id="key_pair" value="<?php echo esc_attr( $git_public_key ); ?>" readonly="readonly">
-			<input type="submit" name="SubmitRegenerateKeypair" class="button" value="Regenerate Key" />
-			</p>
-			<p class="description">If your use ssh keybased authentication for git you need to allow write access to your repository using this key.<br>
-			Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="#" target="_blank">bitbucket</a>.
-			</p>
-		</td>
-	</tr>
-	<?php endif; ?>
-
-	</table>
-
-	<p class="submit">
-		<input type="submit" name="SubmitFetch" class="button-primary" value="Fetch" />
-	</p>
-
-	</form>
-	</div>
-	<?php
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-function git_setup_step2() {
-	global $git;
-	?>
-	<div class="wrap">
-	<h2>Status</h2>
-
-	<form action="" method="POST">
-
-	<table class="form-table">
-	<tr>
-		<th scope="row"><label for="tracking_branch">Choose tracking branch</label></th>
-		<td>
-			<select name="tracking_branch" id="tracking_branch">
-			<?php foreach ( $git->get_remote_branches() as $branch ) : ?>
-				<option value="<?php echo esc_attr( $branch ); ?>"><?php echo esc_html( $branch ); ?></option>
-			<?php endforeach; ?>
-			</select>
-			<p class="description">Your code origin is set to <code><?php echo esc_html( $git->get_remote_url() ); ?></code></p>
-		</td>
-	</tr>
-	</table>
-
-	<p class="submit">
-		<input type="submit" name="SubmitMergeAndPush" class="button-primary" value="Merge & Push" />
-	</p>
-	</form>
-	</div>
-	<?php
-};
-
-//---------------------------------------------------------------------------------------------------------------------
-function get_type_meaning( $type ) {
-	$meaning = array(
-		'??' => 'untracked',
-		'rM' => 'modified to remote',
-		'rA' => 'added to remote',
-		'rD' => 'deleted from remote',
-		'D'  => 'deleted from work tree',
-		'M'  => 'updated in work tree',
-		'A'  => 'added to work tree',
-		'AM' => 'added to work tree',
-		'R'  => 'deleted from work tree',
-	);
-
-	if ( isset( $meaning[ $type ] ) )
-		return $meaning[ $type ];
-
-	if ( 0 === strpos( $type, 'R ' ) ) {
-		$old_filename = substr( $type, 2 );
-		$type = "renamed from `$old_filename`";
-	}
-	return $type;
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-function git_changes_page() {
-	global $git;
-
-	list( $branch_status, $changes ) = _git_status();
-	list( $git_public_key, $git_private_key ) = git_get_keypair();
-	$branch = $git->get_remote_tracking_branch();
-	$ahead  = count( $git->get_ahead_commits() );
-	$behind = count( $git->get_behind_commits() ); ?>
-
-	<div class="wrap">
-	<div id="icon-options-general" class="icon32">&nbsp;</div>
-	<h2>Status <code class="small">connected to <strong><?php echo esc_html( $git->get_remote_url() ); ?></strong></code></h2>
-	<p>
-	  Following remote branch <code><?php echo esc_html( $branch ); ?></code>.
-	  <?php
-		if ( ! $ahead && ! $behind && empty( $changes ) ) echo 'Everything is up to date';
-		if ( $ahead && $behind ) echo "You are $ahead commits ahead and $behind behind remote.";
-		elseif ( $ahead ) echo "You are $ahead commits ahead remote.";
-		elseif ( $behind ) echo "You are $behind commits behind remote.";
-		?>
-	</p>
-	
-	<table class="widefat" id="git-changes-table">
-	<thead><tr><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></thead>
-	<tfoot><tr><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change type</th></tr></tfoot>
-	<tbody>
-		<?php if ( empty( $changes ) ) : ?>
-			<tr><td><p>Nothing to commit, working directory clean.</p></td></tr>
-		<?php else : ?>
-			<?php foreach ( $changes as $path => $type ) : ?>
-				<tr>
-					<td>
-						<strong><?php echo esc_html( $path ); ?></strong>
-					</td>
-					<td>
-						<?php if ( is_dir( ABSPATH . '/' . $path ) && is_dir( ABSPATH . '/' . trailingslashit( $path ) . '.git' ) ) { // test if is submodule ?>
-							Submodules are not supported in this version.
-						<?php } else { ?>
-							<span title="<?php echo esc_html( $type ); ?>"><?php echo esc_html( get_type_meaning( $type ) ); ?></span>
-						<?php } ?>
-					</td>
-				</tr>
-			<?php endforeach; ?>
-		<?php endif; ?>
-	<form action="" method="POST">
-	</tbody>
-	</table>
-	<?php if ( ! empty( $changes ) ) : ?>
-		<p>
-		<label for="save-changes">Commit message:</label>
-		<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="Merged changes from <?php echo esc_url( get_site_url() ); ?> on <?php echo esc_html( date( 'm.d.Y' ) ); ?>" />
-		</p>
-		<p>
-		<input type="submit" name="SubmitSave" class="button-primary button" value="Save changes" <?php if ( get_transient( 'git_remote_disconnected', TRUE ) ) echo 'disabled="disabled" '; ?>/>
-		</p>
-		</form>
-	<?php endif; ?>
-	<table class="form-table">
-	  <tr>
-		<th><label for="webhook-url">Webhook URL:</label></th>
-		<td>
-		  <p><code id="webhook-url"><?php echo esc_url( git_get_webhook() ); ?></code>
-		  <?php if ( ! defined( 'GIT_WEBHOOK_URL' ) || GIT_WEBHOOK_URL == '' ) : ?>
-		  <input type="submit" name="SubmitRegenerateWebhook" class="button" value="Regenerate Webhook" /></p>
-		  <?php endif; ?>
-		  <p class="description">Pinging this URL triggers an update from remote repository.</p>
-		</td>
-	  </tr>
-
-	  <?php if ( ! defined( 'GIT_KEY_FILE' ) || GIT_KEY_FILE == '' ) : ?>
-	  <tr>
-		<th><label for="public-key">Public Key:</label></th>
-		<td>
-		  <p><input type="text" class="regular-text" name="public_key" id="public-key" value="<?php echo esc_attr( $git_public_key ); ?>" readonly="readonly">
-		  <input type="submit" name="SubmitRegenerateKeypair" class="button" value="Regenerate Key" /></p>
-		  <p class="description">If your use ssh keybased authentication for git you need to allow write access to your repository using this key.<br>
-		  Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="#" target="_blank">bitbucket</a>.
-		  </p>
-		</td>
-	  </tr>
-	  <?php endif; ?>
-
-	</table>
-	</div>
-	<?php
-};
-
-//---------------------------------------------------------------------------------------------------------------------
-function git_menu() {
-	$page = add_menu_page( 'Git Status', 'Code', 'manage_options', 'git-sauce/git-sauce.php', 'git_options_page' );
-	add_action( "load-$page", 'git_options_page_check' );
-}
-add_action( 'admin_menu', 'git_menu' );
-
-//---------------------------------------------------------------------------------------------------------------------
-function git_add_menu_bubble() {
-	global $menu, $git;
-
-	list ( $branch_status, $changes ) = _git_status();
-	if ( ! empty( $changes ) ) :
-		$bubble_count = count( $changes );
-		foreach ( $menu as $key => $value  ) {
-			if ( 'git-sauce/git-sauce.php' == $menu[ $key ][2] ) {
-				$menu[ $key ][0] .= " <span class='update-plugins count-$bubble_count'><span class='plugin-count'>"
-					. $bubble_count . '</span></span>';
-				return;
-			}
-		}
-	endif;
-}
-add_action( 'admin_menu', 'git_add_menu_bubble' );
-
-//---------------------------------------------------------------------------------------------------------------------
 function git_has_the_minimum_version() {
 	global $git;
 
 	return '1.7' <= substr( get_transient( 'git_version', '' ), 0, 3 );
 }
 
-//---------------------------------------------------------------------------------------------------------------------
 function git_require_minimum_version() {
 	if ( current_user_can( 'manage_options' ) && ( ! git_has_the_minimum_version() ) ) : ?>
 		<div class="error-nag error">
@@ -778,7 +450,6 @@ function git_require_minimum_version() {
 }
 add_action( 'admin_notices', 'git_require_minimum_version' );
 
-//---------------------------------------------------------------------------------------------------------------------
 function git_remote_disconnected_notice() {
 	if ( current_user_can( 'manage_options' ) && $message = get_transient( 'git_remote_disconnected', null ) ) : ?>
 		<div class="error-nag error">
@@ -790,3 +461,4 @@ function git_remote_disconnected_notice() {
 	<?php endif;
 }
 add_action( 'admin_notices', 'git_remote_disconnected_notice' );
+

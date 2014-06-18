@@ -34,7 +34,10 @@ wp-config.php
 /xmlrpc.php
 .maintenance
 EOF;
+
 function _log() {
+	if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) return;
+	
 	if ( func_num_args() == 1 && is_string( func_get_arg( 0 ) ) ) {
 		error_log( func_get_arg( 0 ) );
 	} else {
@@ -58,13 +61,7 @@ function _git_rrmdir( $dir ) {
 }
 
 function enable_maintenance_mode() {
-	global $file;
-
-	$file = WP_CONTENT_DIR;
-	if ( '/' == $file[ strlen( $file ) -1 ] )
-		$file .= '../.maintenance';
-	else
-		$file .= '/../.maintenance';
+	$file = ABSPATH . '/.maintenance';
 
 	if ( FALSE === file_put_contents( $file, '<?php $upgrading = ' . time() .';' ) )
 		return FALSE;
@@ -73,9 +70,7 @@ function enable_maintenance_mode() {
 }
 
 function disable_maintenance_mode() {
-	global $file;
-
-	return unlink( $file );
+	return unlink( ABSPATH . '/.maintenance' );
 }
 
 function _git_temp_key_file() {
@@ -242,13 +237,16 @@ class Git_Wrapper {
 		$changes = $this->status( true );
 		_log( $changes );
 		foreach ( $changes as $path => $change ) {
-			if ( 'UD' == $change ) {
+			if ( in_array( $change, array( 'UD', 'DD' ) ) ) {
 				$this->_call( 'rm', $path );
 				$message .= "\n\tConflict: $path [removed]";
-			}
-			if ( 'DU' == $change ) {
+			} elseif ( 'DU' == $change ) {
 				$this->_call( 'add', $path );
 				$message .= "\n\tConflict: $path [added]";
+			} elseif ( in_array( $change, array( 'AA', 'UU', 'AU', 'UA' ) ) ) {
+				$this->_call( 'checkout', '--theirs', $path );
+				$this->_call( 'add', '--all', $path );
+				$message .= "\n\tConflict: $path [local version]";
 			}
 		}
 		$this->commit( $message );
@@ -302,11 +300,6 @@ class Git_Wrapper {
 		return ( 0 == count( array_intersect( $changes, array( 'DD', 'AU', 'UD', 'UA', 'DU', 'AA', 'UU' ) ) ) );
 	}
 
-	function add_initial_content() {
-		list( $return, $response ) = $this->_call( 'add', 'wp-content', '.gitignore' );
-		return ( 0 == $return );
-	}
-
 	function merge_initial_commit( $commit, $branch ) {
 		list( $return, $response ) = $this->_call( 'branch', '-m', 'initial' );
 		if ( 0 != $return )
@@ -321,15 +314,14 @@ class Git_Wrapper {
 		);
 		if ( $return != 0 ) {
 			$this->_resolve_merge_conflicts( $this->get_commit_message( $commit ) );
+			if ( ! $this->successfully_merged() ) {
+				$this->_call( 'cherry-pick', '--abort' );
+				$this->_call( 'checkout', 'initial' );
+				return FALSE;
+			}
 		}
-		if ( $this->successfully_merged() ) { // git status without states: AA, DD, UA, AU ...
-			$this->_call( 'branch', '-D', 'initial' );
-			return TRUE;
-		} else {
-			$this->_call( 'cherry-pick', '--abort' );
-			$this->checkout( 'initial' );
-			return FALSE;
-		}
+		$this->_call( 'branch', '-D', 'initial' );
+		return TRUE;
 	}
 
 	function get_remote_branches() {
