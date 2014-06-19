@@ -1,43 +1,38 @@
-<?php class Test_Git_Sauce extends WP_UnitTestCase {
-	function test_plugin_activated() {
-		$this->assertTrue( is_plugin_active( 'git-sauce/git-sauce.php' ) );
+<?php class Test_Gitium_Sauce extends WP_UnitTestCase {
+	private $test_gitium_is_activated = FALSE;
+	private $plugin = 'gitium/gitium.php';
+
+	function Test_Gitium_Sauce() {
+		$this->test_gitium_is_activated = is_plugin_active( $this->plugin );
 	}
 
 	function test_has_filter_upgrader_post_install() {
-		$this->assertGreaterThan( 0, has_filter( 'upgrader_post_install', 'git_upgrader_post_install' ) );
+		$this->assertGreaterThan( 0, has_filter( 'upgrader_post_install', 'gitium_upgrader_post_install' ) );
 	}
 
 	function test_has_action_upgrader_process_complete() {
-		$this->assertGreaterThan( 0, has_action( 'upgrader_process_complete', 'git_pull_and_push' ) );
-	}
-
-	function test_has_constant_git_branch() {
-		$this->assertGreaterThan( 0, defined( 'GIT_BRANCH' ) );
-	}
-
-	function test_git_format_message() {
-		$this->markTestIncomplete();
+		$this->assertGreaterThan( 0, has_action( 'upgrader_process_complete', 'gitium_auto_push' ) );
 	}
 
 	function test_has_action_activated_plugin_git_check_post_activate_modifications() {
-		$this->assertGreaterThan( 0, has_action( 'activated_plugin','git_check_post_activate_modifications' ) );
+		$this->assertGreaterThan( 0, has_action( 'activated_plugin','gitium_check_post_activate_modifications' ) );
 	}
 
 	function test_has_action_deactivated_plugin_git_check_post_deactivate_modifications() {
-		$this->assertGreaterThan( 0, has_action( 'deactivated_plugin','git_check_post_deactivate_modifications' ) );
+		$this->assertGreaterThan( 0, has_action( 'deactivated_plugin','gitium_check_post_deactivate_modifications' ) );
 	}
 
 	function test_has_action_git_check_for_plugin_deletions() {
-		$this->assertGreaterThan( 0, has_action( 'load-plugins.php', 'git_check_for_plugin_deletions' ) );
+		$this->assertGreaterThan( 0, has_action( 'load-plugins.php', 'gitium_check_for_plugin_deletions' ) );
 	}
 
 	function test_has_action_git_check_for_themes_deletions() {
-		$this->assertGreaterThan( 0, has_action( 'load-themes.php','git_check_for_themes_deletions' ) );
+		$this->assertGreaterThan( 0, has_action( 'load-themes.php','gitium_check_for_themes_deletions' ) );
 	}
 
-	function test_git_module_by_path() {
+	function test_gitium_module_by_path() {
 		set_transient(
-			'git_versions', 
+			'gitium_versions',
 			array(
 				'plugins' => array(
 					'struto-camila/strutul.php' => array( 'name' => 'Strutul', 'version' => '3.2.1' ),
@@ -53,7 +48,7 @@
 
 		// Case 1
 		$path   = '';
-		$assert = _git_module_by_path( $path ) == array(
+		$assert = _gitium_module_by_path( $path ) == array(
 			'base_path' => $path,
 			'type'      => 'other',
 			'name'      => basename( $path ),
@@ -63,7 +58,7 @@
 
 		// Case 2
 		$path   = 'wp-content/plugins/autover/autover.php';
-		$assert = _git_module_by_path( $path ) == array(
+		$assert = _gitium_module_by_path( $path ) == array(
 			'base_path' => 'wp-content/plugins/autover',
 			'type'      => 'plugin',
 			'name'      => 'AutoVer',
@@ -73,7 +68,7 @@
 
 		// Case 3
 		$path   = 'wp-content/plugins/simple.php';
-		$assert = _git_module_by_path( $path ) == array(
+		$assert = _gitium_module_by_path( $path ) == array(
 			'base_path' => 'wp-content/plugins/simple.php',
 			'type'      => 'plugin',
 			'name'      => 'Simple',
@@ -83,7 +78,7 @@
 
 		// Case 4
 		$path   = 'wp-content/themes/hahaha/style.css';
-		$assert = _git_module_by_path( $path ) == array(
+		$assert = _gitium_module_by_path( $path ) == array(
 			'base_path' => 'wp-content/themes/hahaha',
 			'type'      => 'theme',
 			'name'      => 'Ha ha ha hi',
@@ -93,7 +88,7 @@
 
 		// Case 5
 		$path   = 'wp-content/themes/hahaha/img/logo.png';
-		$assert = _git_module_by_path( $path ) == array(
+		$assert = _gitium_module_by_path( $path ) == array(
 			'base_path' => 'wp-content/themes/hahaha',
 			'type'      => 'theme',
 			'name'      => 'Ha ha ha hi',
@@ -103,7 +98,7 @@
 
 		// Case 6
 		$path   = 'wp-content/themes/mobile_pack_red/style.css.nokia.css';
-		$assert = _git_module_by_path( $path ) == array(
+		$assert = _gitium_module_by_path( $path ) == array(
 			'base_path' => $path,
 			'type'      => 'theme',
 			'name'      => basename( $path ),
@@ -113,7 +108,7 @@
 
 		// Case 7
 		$path   = 'wp-content/plugins/struto-camila/camila.php';
-		$assert = _git_module_by_path( $path ) == array(
+		$assert = _gitium_module_by_path( $path ) == array(
 			'base_path' => 'wp-content/plugins/struto-camila',
 			'type'      => 'plugin',
 			'name'      => 'Strutul',
@@ -122,3 +117,4 @@
 		$this->assertTrue( $assert );
 	}
 }
+$test = new Test_Gitium_Sauce();
