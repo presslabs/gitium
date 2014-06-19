@@ -1,0 +1,13 @@
+{
+    "name": "presslabs/gitium",
+    "description": "Keep all your wordpress code on git version control system",
+    "authors": [
+        {
+            "name": "Gitium",
+            "email": "gitium@presslabs.com"
+        }
+    ],
+    "require-dev": {
+        "phpunit/phpunit": "4.1.*"
+    }
+}
