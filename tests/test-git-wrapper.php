@@ -3,4 +3,3 @@
 		$this->assertTrue( class_exists( 'Git_Wrapper' ) );
 	}
 }
-
