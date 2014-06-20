@@ -95,14 +95,10 @@ class Gitium_Admin {
 		$this->redirect( $message, true );
 	}
 
-	public function init_repo() {
-		if ( ! isset( $_POST['SubmitFetch'] ) || ! isset( $_POST['remote_url'] ) ) return;
-		check_admin_referer( 'gitium-admin' );
-		if ( empty( $_POST['remote_url'] ) ) $this->redirect( 'Please secify a valid repo.' );
-
+	public function init_process( $remote_url ) {
 		$git = $this->git;
 		$git->init();
-		$git->add_remote_url( $_POST['remote_url'] );
+		$git->add_remote_url( $remote_url );
 		$git->fetch_ref();
 		if ( count( $git->get_remote_branches() ) == 0 ) {
 			$git->add( 'wp-content', '.gitignore' );
@@ -110,10 +106,21 @@ class Gitium_Admin {
 			$git->commit( 'Initial commit', $current_user->display_name, $current_user->user_email );
 			if ( ! $git->push( 'master' ) ) {
 				$git->cleanup();
-				$this->redirect( 'Could not push to remote ' . $_POST['remote_url'] );
+				return FALSE;
 			}
 		}
-		$this->success_redirect();
+		return TRUE;
+	}
+
+	public function init_repo() {
+		if ( ! isset( $_POST['SubmitFetch'] ) || ! isset( $_POST['remote_url'] ) ) return;
+		check_admin_referer( 'gitium-admin' );
+		if ( empty( $_POST['remote_url'] ) ) $this->redirect( 'Please secify a valid repo.' );
+
+		if ( $this->init_process( $_POST['remote_url'] ) )
+			$this->success_redirect();
+		else
+			$this->redirect( 'Could not push to remote ' . $_POST['remote_url']  );
 	}
 
 	public function choose_branch() {
