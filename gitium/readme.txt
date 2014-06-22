@@ -21,9 +21,11 @@ Gitium is the latest element discovered in the [PressLabs](http://www.presslabs.
 
 == Screenshots ==
 
-1. Setup step 1: Add remote repository
-2. Setup step 2: Choose following branch
-3. Commit local changes
+1. Setup step 1: Get SSH Key
+2. Setup step 2: Set SSH Key (Github)
+3. Setup step 3: Add remote repository
+4. Setup step 4: Choose following branch
+5. Commit local changes
 
 == Installation ==
 
