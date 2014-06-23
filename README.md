@@ -32,7 +32,7 @@ Plugin and search for __gitium__. Then click on Install, then on Activate Now.
 
 Activate the plugin and follow the on screen instructions under the `Code` menu.
 
-_IMPORTANT_: Gitium does it's best not to version your WordPress core neither
+_IMPORTANT_: Gitium does its best not to version your WordPress core neither
 your `/wp-content/uploads` folder.
 
 ## Frequently Asked Questions
