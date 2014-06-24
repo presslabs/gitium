@@ -41,7 +41,11 @@
 		// add & commit (remote)
 		exec( "git clone -q $this->remote_repo /tmp/gitium-repo" );
 		exec( 'cd /tmp/gitium-repo' );
-		exec( "echo 'remote' > $file_name ; git add $file_name ; git commit -q -m 'remote file' ; git push -q" );
+		exec( "echo 'remote' > $file_name " );
+		exec( 'git config user.email gitium@presslabs.com' );
+		exec( 'git config user.name Gitium' );
+		exec( 'git config push.default matching' );
+		exec( "git add $file_name ; git commit -q -m 'remote file' ; git push -q" );
 
 		// add & commit (local)
 		file_put_contents( "$local_file", 'local' );

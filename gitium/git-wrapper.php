@@ -207,8 +207,8 @@ class Git_Wrapper {
 		global $gitignore;
 		file_put_contents( "$this->repo_dir/.gitignore", $gitignore );
 		list( $return, $response ) = $this->_call( 'init' );
-		$this->_call( 'config', 'user.email', 'git-sauce@presslabs.com' );
-		$this->_call( 'config', 'user.name', 'Git Sauce' );
+		$this->_call( 'config', 'user.email', 'gitium@presslabs.com' );
+		$this->_call( 'config', 'user.name', 'Gitium' );
 		$this->_call( 'config', 'push.default', 'matching' );
 		return ( 0 == $return );
 	}
