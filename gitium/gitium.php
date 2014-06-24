@@ -482,4 +482,3 @@ function gitium_remote_disconnected_notice() {
 	<?php endif;
 }
 add_action( 'admin_notices', 'gitium_remote_disconnected_notice' );
-
