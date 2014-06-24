@@ -24,6 +24,10 @@
 	function teardown() {
 	}
 
+	function test_gitium_is_activated() {
+		$this->assertTrue( is_plugin_active( $this->plugin ) );
+	}
+
 	function test_has_action_gitium_update_versions() {
 		$this->assertGreaterThan( 0, has_action( 'load-plugins.php', 'gitium_update_versions', 999 ) );
 	}
