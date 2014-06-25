@@ -40,7 +40,7 @@ register_activation_hook( __FILE__, '_gitium_make_ssh_git_file_exe' );
             [hello-dolly/hello.php] => `Hello Dolly` version 1.6
         )
 
-	) */
+) */
 function gitium_update_versions() {
 	//
 	// get all themes from WP
