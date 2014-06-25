@@ -16,22 +16,34 @@
 */
 
 $gitignore = <<<EOF
-wp-admin/
-wp-includes/
+*.log
+*.swp
+*.back
+*.bak
+*.sql
+*.sql.gz
+~*
+
 .htaccess
+.maintenance
+
+wp-config.php
+sitemap.xml
+sitemap.xml.gz
 wp-content/uploads/
 wp-content/blogs.dir/
 wp-content/upgrade/
 wp-content/backup-db/
-wp-content/advanced-cache.php
-wp-content/wp-cache-config.php
-sitemap.xml
-*.log
 wp-content/cache/
 wp-content/backups/
-sitemap.xml.gz
-wp-config.php
 
+wp-content/advanced-cache.php
+wp-content/object-cache.php
+wp-content/wp-cache-config.php
+wp-content/db.php
+
+wp-admin/
+wp-includes/
 /index.php
 /license.txt
 /readme.html
@@ -48,7 +60,6 @@ wp-config.php
 /wp-signup.php
 /wp-trackback.php
 /xmlrpc.php
-.maintenance
 EOF;
 
 function _log() {
