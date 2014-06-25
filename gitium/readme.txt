@@ -5,7 +5,7 @@ Donate link: http://www.presslabs.com/
 Tags: git, version, versioning, deployment, version-control, github, bitbucker, travis, code, revision, testing, development, branch, production, staging, debug
 Requires at least: 3.9
 Tested up to: 3.9.1
-Stable tag: 0.3-alpha
+Stable tag: 0.3.1-alpha
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -66,6 +66,10 @@ Currently submodules are not supported.
 
 
 == Changelog ==
+
+= 0.3.1-alpha =
+* Fix issues with ssh repositories
+* Fix maintemance mode when webhook fails
 
 = 0.3-alpha =
 * First alpha release
