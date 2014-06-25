@@ -66,6 +66,19 @@ function _log() {
 	}
 }
 
+function _gitium_make_ssh_git_file_exe() {
+	$ssh_wrapper = dirname( __FILE__ ) . '/ssh-git';
+	$process     = proc_open(
+		"chmod -f +x $ssh_wrapper",
+		array(
+			0 => array( 'pipe', 'r' ),  // stdin
+			1 => array( 'pipe', 'w' ),  // stdout
+		),
+		$pipes
+	);
+	fclose( $pipes[0] );
+}
+
 function _git_rrmdir( $dir ) {
 	if ( ! empty( $dir ) && is_dir( $dir ) ) {
 		$files = array_diff( scandir( $dir ), array( '.', '..' ) );

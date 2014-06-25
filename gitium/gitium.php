@@ -26,6 +26,8 @@
 require_once __DIR__ . '/git-wrapper.php';
 require_once __DIR__ . '/gitium-admin.php';
 
+register_activation_hook( __FILE__, '_gitium_make_ssh_git_file_exe' );
+
 /* Array
 (
     [themes] => Array
