@@ -1,7 +1,7 @@
 <?php
 /*
  * Plugin Name: Gitium
- * Version: 0.3.1-alpha
+ * Version: 0.3.2-alpha
  * Author: PressLabs
  * Author URI: http://www.presslabs.com
  * License: GPL2
@@ -298,7 +298,7 @@ add_action( 'upgrader_process_complete', 'gitium_auto_push', 11, 0 );
 function gitium_check_post_activate_modifications( $plugin ) {
 	global $git;
 
-	if ( 'git-sauce/git-sauce.php' == $plugin ) return; // do not hook on activation of this plugin
+	if ( 'gitium/gitium.php' == $plugin ) return; // do not hook on activation of this plugin
 
 	if ( $git->is_dirty() ) {
 		$versions = gitium_update_versions();
@@ -316,7 +316,7 @@ add_action( 'activated_plugin', 'gitium_check_post_activate_modifications', 999 
 function gitium_check_post_deactivate_modifications( $plugin ) {
 	global $git;
 
-	if ( 'git-sauce/git-sauce.php' == $plugin ) return; // do not hook on deactivation of this plugin
+	if ( 'gitium/gitium.php' == $plugin ) return; // do not hook on deactivation of this plugin
 
 	if ( $git->is_dirty() ) {
 		$versions = gitium_get_versions();
@@ -415,7 +415,7 @@ function _gitium_generate_keypair() {
 	$buffer     = pack( 'N', 7 ) . 'ssh-rsa' .
 					_gitium_ssh_encode_buffer( $key_info['rsa']['e'] ) .
 					_gitium_ssh_encode_buffer( $key_info['rsa']['n'] );
-	$public_key = 'ssh-rsa ' . base64_encode( $buffer ) . ' git-sauce@' . parse_url( get_home_url(), PHP_URL_HOST );
+	$public_key = 'ssh-rsa ' . base64_encode( $buffer ) . ' gitium@' . parse_url( get_home_url(), PHP_URL_HOST );
 
 	return array( $public_key, $pem );
 }
@@ -467,7 +467,7 @@ function gitium_has_the_minimum_version() {
 function gitium_require_minimum_version() {
 	if ( current_user_can( 'manage_options' ) && ( ! gitium_has_the_minimum_version() ) ) : ?>
 		<div class="error-nag error">
-			<p>Git Sauce plugin require minimum `git version 1.7`!</p>
+			<p>Gitium requires minimum git version 1.7!</p>
 		</div>
 	<?php endif;
 }
