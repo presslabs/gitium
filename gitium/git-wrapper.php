@@ -298,6 +298,8 @@ class Git_Wrapper {
 	}
 
 	function merge_with_accept_mine() {
+		do_action( 'gitium_before_merge_with_accept_mine' );
+
 		$commits = func_get_args();
 		if ( 1 == func_num_args() && is_array( $commits[0] ) )
 			$commits = $commits[0];
