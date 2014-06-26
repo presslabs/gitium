@@ -125,6 +125,8 @@ function _gitium_format_message( $name, $version = FALSE, $prefix = '' ) {
 function gitium_upgrader_post_install( $res, $hook_extra, $result ) {
 	global $git;
 
+	_gitium_make_ssh_git_file_exe();
+
 	$type    = isset( $hook_extra['type']) ? $hook_extra['type'] : 'plugin';
 	$action  = isset( $hook_extra['action']) ? $hook_extra['action'] : 'update';
 	$git_dir = $result['destination'];
