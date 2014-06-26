@@ -252,7 +252,7 @@ class Gitium_Admin {
 				<input type="submit" name="SubmitRegenerateKeypair" class="button" value="Regenerate Key" />
 				</p>
 				<p class="description">If your use ssh keybased authentication for git you need to allow write access to your repository using this key.<br>
-				Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="#" target="_blank">bitbucket</a>.
+				Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="https://confluence.atlassian.com/display/BITBUCKET/Add+an+SSH+key+to+an+account#AddanSSHkeytoanaccount-HowtoaddakeyusingSSHforOSXorLinux" target="_blank">bitbucket</a>.
 				</p>
 			</td>
 		</tr>
@@ -376,7 +376,7 @@ class Gitium_Admin {
 			  <p><input type="text" class="regular-text" name="public_key" id="public-key" value="<?php echo esc_attr( $git_public_key ); ?>" readonly="readonly">
 			  <input type="submit" name="SubmitRegenerateKeypair" class="button" value="Regenerate Key" /></p>
 			  <p class="description">If your use ssh keybased authentication for git you need to allow write access to your repository using this key.<br>
-			  Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="#" target="_blank">bitbucket</a>.
+			  Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="https://confluence.atlassian.com/display/BITBUCKET/Add+an+SSH+key+to+an+account#AddanSSHkeytoanaccount-HowtoaddakeyusingSSHforOSXorLinux" target="_blank">bitbucket</a>.
 			  </p>
 			</td>
 		  </tr>
