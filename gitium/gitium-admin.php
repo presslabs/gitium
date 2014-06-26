@@ -237,8 +237,9 @@ class Gitium_Admin {
 		<tr>
 			<th scope="row"><label for="remote_url">Remote URL</label></th>
 			<td>
-				<input type="text" class="regular-text" name="remote_url" id="remote_url" value="">
-				<p class="description">This URL provide access to a Git repository via SSH, HTTPS, or Subversion.</p>
+				<input type="text" class="regular-text" name="remote_url" id="remote_url" placeholder="git@github.com:user/example.git" value="">
+				<p class="description">This URL provide access to a Git repository via SSH, HTTPS, or Subversion.<br />
+				If you need to authenticate over "https://" instead of SSH use: <code>https://user:pass@github.com/user/example.git</code></p>
 			</td>
 		</tr>
 
