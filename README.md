@@ -1,4 +1,4 @@
-gitium [![Build Status](https://magnum.travis-ci.com/PressLabs/gitium.svg?token=zzWtsrp6o6xxAAyCxmmH)](https://magnum.travis-ci.com/PressLabs/gitium)
+gitium [![Build Status](https://travis-ci.org/PressLabs/gitium.svg)](https://travis-ci.org/PressLabs/gitium)
 ======
 
 Automatic git version control and deployment for your plugins and themes
