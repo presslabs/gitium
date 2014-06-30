@@ -1,25 +1,40 @@
-<?php class Test_Gitium_Process extends WP_UnitTestCase {
-	private $remote_repo = null;
+<?php class Test_Gitium_Merge_Conflicts extends WP_UnitTestCase {
+	private $remote_repo   = null;
+	private $local_file    = null;
+	private $remote_file   = null;
+	private $file_name     = 'me';
+	private $repo_temp_dir = '/tmp/gitium-repo';
 
 	function setup() {
-		// http://treeleafmedia.be/blog/2011/03/creating-a-new-git-repository-on-a-local-file-system/
+		// create file with unique file name and with 0600 access permission
 		$repo = tempnam( sys_get_temp_dir(), 'gitium-' );
 		if ( file_exists( $repo ) ) unlink( $repo );
 		mkdir( $repo );
-		exec( "cd $repo; git init --bare $repo" );
 		$this->remote_repo = $repo;
+		$this->local_file  = dirname( WP_CONTENT_DIR ) . "/{$this->file_name}";
+		$this->remote_file = "{$this->repo_temp_dir}/{$this->file_name}";
+
+		// init git
+		exec( "cd $repo; git init --bare $repo" );
+		$this->gitium_init_process();
+
+		// clone the repo
+		exec( "git clone -q {$this->remote_repo} {$this->repo_temp_dir}" );
+
+		// set git config data
+		exec( "cd {$this->repo_temp_dir} ; git config user.email gitium@presslabs.com" );
+		exec( "cd {$this->repo_temp_dir} ; git config user.name Gitium" );
+		exec( "cd {$this->repo_temp_dir} ; git config push.default matching" );
 	}
 
 	function teardown() {
 		if ( $this->remote_repo )
-			exec( "rm -rf $this->remote_repo" );
+			exec( "rm -rf {$this->remote_repo}" );
 		exec( 'rm -rf ' . dirname( WP_CONTENT_DIR ) . '/.git' );
 		exec( 'rm -rf ' . dirname( WP_CONTENT_DIR ) . '/.gitignore' );
-	}
 
-	function test_repo_dir() {
-		global $git;
-		$this->assertEquals( $git->repo_dir, dirname( WP_CONTENT_DIR ) );
+		// remove the files of the test
+		exec( "rm -rf {$this->local_file} ; rm -rf {$this->repo_temp_dir}" );
 	}
 
 	function gitium_init_process() {
