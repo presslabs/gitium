@@ -39,12 +39,13 @@
 		$local_file = dirname( WP_CONTENT_DIR ) . "/$file_name";
 
 		// add & commit (remote)
-		exec( "git clone -q $this->remote_repo /tmp/gitium-repo" );
-		exec( "cd /tmp/gitium-repo ; echo 'remote' > $file_name " );
-		exec( 'cd /tmp/gitium-repo ; git config user.email gitium@presslabs.com' );
-		exec( 'cd /tmp/gitium-repo ; git config user.name Gitium' );
-		exec( 'cd /tmp/gitium-repo ; git config push.default matching' );
-		exec( "cd /tmp/gitium-repo ; git add $file_name ; git commit -q -m 'remote file' ; git push -q" );
+		$gitium_repo_temp_dir = '/tmp/gitium-repo';
+		exec( "git clone -q $this->remote_repo $gitium_repo_temp_dir" );
+		exec( "cd $gitium_repo_temp_dir ; echo 'remote' > $file_name " );
+		exec( "cd $gitium_repo_temp_dir ; git config user.email gitium@presslabs.com" );
+		exec( "cd $gitium_repo_temp_dir ; git config user.name Gitium" );
+		exec( "cd $gitium_repo_temp_dir ; git config push.default matching" );
+		exec( "cd $gitium_repo_temp_dir ; git add $file_name ; git commit -q -m 'remote file' ; git push -q" );
 
 		// add & commit (local)
 		file_put_contents( "$local_file", 'local' );
@@ -53,9 +54,10 @@
 
 		// test merge with accept mine conflicts
 		$this->assertTrue( $git->merge_with_accept_mine() );
-		$this->assertEquals( file_get_contents( $local_file ), 'local' );
 
 		// check if the result is what it's supposed to be from merge with accept mine process
-		exec( "rm -rf $local_file ; rm -rf /tmp/gitium-repo" );
+		$this->assertEquals( file_get_contents( $local_file ), 'local' );
+
+		exec( "rm -rf $local_file ; rm -rf $gitium_repo_temp_dir" );
 	}
 }
