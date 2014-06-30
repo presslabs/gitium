@@ -42,37 +42,139 @@
 		return $admin->init_process( $this->remote_repo );
 	}
 
-	function test_init_process() {
-		$this->assertTrue( $this->gitium_init_process() );
-	}
-
-	function test_check_merge_conflicts_aa() { // AA unmerged, both added
+	/**
+	 * Set merge conflict: AA -> unmerged, both added
+	 *
+	 * 1.create one file remotely with the content `remote` (add & commit)
+	 * 2.create the same file locally with the content `local` (add & commit)
+	 */
+	function set_merge_conflict_aa() {
 		global $git;
-		$this->gitium_init_process(); // init the git repo
 
-		$file_name  = 'me';
-		$local_file = dirname( WP_CONTENT_DIR ) . "/$file_name";
+		// 1.add & commit (remote)
+		exec( "cd {$this->repo_temp_dir} ; echo 'remote' > $this->file_name " );
+		exec( "cd {$this->repo_temp_dir} ; git add $this->file_name ; git commit -q -m 'remote file' ; git push -q" );
 
-		// add & commit (remote)
-		$gitium_repo_temp_dir = '/tmp/gitium-repo';
-		exec( "git clone -q $this->remote_repo $gitium_repo_temp_dir" );
-		exec( "cd $gitium_repo_temp_dir ; echo 'remote' > $file_name " );
-		exec( "cd $gitium_repo_temp_dir ; git config user.email gitium@presslabs.com" );
-		exec( "cd $gitium_repo_temp_dir ; git config user.name Gitium" );
-		exec( "cd $gitium_repo_temp_dir ; git config push.default matching" );
-		exec( "cd $gitium_repo_temp_dir ; git add $file_name ; git commit -q -m 'remote file' ; git push -q" );
-
-		// add & commit (local)
-		file_put_contents( "$local_file", 'local' );
+		// 2.add & commit (local)
+		file_put_contents( "$this->local_file", 'local' );
 		$git->add();
 		$git->commit( 'Add local file' );
+	}
 
-		// test merge with accept mine conflicts
+	/**
+	 * Test merge conflict: AA -> unmerged, both added
+	 *
+	 * 1.set merge conflict AA (unmerged, both added)
+	 * 2.test `merge with accept mine` conflicts
+	 * 3.check if the content `local` is the final text after the `merge with accept mine` process
+	 */
+	function test_merge_conflict_aa() {
+		global $git;
+
+		// 1.set merge conflict AA (unmerged, both added)
+		$this->set_merge_conflict_aa();
+
+		// 2.test merge with accept mine conflicts
 		$this->assertTrue( $git->merge_with_accept_mine() );
 
-		// check if the result is what it's supposed to be from merge with accept mine process
-		$this->assertEquals( file_get_contents( $local_file ), 'local' );
+		// 3.check if the result is what it's supposed to be from merge with accept mine process
+		$this->assertEquals( file_get_contents( $this->local_file ), 'local' );
+	}
 
-		exec( "rm -rf $local_file ; rm -rf $gitium_repo_temp_dir" );
+	/**
+	 * Set merge conflict: UU -> unmerged, both modified
+	 *
+	 * 1.set merge conflict AA
+	 * 2.merge with accept mine
+	 * 3.create one file remotely with the content `remote` (edit,add & commit)
+	 * 4.create the same file locally with the content `local` (edit,add & commit)
+	 */
+	function set_merge_conflict_uu() {
+		global $git;
+
+		// 1.set merge conflict AA (unmerged, both added)
+		$this->set_merge_conflict_aa();
+
+		// 2.merge with accept mine
+		$git->merge_with_accept_mine();
+
+		// 3.modify the remote file with the content `remote:uu` (edit,add & commit)
+		file_put_contents( "$this->remote_file", 'remote:uu' );
+		$git->add();
+		$git->commit( 'Change remote file' );
+
+		// 4.modify the same file locally with the content `local:uu` (edit,add & commit)
+		file_put_contents( "$this->local_file", 'local:uu' );
+		$git->add();
+		$git->commit( 'Change local file' );
+	}
+
+	/**
+	 * Test merge conflict: UU -> unmerged, both modified
+	 *
+	 * 1.set merge conflict UU (unmerged, both modified)
+	 * 2.test `merge with accept mine` conflicts
+	 * 3.check if the content `local:uu` is the final text after the `merge with accept mine` process
+	 */
+	function test_merge_conflict_uu() {
+		global $git;
+
+		// 1.set merge conflict UU (unmerged, both modified)
+		$this->set_merge_conflict_uu();
+
+		// 2.test `merge with accept mine` conflicts
+		$this->assertTrue( $git->merge_with_accept_mine() );
+
+		// 3.check if the content `local:uu` is the final text after the `merge with accept mine` process
+		$this->assertEquals( file_get_contents( $this->local_file ), 'local:uu' );
+	}
+
+	/**
+	 * Set merge conflict: AU -> unmerged, added by us
+	 *
+	 * 1.create one file remotely with the content `remote` (add & commit)
+	 * 2.merge with accept mine
+	 * 3.change the remote file content with `remote:au` (edit,add & commit)
+	 * 4.create the same file locally with the content `local:au` (add & commit)
+	 */
+	function set_merge_conflict_au() {
+		global $git;
+
+		// 1.create one file remotely with the content `remote` (add & commit)
+		exec( "cd {$this->repo_temp_dir} ; echo 'remote' > $this->file_name " );
+		exec( "cd {$this->repo_temp_dir} ; git add $this->file_name ; git commit -q -m 'remote file' ; git push -q" );
+
+		// 2.merge with accept mine
+		$git->merge_with_accept_mine();
+
+		// 3.change the remote file content with `remote:au` (edit,add & commit)
+		file_put_contents( "$this->remote_file", 'remote:au' );
+		$git->add();
+		$git->commit( 'Change remote file' );
+
+		// 4.modify the same file locally with the content `local:au` (edit,add & commit)
+		file_put_contents( "$this->local_file", 'local:au' );
+		$git->add();
+		$git->commit( 'Change local file' );
+	}
+
+	/**
+	 * Test merge conflict: AU -> unmerged, added by us
+	 *
+	 * 1.set merge conflict AU (unmerged, added by us)
+	 * 2.test `merge with accept mine` conflicts
+	 * 3.check if the content `local:au` is the final text after the `merge with accept mine` process
+	 */
+	function test_merge_conflict_au() {
+		global $git;
+
+		// 1.set merge conflict AU (unmerged, added by us)
+		$this->set_merge_conflict_au();
+
+		// 2.test `merge with accept mine` conflicts
+		$this->assertTrue( $git->merge_with_accept_mine() );
+
+		// 3.check if the content `local:au` is the final text after the `merge with accept mine` process
+		$this->assertEquals( file_get_contents( $this->local_file ), 'local:au' );
 	}
 }
