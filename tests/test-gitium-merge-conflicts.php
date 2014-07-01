@@ -86,8 +86,8 @@
 	 *
 	 * 1.set merge conflict AA
 	 * 2.merge with accept mine
-	 * 3.create one file remotely with the content `remote` (edit,add & commit)
-	 * 4.create the same file locally with the content `local` (edit,add & commit)
+	 * 3.modify the remote file with the content `remote:uu` (edit,add & commit)
+	 * 4.modify the same file locally with the content `local:uu` (edit,add & commit)
 	 */
 	function set_merge_conflict_uu() {
 		global $git;
@@ -142,7 +142,7 @@
 
 		// 1.create one file remotely with the content `remote` (add & commit)
 		exec( "cd {$this->repo_temp_dir} ; echo 'remote' > $this->file_name " );
-		exec( "cd {$this->repo_temp_dir} ; git add $this->file_name ; git commit -q -m 'remote file' ; git push -q" );
+		exec( "cd {$this->repo_temp_dir} ; git add $this->file_name ; git commit -q -m 'Add remote file' ; git push -q" );
 
 		// 2.merge with accept mine
 		$git->merge_with_accept_mine();
@@ -152,7 +152,7 @@
 		$git->add();
 		$git->commit( 'Change remote file' );
 
-		// 4.modify the same file locally with the content `local:au` (edit,add & commit)
+		// 4.create the same file locally with the content `local:au` (edit,add & commit)
 		file_put_contents( "$this->local_file", 'local:au' );
 		$git->add();
 		$git->commit( 'Change local file' );
@@ -176,5 +176,54 @@
 
 		// 3.check if the content `local:au` is the final text after the `merge with accept mine` process
 		$this->assertEquals( file_get_contents( $this->local_file ), 'local:au' );
+	}
+
+	/**
+	 * Set merge conflict: UA -> unmerged, added by them
+	 *
+	 * 1.create one file locally with the content `local` (add & commit)
+	 * 2.merge with accept mine
+	 * 3.change the local file content with `local:ua` (edit,add & commit)
+	 * 4.add the same file remotely with the content `remote:ua` (add & commit)
+	 */
+	function set_merge_conflict_ua() {
+		global $git;
+
+		// 1.create one file locally with the content `local` (add & commit)
+		file_put_contents( "$this->local_file", 'local' );
+		$git->add();
+		$git->commit( 'Create local file' );
+
+		// 2.test `merge with accept mine` conflicts
+		$this->assertTrue( $git->merge_with_accept_mine() );
+
+		// 3.change the local file content with `local:ua` (edit,add & commit)
+		file_put_contents( "$this->local_file", 'local:ua' );
+		$git->add();
+		$git->commit( 'Change local file' );
+
+		// 4.add the same file remotely with the content `remote:ua` (add & commit)
+		exec( "cd {$this->repo_temp_dir} ; echo 'remote:ua' > $this->file_name " );
+		exec( "cd {$this->repo_temp_dir} ; git add $this->file_name ; git commit -q -m 'Add remote file' ; git push -q" );
+	}
+
+	/**
+	 * Test merge conflict: UA -> unmerged, added by them
+	 *
+	 * 1.set merge conflict UA (unmerged, added by them)
+	 * 2.test `merge with accept mine` conflicts
+	 * 3.check if the content `local:ua` is the final text after the `merge with accept mine` process
+	 */
+	function test_merge_conflict_ua() {
+		global $git;
+
+		// 1.set merge conflict UA (unmerged, added by them)
+		$this->set_merge_conflict_ua();
+
+		// 2.test `merge with accept mine` conflicts
+		$this->assertTrue( $git->merge_with_accept_mine() );
+
+		// 3.check if the content `local:ua` is the final text after the `merge with accept mine` process
+		$this->assertEquals( file_get_contents( $this->local_file ), 'local:ua' );
 	}
 }
