@@ -2,7 +2,7 @@
 
 Contributors: PressLabs
 Donate link: http://www.presslabs.com/
-Tags: git, version, versioning, deployment, version-control, github, bitbucker, travis, code, revision, testing, development, branch, production, staging, debug
+Tags: git, version, versioning, deployment, version-control, github, bitbucket, travis, code, revision, testing, development, branch, production, staging, debug, plugin, gitium, presslabs, simple
 Requires at least: 3.9
 Tested up to: 3.9.1
 Stable tag: 0.3.2-alpha
@@ -17,7 +17,7 @@ Gitium enables continuous deployment for WordPress integrating with tools such a
 
 Gitium requires `git` command line tool minimum version 1.7 installed on the server and `proc_open` PHP function enabled.
 
-Gitium is the latest element discovered in the [PressLabs](http://www.presslabs.com).
+Gitium is the latest element discovered in the [PressLabs](http://www.presslabs.com). Here you have the [Github](https://github.com/PressLabs/gitium) repository.
 
 == Screenshots ==
 
