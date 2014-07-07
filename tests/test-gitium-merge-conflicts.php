@@ -226,4 +226,50 @@
 		// 3.check if the content `local:ua` is the final text after the `merge with accept mine` process
 		$this->assertEquals( file_get_contents( $this->local_file ), 'local:ua' );
 	}
+
+	/**
+	 * Set merge conflict: DU -> unmerged, deleted by us
+	 *
+	 * 1.set merge conflict AA (unmerged, both added)
+	 * 2.merge with accept mine
+	 * 3.change the remote file content with `remote:du` (edit,add & commit)
+	 * 4.remove the file locally (rm & commit)
+	 */
+	function set_merge_conflict_du() {
+		global $git;
+
+		// 1.set merge conflict AA (unmerged, both added)
+		$this->set_merge_conflict_aa();
+
+		// 2.merge with accept mine
+		$git->merge_with_accept_mine();
+
+		// 3.change the remote file content with `remote:du` (edit,add & commit)
+		file_put_contents( "$this->remote_file", 'remote:du' );
+		$git->add();
+		$git->commit( 'Change remote file' );
+
+		// 4.remove the file locally (rm & commit)
+		exec( 'cd ' . WP_CONTENT_DIR . " ; git rm -fq $this->local_file ; git commit -q -m 'Remove local file'" );
+	}
+
+	/**
+	 * Test merge conflict: DU -> unmerged, deleted by us
+	 *
+	 * 1.set merge conflict DU (unmerged, deleted by us)
+	 * 2.merge with accept mine
+	 * 3.check if the local file exists(FALSE expected)
+	 */
+	function test_merge_conflict_du() {
+		global $git;
+
+		// 1.set merge conflict DU (unmerged, deleted by us)
+		$this->set_merge_conflict_du();
+
+		// 2.test `merge with accept mine` conflict
+		$this->assertTrue( $git->merge_with_accept_mine() );
+
+		// 3.check if the local file exists
+		$this->assertFalse( file_exists( $this->local_file ) );
+	}
 }
