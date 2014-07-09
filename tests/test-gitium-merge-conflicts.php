@@ -106,7 +106,7 @@
 		// 3.check if the result is what it's supposed to be from merge process
 		$this->_create_work_fresh_clone();
 		$this->assertFileEquals( $this->local_file, $this->work_file );
-		$this->assertEquals( file_get_contents( $this->local_file ), 'local' . PHP_EOL );
+		$this->assertStringEqualsFile( $this->local_file, 'local' . PHP_EOL );
 	}
 
 	/**
@@ -156,7 +156,7 @@
 		// 3.check if the content `local:uu` is the final text after the `merge` process
 		$this->_create_work_fresh_clone();
 		$this->assertFileEquals( $this->local_file, $this->work_file );
-		$this->assertEquals( file_get_contents( $this->local_file ), 'local:uu' . PHP_EOL );
+		$this->assertStringEqualsFile( $this->local_file, 'local:uu' . PHP_EOL );
 	}
 
 	/**
@@ -202,7 +202,7 @@
 		// 3.check if the content `local:au` is the final text after the `merge` process
 		$this->_create_work_fresh_clone();
 		$this->assertFileEquals( $this->local_file, $this->work_file );
-		$this->assertEquals( file_get_contents( $this->local_file ), 'local:au' . PHP_EOL );
+		$this->assertStringEqualsFile( $this->local_file, 'local:au' . PHP_EOL );
 	}
 
 	/**
@@ -249,7 +249,7 @@
 		// 3.check if the content `local:ua` is the final text after the `merge with accept mine` process
 		$this->_create_work_fresh_clone();
 		$this->assertFileEquals( $this->local_file, $this->work_file );
-		$this->assertEquals( file_get_contents( $this->local_file ), 'local:ua' . PHP_EOL );
+		$this->assertStringEqualsFile( $this->local_file, 'local:ua' . PHP_EOL );
 	}
 
 	/**
@@ -346,7 +346,7 @@
 		// 3.check if the remote file exists & the content is `local:ud`
 		$this->_create_work_fresh_clone();
 		$this->assertFileEquals( $this->local_file, $this->work_file );
-		$this->assertEquals( file_get_contents( $this->local_file ), 'local:ud' . PHP_EOL );
+		$this->assertStringEqualsFile( $this->local_file, 'local:ud' . PHP_EOL );
 	}
 
 	/**
