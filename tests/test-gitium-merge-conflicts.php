@@ -5,7 +5,7 @@
 	private $work_fname  = 'work-file.txt';
 	private $work_repo   = '/tmp/gitium-repo';
 
-	function _create_work_fresh_clone() {
+	private function _create_work_fresh_clone() {
 		if ( $this->work_repo )
 			exec( "rm -rf {$this->work_repo}" );
 
@@ -18,7 +18,7 @@
 		exec( "cd {$this->work_repo} ; git config push.default matching" );
 	}
 
-	function assertmerge( $prefix = '' ) {
+	private function assertmerge( $prefix = '' ) {
 		global $git;
 
 		$this->assertTrue( $git->fetch_ref(), "{$prefix}Fetch failed" );
@@ -63,7 +63,7 @@
 		exec( "rm -rf {$this->local_file} ; rm -rf {$this->work_repo}" );
 	}
 
-	function gitium_init_process() {
+	private function gitium_init_process() {
 		$admin = new Gitium_Admin();
 		return $admin->init_process( $this->remote_repo );
 	}
@@ -74,7 +74,7 @@
 	 * 1.create one file remotely with the content `remote` (add & commit)
 	 * 2.create the same file locally with the content `local` (add & commit)
 	 */
-	function _create_merge_conflict_aa() {
+	private function _create_merge_conflict_aa() {
 		global $git;
 
 		// 1.add & commit (remote)
@@ -117,7 +117,7 @@
 	 * 3.modify the remote file with the content `remote:uu` (edit,add & commit)
 	 * 4.modify the same file locally with the content `local:uu` (edit,add & commit)
 	 */
-	function _create_merge_conflict_uu() {
+	private function _create_merge_conflict_uu() {
 		global $git;
 
 		// 1.create merge conflict AA (unmerged, both added)
@@ -166,7 +166,7 @@
 	 * 2.change the remote file content with `remote:au` (edit,add,commit & push)
 	 * 3.create the same file locally with the content `local:au` (add & commit)
 	 */
-	function _create_merge_conflict_au() {
+	private function _create_merge_conflict_au() {
 		global $git;
 
 		// 1.create one file remotely with the content `remote` (add & commit)
@@ -212,7 +212,7 @@
 	 * 2.change the local file content with `local:ua` (edit,add & commit)
 	 * 3.add the same file remotely with the content `remote:ua` (add & commit)
 	 */
-	function _create_merge_conflict_ua() {
+	private function _create_merge_conflict_ua() {
 		global $git;
 
 		// 1.create one file locally with the content `local` (add & commit)
@@ -260,7 +260,7 @@
 	 * 3.change the remote file content with `remote:du` (edit,add & commit)
 	 * 4.remove the file locally (rm & commit)
 	 */
-	function _create_merge_conflict_du() {
+	private function _create_merge_conflict_du() {
 		global $git;
 
 		// 1.create merge conflict AA (unmerged, both added)
@@ -311,7 +311,7 @@
 	 * 2.change the local file content with `local:ud` (edit,add & commit)
 	 * 3.remove the file remotely (rm,commit & push)
 	 */
-	function _create_merge_conflict_ud() {
+	private function _create_merge_conflict_ud() {
 		global $git;
 
 		// 1.create merge conflict AA (unmerged, both added)
@@ -356,7 +356,7 @@
 	 * 2.remove the local file (rm & commit)
 	 * 3.remove the file remotely (rm,commit & push)
 	 */
-	function _create_merge_conflict_dd() {
+	private function _create_merge_conflict_dd() {
 		global $git;
 
 		// 1.set merge conflict AA (unmerged, both added)
