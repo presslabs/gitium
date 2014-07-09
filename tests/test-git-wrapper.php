@@ -72,23 +72,23 @@
 		$this->assertTrue( class_exists( 'Git_Wrapper' ) );
 	}
 
-	private function _add_uncommited_changes() {
+	private function _add_uncommited_changes_locally() {
 		global $git;
 
-		// 1.add changes remotely
-		exec( "cd {$this->work_repo} ; echo 'remote' > $this->work_fname " );
-		exec( "cd {$this->work_repo} ; git add $this->work_fname ; " );
-
-		// 2.add chages locally
 		file_put_contents( "$this->local_file", 'local' . PHP_EOL );
 		$git->add();
+	}
+
+	private function _add_uncommited_changes_remotely() {
+		exec( "cd {$this->work_repo} ; echo 'remote' > $this->work_fname " );
+		exec( "cd {$this->work_repo} ; git add $this->work_fname ; " );
 	}
 
 	/**
 	 * Test is_dirty()
 	 *
 	 * 1.test if repo has uncommited changes(FALSE expected)
-	 * 2.add uncommited changes
+	 * 2.add uncommited changes(local & remote)
 	 * 3.test if repo has uncommited changes(TRUE expected)
 	 * 4.commit all changes and test again(FALSE expected)
 	 */
@@ -98,8 +98,9 @@
 		// 1.test if repo has uncommited changes(FALSE expected)
 		$this->assertFalse( $git->is_dirty() );
 
-		// 2.add uncommited changes
-		$this->_add_uncommited_changes();
+		// 2.add uncommited changes(local & remote)
+		$this->_add_uncommited_changes_remotely();
+		$this->_add_uncommited_changes_locally();
 
 		// 3.test if repo has uncommited changes(TRUE expected)
 		$this->assertTrue( $git->is_dirty() );
@@ -108,5 +109,31 @@
 		exec( "cd {$this->work_repo} ; git commit -q -m 'Add remote file' ; git push -q" );
 		$git->commit( 'Add local file' );
 		$this->assertFalse( $git->is_dirty() );
+	}
+
+	/**
+	 * Test get_uncommited_changes()
+	 *
+	 * 1.test if repo has uncommited changes(EMPTY expected)
+	 * 2.add uncommited changes(local & remote)
+	 * 3.test if repo has uncommited changes(1 change expected)
+	 * 4.commit all changes and test again(EMPTY expected)
+	 */
+	function test_get_uncommited_changes() {
+		global $git;
+
+		// 1.test if repo has uncommited changes(EMPTY expected)
+		$this->assertEmpty( $git->get_uncommited_changes() );
+
+		// 2.add uncommited changes(local)
+		$this->_add_uncommited_changes_locally();
+
+		// 3.test if repo has uncommited changes(1 change expected)
+		$this->assertCount( 1, $git->get_uncommited_changes() );
+
+		// 4.commit all changes and test again(EMPTY expected)
+		exec( "cd {$this->work_repo} ; git commit -q -m 'Add remote file' ; git push -q" );
+		$git->commit( 'Add local file' );
+		$this->assertEmpty( $git->get_uncommited_changes() );
 	}
 }
