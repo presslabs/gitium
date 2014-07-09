@@ -136,4 +136,32 @@
 		$git->commit( 'Add local file' );
 		$this->assertEmpty( $git->get_uncommited_changes() );
 	}
+
+	/**
+	 * Test get_ahead_commits()
+	 *
+	 * 1.add local changes and commit them(add two ahead commits)
+	 * 2.test if there are ahead commits(two expected)
+	 * 3.merge with accept mine
+	 * 4.test if there are ahead commits(EMPTY expected)
+	 */
+	function test_get_ahead_commits() {
+		global $git;
+
+		// 1.add local changes and commit them(add two ahead commits)
+		$this->_add_uncommited_changes_locally( 'one' );
+		$git->commit( 'Add local file' );
+
+		$this->_add_uncommited_changes_locally( 'two' );
+		$git->commit( 'Add another local file' );
+
+		// 2.test if there are ahead commits(two expected)
+		$this->assertCount( 2, $git->get_ahead_commits() );
+
+		// 3.merge with accept mine
+		$this->assertMerge( '[get_ahead_commits] ' );
+
+		// 4.test if there are ahead commits(EMPTY expected)
+		$this->assertEmpty( $git->get_ahead_commits() );
+	}
 }
