@@ -100,14 +100,13 @@
 		$this->assertFalse( $git->is_dirty() );
 
 		// 2.add uncommited changes(local & remote)
-		$this->_add_uncommited_changes_remotely();
+		$this->_add_uncommited_changes_remotely( 'Add remote file', TRUE );
 		$this->_add_uncommited_changes_locally();
 
 		// 3.test if repo has uncommited changes(TRUE expected)
 		$this->assertTrue( $git->is_dirty() );
 
 		// 4.commit all changes and test again(FALSE expected)
-		exec( "cd {$this->work_repo} ; git commit -q -m 'Add remote file' ; git push -q" );
 		$git->commit( 'Add local file' );
 		$this->assertFalse( $git->is_dirty() );
 	}
@@ -128,6 +127,7 @@
 
 		// 2.add uncommited changes(local)
 		$this->_add_uncommited_changes_locally();
+		$this->_add_uncommited_changes_remotely();
 
 		// 3.test if repo has uncommited changes(1 change expected)
 		$this->assertCount( 1, $git->get_uncommited_changes() );
