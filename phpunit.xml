@@ -13,7 +13,7 @@
 	</testsuites>
 	<filter>
 		<blacklist>
-			<directory suffix=".php">/tmp/wordpress/</directory>
+			<directory suffix=".php">/tmp/wordpress</directory>
 		</blacklist>
 	</filter>
 </phpunit>
