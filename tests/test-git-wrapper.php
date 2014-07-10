@@ -184,4 +184,9 @@
 		global $git;
 		$this->assertTrue( $git->is_versioned() );
 	}
+
+	function test_get_version() {
+		global $git;
+		$this->assertNotEmpty( $git->get_version() );
+	}
 }
