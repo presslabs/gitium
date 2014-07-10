@@ -189,17 +189,6 @@ EOF;
 		return $commits;
 	}
 
-	function is_already_up_to_date() {
-		$ahead  = count( $git->get_ahead_commits() );
-		$behind = count( $git->get_behind_commits() );
-		return ( ! $ahead && ! $behind );
-	}
-
-	function has_remote() {
-		list( $return, $response ) = $this->_call( 'remote', 'show', '-n' );
-		return ( 0 == $return && in_array( 'origin', $response ) );
-	}
-
 	function init() {
 		file_put_contents( "$this->repo_dir/.gitignore", $this->gitignore );
 		list( $return, $response ) = $this->_call( 'init' );
@@ -505,13 +494,6 @@ EOF;
 	function is_dirty() {
 		$changes = $this->get_uncommited_changes();
 		return ! empty( $changes );
-	}
-
-	/*
-	 * Pull changes from remote. By default accept local changes on conflicts
-	 */
-	function pull() {
-		$this->_call( 'pull', '-s', 'recursive', '-X', 'ours' );
 	}
 }
 
