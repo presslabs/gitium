@@ -217,4 +217,9 @@
 		$git->commit( 'Add local file' );
 		$this->assertEmpty( $git->get_local_changes() );
 	}
+
+	function test_get_last_error() {
+		global $git;
+		$this->assertEmpty( $git->get_last_error() );
+	}
 }
