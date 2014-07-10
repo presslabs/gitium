@@ -318,7 +318,7 @@ class Git_Wrapper {
 			if ( empty( $commit ) ) return FALSE;
 
 			list( $return, $response ) = $this->_call(
-				'cherry-pick', '--strategy', 'recursive', '--strategy-option', 'theirs', $commit
+				'cherry-pick', $commit
 			);
 			if ( $return != 0 ) {
 				$this->_resolve_merge_conflicts( $this->get_commit_message( $commit ) );
