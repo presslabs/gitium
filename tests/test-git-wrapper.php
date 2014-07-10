@@ -179,4 +179,9 @@
 		global $git;
 		$this->assertTrue( $git->can_exec_git() );
 	}
+
+	function test_is_versioned() {
+		global $git;
+		$this->assertTrue( $git->is_versioned() );
+	}
 }
