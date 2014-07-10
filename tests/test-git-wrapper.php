@@ -195,4 +195,9 @@
 		$git->cleanup();
 		$this->assertFalse( $git->is_versioned() );
 	}
+
+	function test_get_remote_url() {
+		global $git;
+		$this->assertEquals( $git->get_remote_url(), $this->remote_repo );
+	}
 }
