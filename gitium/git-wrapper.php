@@ -291,7 +291,7 @@ EOF;
 			return TRUE;
 		} else {
 			$this->_call( 'cherry-pick', '--abort' );
-			$this->checkout( 'merge_local' );
+			$this->create_branch( 'merge_local' );
 			$this->_call( 'branch', '-D', $local_branch );
 			$this->_call( 'branch', '-m', $local_branch );
 			return FALSE;
@@ -335,7 +335,7 @@ EOF;
 		return $response;
 	}
 
-	function checkout( $branch ) {
+	function create_branch( $branch ) {
 		list( $return, $response ) = $this->_call( 'checkout', '-b', $branch );
 		return ( $return == 0 );
 	}
