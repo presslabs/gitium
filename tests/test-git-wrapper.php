@@ -174,4 +174,9 @@
 		// 2.test if there are behind commits(three expected)
 		$this->assertCount( 3, $git->get_behind_commits() );
 	}
+
+	function test_can_exec_git() {
+		global $git;
+		$this->assertTrue( $git->can_exec_git() );
+	}
 }
