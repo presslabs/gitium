@@ -72,16 +72,17 @@
 		$this->assertTrue( class_exists( 'Git_Wrapper' ) );
 	}
 
-	private function _add_uncommited_changes_locally( $change = 'local' ) {
+	private function _add_uncommited_changes_locally( $change = 'local', $commit = FALSE ) {
 		global $git;
-
 		file_put_contents( "$this->local_file", $change . PHP_EOL );
 		$git->add();
+		if ( $commit ) $git->commit( 'Commit local file' );
 	}
 
-	private function _add_uncommited_changes_remotely( $change = 'remote' ) {
+	private function _add_uncommited_changes_remotely( $change = 'remote', $commit = FALSE ) {
 		exec( "cd {$this->work_repo} ; echo '$change' > $this->work_fname " );
 		exec( "cd {$this->work_repo} ; git add $this->work_fname ; " );
+		if ( $commit ) exec( "cd {$this->work_repo} ; git commit -q -m '[$change]: Commit remote file' ; git push -q" );
 	}
 
 	/**
