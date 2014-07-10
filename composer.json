@@ -1,1 +1,6 @@
-{ "require-dev": { "codeclimate/php-test-reporter": "dev-master"  }  }
+{
+    "require-dev": {
+        "codeclimate/php-test-reporter": "dev-master",
+        "satooshi/php-coveralls": "dev-master"
+    }
+}
