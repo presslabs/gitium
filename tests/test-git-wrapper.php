@@ -189,4 +189,10 @@
 		global $git;
 		$this->assertNotEmpty( $git->get_version() );
 	}
+
+	function test_cleanup() {
+		global $git;
+		$git->cleanup();
+		$this->assertFalse( $git->is_versioned() );
+	}
 }

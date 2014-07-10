@@ -199,7 +199,7 @@ EOF;
 	}
 
 	function cleanup() {
-		$this->_log( "Cleaning up $this->repo_dir/.git" );
+		//$this->_log( "Cleaning up $this->repo_dir/.git" ); // just for debug
 		$this->_git_rrmdir( $this->repo_dir . '/.git' );
 	}
 
