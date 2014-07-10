@@ -1,7 +1,4 @@
 language: php
-addons:
-  code_climate:
-    repo_token: 819c356e2d022f98e4e2717dbd459c3801fef95241a2db7261596a0482dd6ca3 
 php:
   - 5.4
   - 5.5
@@ -13,4 +10,4 @@ before_script:
   - bash bin/install-wp-tests.sh wordpress_test root '' localhost $WP_VERSION
 script: phpunit --tap --coverage-clover build/logs/clover.xml
 after_script:
-  - vendor/bin/test-reporter
+  - bash bin/code-climate-coverage.sh
