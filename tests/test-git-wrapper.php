@@ -200,4 +200,21 @@
 		global $git;
 		$this->assertEquals( $git->get_remote_url(), $this->remote_repo );
 	}
+
+	function test_get_local_changes() {
+		global $git;
+
+		// 1.test if repo has uncommited changes(EMPTY expected)
+		$this->assertEmpty( $git->get_local_changes() );
+
+		// 2.add uncommited changes(local)
+		$this->_add_uncommited_changes_locally();
+
+		// 3.test if repo has uncommited changes(1 change expected)
+		$this->assertCount( 1, $git->get_local_changes() );
+
+		// 4.commit all changes and test again(EMPTY expected)
+		$git->commit( 'Add local file' );
+		$this->assertEmpty( $git->get_local_changes() );
+	}
 }
