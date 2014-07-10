@@ -143,26 +143,35 @@
 	 *
 	 * 1.add local changes and commit them(add two ahead commits)
 	 * 2.test if there are ahead commits(two expected)
-	 * 3.merge with accept mine
-	 * 4.test if there are ahead commits(EMPTY expected)
 	 */
 	function test_get_ahead_commits() {
 		global $git;
 
 		// 1.add local changes and commit them(add two ahead commits)
-		$this->_add_uncommited_changes_locally( 'one' );
-		$git->commit( 'Add local file' );
-
-		$this->_add_uncommited_changes_locally( 'two' );
-		$git->commit( 'Add another local file' );
+		$this->_add_uncommited_changes_locally( 'one', TRUE );
+		$this->_add_uncommited_changes_locally( 'two', TRUE );
 
 		// 2.test if there are ahead commits(two expected)
 		$this->assertCount( 2, $git->get_ahead_commits() );
+	}
 
-		// 3.merge with accept mine
-		$this->assertMerge( '[get_ahead_commits] ' );
+	/**
+	 * Test get_behind_commits()
+	 *
+	 * 1.add remote changes and commit them(add three behind commits)
+	 * 2.test if there are behind commits(three expected)
+	 */
+	function test_get_behind_commits() {
+		global $git;
 
-		// 4.test if there are ahead commits(EMPTY expected)
-		$this->assertEmpty( $git->get_ahead_commits() );
+		// 1.add remote changes and commit them(add three behind commits)
+		$this->_add_uncommited_changes_remotely( 'one', TRUE );
+		$this->_add_uncommited_changes_remotely( 'two', TRUE );
+		$this->_add_uncommited_changes_remotely( 'three',TRUE );
+
+		$git->fetch_ref();
+
+		// 2.test if there are behind commits(three expected)
+		$this->assertCount( 3, $git->get_behind_commits() );
 	}
 }
