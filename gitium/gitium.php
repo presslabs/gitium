@@ -26,6 +26,33 @@
 require_once __DIR__ . '/git-wrapper.php';
 require_once __DIR__ . '/gitium-admin.php';
 
+
+function _gitium_make_ssh_git_file_exe() {
+	$ssh_wrapper = dirname( __FILE__ ) . '/ssh-git';
+	$process     = proc_open(
+		"chmod -f +x $ssh_wrapper",
+		array(
+			0 => array( 'pipe', 'r' ),  // stdin
+			1 => array( 'pipe', 'w' ),  // stdout
+		),
+		$pipes
+	);
+	fclose( $pipes[0] );
+}
+
+function enable_maintenance_mode() {
+	$file = ABSPATH . '/.maintenance';
+
+	if ( FALSE === file_put_contents( $file, '<?php $upgrading = ' . time() .';' ) )
+		return FALSE;
+	else
+		return TRUE;
+}
+
+function disable_maintenance_mode() {
+	return unlink( ABSPATH . '/.maintenance' );
+}
+
 register_activation_hook( __FILE__, '_gitium_make_ssh_git_file_exe' );
 
 /* Array
