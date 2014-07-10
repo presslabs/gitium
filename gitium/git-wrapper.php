@@ -274,7 +274,7 @@ class Git_Wrapper {
 	}
 
 	protected function _resolve_merge_conflicts( $message ) {
-		$changes = $this->status( true );
+		list( $branch_status, $changes ) = $this->status( TRUE );
 		_log( $changes );
 		foreach ( $changes as $path => $change ) {
 			if ( in_array( $change, array( 'UD', 'DD' ) ) ) {
@@ -338,7 +338,8 @@ class Git_Wrapper {
 	}
 
 	function successfully_merged() {
-		$changes = array_values( $this->status( true ) );
+		list( $branch_status, $response ) = $this->status( TRUE );
+		$changes = array_values( $response );
 		return ( 0 == count( array_intersect( $changes, array( 'DD', 'AU', 'UD', 'UA', 'DU', 'AA', 'UU' ) ) ) );
 	}
 
@@ -460,7 +461,7 @@ class Git_Wrapper {
 		return $changes;
 	}
 
-	function status( $local_only = false ) {
+	function local_status() {
 		list( $return, $response ) = $this->_call( 'status', '-z', '-b', '-u' );
 		if ( 0 !== $return )
 			return array( '', array() );
@@ -490,21 +491,28 @@ class Git_Wrapper {
 				$new_response[ $to ] = trim( "$x$y $from" );
 			endforeach;
 		}
-		if ( $local_only ) return $new_response;
+
+		return array( $branch_status, $new_response );
+	}
+
+	function status( $local_only = false ) {
+		list( $branch_status, $new_response ) = $this->local_status();
+
+		if ( $local_only ) return array( $branch_status, $new_response );
 
 		if ( preg_match( '/## ([^.]+)\.+([^ ]+)/', $branch_status, $matches ) ) {
 			$local_branch  = $matches[1];
 			$remote_branch = $matches[2];
 
-			list( $retrn, $response ) = $this->_call( 'rev-list', "$local_branch..$remote_branch", '--count' );
+			list( $return, $response ) = $this->_call( 'rev-list', "$local_branch..$remote_branch", '--count' );
 			$behind_count = (int)$response[0];
 
-			list( $retrn, $response ) = $this->_call( 'rev-list', "$remote_branch..$local_branch", '--count' );
+			list( $return, $response ) = $this->_call( 'rev-list', "$remote_branch..$local_branch", '--count' );
 			$ahead_count = (int)$response[0];
 		}
 
 		if ( $behind_count ) {
-			list( $retrn, $response ) = $this->_call( 'diff', '-z', '--name-status', "$local_branch~$ahead_count", $remote_branch );
+			list( $return, $response ) = $this->_call( 'diff', '-z', '--name-status', "$local_branch~$ahead_count", $remote_branch );
 			$response = explode( chr( 0 ), $response[0] );
 			array_pop( $response );
 			for ( $idx = 0 ; $idx < count( $response ) / 2 ; $idx++ ) {
