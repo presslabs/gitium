@@ -204,7 +204,7 @@
 	function test_get_local_changes() {
 		global $git;
 
-		// 1.test if repo has uncommited changes(EMPTY expected)
+		// 1.test if repo has local uncommited changes(EMPTY expected)
 		$this->assertEmpty( $git->get_local_changes() );
 
 		// 2.add uncommited changes(local)
