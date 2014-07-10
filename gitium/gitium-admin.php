@@ -299,18 +299,11 @@ class Gitium_Admin {
 		<?php
 	}
 
-	private function changes_page() {
-		$git = $this->git;
-
-		list( $branch_status, $changes ) = _gitium_status();
-		list( $git_public_key, $git_private_key ) = gitium_get_keypair();
-		$branch = $git->get_remote_tracking_branch();
-		$ahead  = count( $git->get_ahead_commits() );
-		$behind = count( $git->get_behind_commits() ); ?>
-
-		<div class="wrap">
-		<div id="icon-options-general" class="icon32">&nbsp;</div>
-		<h2>Status <code class="small">connected to <strong><?php echo esc_html( $git->get_remote_url() ); ?></strong></code></h2>
+	private function show_ahead_and_behind_info( $changes = '' ) {
+		$branch = $this->git->get_remote_tracking_branch();
+		$ahead  = count( $this->git->get_ahead_commits() );
+		$behind = count( $this->git->get_behind_commits() );
+		?>
 		<p>
 		  Following remote branch <code><?php echo esc_html( $branch ); ?></code>.
 		  <?php
@@ -320,7 +313,11 @@ class Gitium_Admin {
 			elseif ( $behind ) echo esc_html( "You are $behind commits behind remote." );
 			?>
 		</p>
-		
+		<?php
+	}
+
+	private function show_git_changes_table( $changes = '' ) {
+		?>
 		<table class="widefat" id="git-changes-table">
 		<thead><tr><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change</th></tr></thead>
 		<tfoot><tr><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change</th></tr></tfoot>
@@ -343,11 +340,27 @@ class Gitium_Admin {
 					</tr>
 				<?php endforeach; ?>
 			<?php endif; ?>
-		<form action="" method="POST">
-
-		<?php wp_nonce_field( 'gitium-admin' ) ?>
 		</tbody>
 		</table>
+		<?php
+	}
+
+	private function changes_page() {
+		list( $branch_status, $changes ) = _gitium_status();
+		list( $git_public_key, $git_private_key ) = gitium_get_keypair();
+		?>
+		<div class="wrap">
+		<div id="icon-options-general" class="icon32">&nbsp;</div>
+		<h2>Status <code class="small">connected to <strong><?php echo esc_html( $this->git->get_remote_url() ); ?></strong></code></h2>
+
+		<?php
+			$this->show_ahead_and_behind_info( $changes );
+			$this->show_git_changes_table( $changes );
+		?>
+
+		<form action="" method="POST">
+		<?php wp_nonce_field( 'gitium-admin' ) ?>
+
 		<?php if ( ! empty( $changes ) ) : ?>
 			<p>
 			<label for="save-changes">Commit message:</label>
@@ -357,6 +370,7 @@ class Gitium_Admin {
 			<input type="submit" name="SubmitSave" class="button-primary button" value="Save changes" <?php if ( get_transient( 'gitium_remote_disconnected', TRUE ) ) echo 'disabled="disabled" '; ?>/>
 			</p>
 		<?php endif; ?>
+
 		<table class="form-table">
 		  <tr>
 			<th><label for="webhook-url">Webhook URL:</label></th>
@@ -381,8 +395,8 @@ class Gitium_Admin {
 			</td>
 		  </tr>
 		  <?php endif; ?>
-
 		</table>
+
 		</form>
 		</div>
 		<?php
