@@ -250,4 +250,11 @@
 		$commit_id = $git->commit( 'Add local changes' );
 		$this->assertTrue( $git->merge_initial_commit( $commit_id, 'master' ) );
 	}
+
+	function test_local_status() {
+		global $git;
+
+		$this->_add_uncommited_changes_locally( 'local', TRUE );
+		$this->assertEquals( $git->local_status(), $git->status( TRUE ) );
+	}
 }
