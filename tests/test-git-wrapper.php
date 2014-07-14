@@ -227,4 +227,12 @@
 		global $git;
 		$this->assertTrue( $git->create_branch( 'develop' ) );
 	}
+
+	function test_commit_with_dif_user_and_email() {
+		global $git;
+
+		$this->_add_uncommited_changes_locally();
+		$git->add();
+		$this->assertNotEquals( FALSE, $git->commit( 'Add local changes', 'User', 'test@example.com' ) );
+	}
 }
