@@ -241,4 +241,13 @@
 		$wrapper = new Git_Wrapper( $repo_dir_name );
 		$this->assertEquals( $repo_dir_name, $wrapper->repo_dir );
 	}
+
+	function test_merge_initial_commit() {
+		global $git;
+
+		$this->_add_uncommited_changes_locally();
+		$git->add();
+		$commit_id = $git->commit( 'Add local changes' );
+		$this->assertTrue( $git->merge_initial_commit( $commit_id, 'master' ) );
+	}
 }
