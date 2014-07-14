@@ -235,4 +235,10 @@
 		$git->add();
 		$this->assertNotEquals( FALSE, $git->commit( 'Add local changes', 'User', 'test@example.com' ) );
 	}
+
+	function test_repo_dir_init() {
+		$repo_dir_name = '/my/repo/dir';
+		$wrapper = new Git_Wrapper( $repo_dir_name );
+		$this->assertEquals( $repo_dir_name, $wrapper->repo_dir );
+	}
 }
