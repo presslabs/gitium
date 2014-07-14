@@ -257,4 +257,20 @@
 		$this->_add_uncommited_changes_locally( 'local', TRUE );
 		$this->assertEquals( $git->local_status(), $git->status( TRUE ) );
 	}
+
+	function test_status() {
+		global $git;
+
+		// 1.add local change
+		$this->_add_uncommited_changes_locally( 'locla', TRUE );
+
+		// 2.add remote changes and commit them(add two behind commits)
+		$this->_add_uncommited_changes_remotely( 'one', TRUE );
+		$this->_add_uncommited_changes_remotely( 'two', TRUE );
+		$git->fetch_ref();
+
+		// 3.test if the changes are visible in status call
+		$status = $git->status();
+		$this->assertStringEndsWith( '[ahead 1, behind 2]', $status[0] );
+	}
 }
