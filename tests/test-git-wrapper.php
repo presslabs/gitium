@@ -273,4 +273,10 @@
 		$status = $git->status();
 		$this->assertStringEndsWith( '[ahead 1, behind 2]', $status[0] );
 	}
+
+	function test_git_dir_constant() {
+		global $git;
+		$this->assertTrue( defined( 'GIT_DIR' ) );
+		$this->assertEquals( GIT_DIR, $git->repo_dir );
+	}
 }
