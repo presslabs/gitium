@@ -50,7 +50,7 @@ class Gitium_Admin {
 		);
 	}
 
-	private function humaized_change( $change ) {
+	private function humanized_change( $change ) {
 		$meaning = array(
 			'??' => 'untracked',
 			'rM' => 'modified to remote',
@@ -334,7 +334,7 @@ class Gitium_Admin {
 							<?php if ( is_dir( ABSPATH . '/' . $path ) && is_dir( ABSPATH . '/' . trailingslashit( $path ) . '.git' ) ) { // test if is submodule ?>
 								Submodules are not supported in this version.
 							<?php } else { ?>
-								<span title="<?php echo esc_html( $type ); ?>"><?php echo esc_html( $this->humaized_change( $type ) ); ?></span>
+								<span title="<?php echo esc_html( $type ); ?>"><?php echo esc_html( $this->humanized_change( $type ) ); ?></span>
 							<?php } ?>
 						</td>
 					</tr>
