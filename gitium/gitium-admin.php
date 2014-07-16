@@ -50,7 +50,7 @@ class Gitium_Admin {
 		);
 	}
 
-	private function humanized_change( $change ) {
+	public function humanized_change( $change ) {
 		$meaning = array(
 			'??' => 'untracked',
 			'rM' => 'modified to remote',
