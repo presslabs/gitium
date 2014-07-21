@@ -7,6 +7,7 @@ env:
   - WP_VERSION=3.9 WP_MULTISITE=0
 before_script:
   - composer install --dev
+  - curl https://gist.github.com/santiycr/5139565/raw/sauce_connect_setup.sh | bash
   - bash bin/install-wp-tests.sh wordpress_test root '' localhost $WP_VERSION
 script: phpunit --tap --coverage-clover build/logs/clover.xml
 after_script:
