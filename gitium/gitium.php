@@ -380,8 +380,8 @@ add_action( 'admin_enqueue_scripts', 'gitium_hook_plugin_and_theme_editor_page' 
 
 function gitium_options_page_check() {
 	global $git;
-
 	if ( ! $git->can_exec_git() ) wp_die( 'Cannot exec git' );
+	return TRUE;
 }
 
 function _gitium_status( $update_transient = false ) {

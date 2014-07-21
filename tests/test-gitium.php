@@ -235,4 +235,8 @@
 		$admin = new Gitium_Admin();
 		$this->assertEquals( 'zz', $admin->humanized_change( 'zz' ) );
 	}
+
+	function test_gitium_options_page_check() {
+		$this->assertTrue( gitium_options_page_check() );
+	}
 }
