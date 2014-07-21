@@ -461,6 +461,8 @@ EOF;
 
 		if ( $local_only ) return array( $branch_status, $new_response );
 
+		$behind_count = 0;
+		$ahead_count  = 0;
 		if ( preg_match( '/## ([^.]+)\.+([^ ]+)/', $branch_status, $matches ) ) {
 			$local_branch  = $matches[1];
 			$remote_branch = $matches[2];
