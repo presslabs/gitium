@@ -43,12 +43,12 @@
 		$this->assertGreaterThan( 0, has_action( 'upgrader_process_complete', 'gitium_auto_push' ) );
 	}
 
-	function test_has_action_activated_plugin_git_check_post_activate_modifications() {
-		$this->assertGreaterThan( 0, has_action( 'activated_plugin','gitium_check_post_activate_modifications' ) );
+	function test_has_action_activated_plugin_git_check_after_activate_modifications() {
+		$this->assertGreaterThan( 0, has_action( 'activated_plugin','gitium_check_after_activate_modifications' ) );
 	}
 
-	function test_has_action_deactivated_plugin_git_check_post_deactivate_modifications() {
-		$this->assertGreaterThan( 0, has_action( 'deactivated_plugin','gitium_check_post_deactivate_modifications' ) );
+	function test_has_action_deactivated_plugin_git_check_after_deactivate_modifications() {
+		$this->assertGreaterThan( 0, has_action( 'deactivated_plugin','gitium_check_after_deactivate_modifications' ) );
 	}
 
 	function test_has_action_git_check_for_plugin_deletions() {

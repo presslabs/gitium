@@ -324,7 +324,7 @@ function gitium_auto_push( $msg_prepend = '' ) {
 }
 add_action( 'upgrader_process_complete', 'gitium_auto_push', 11, 0 );
 
-function gitium_check_post( $plugin, $message = 'activation' ) {
+function gitium_check_after_event( $plugin, $event = 'activation' ) {
 	global $git;
 
 	if ( 'gitium/gitium.php' == $plugin ) return; // do not hook on activation of this plugin
@@ -337,19 +337,19 @@ function gitium_check_post( $plugin, $message = 'activation' ) {
 		} else {
 			$name = $plugin;
 		}
-		gitium_auto_push( _gitium_format_message( $name, $version, "post $message of" ) );
+		gitium_auto_push( _gitium_format_message( $name, $version, "after $event of" ) );
 	}
 }
 
-function gitium_check_post_activate_modifications( $plugin ) {
-	gitium_check_post( $plugin );
+function gitium_check_after_activate_modifications( $plugin ) {
+	gitium_check_after_event( $plugin );
 }
-add_action( 'activated_plugin', 'gitium_check_post_activate_modifications', 999 );
+add_action( 'activated_plugin', 'gitium_check_after_activate_modifications', 999 );
 
-function gitium_check_post_deactivate_modifications( $plugin ) {
-	gitium_check_post( $plugin, 'deactivation' );
+function gitium_check_after_deactivate_modifications( $plugin ) {
+	gitium_check_after_event( $plugin, 'deactivation' );
 }
-add_action( 'deactivated_plugin', 'gitium_check_post_deactivate_modifications', 999 );
+add_action( 'deactivated_plugin', 'gitium_check_after_deactivate_modifications', 999 );
 
 function gitium_check_for_plugin_deletions() { // Handle plugin deletion
 	if ( isset( $_GET['deleted'] ) && 'true' == $_GET['deleted'] )
