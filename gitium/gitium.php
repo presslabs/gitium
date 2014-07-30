@@ -1,7 +1,7 @@
 <?php
 /*
  * Plugin Name: Gitium
- * Version: 0.3.2-alpha
+ * Version: 0.4-beta
  * Author: PressLabs
  * Author URI: http://www.presslabs.com
  * License: GPL2
@@ -25,6 +25,33 @@
 
 require_once __DIR__ . '/git-wrapper.php';
 require_once __DIR__ . '/gitium-admin.php';
+
+
+function _gitium_make_ssh_git_file_exe() {
+	$ssh_wrapper = dirname( __FILE__ ) . '/ssh-git';
+	$process     = proc_open(
+		"chmod -f +x $ssh_wrapper",
+		array(
+			0 => array( 'pipe', 'r' ),  // stdin
+			1 => array( 'pipe', 'w' ),  // stdout
+		),
+		$pipes
+	);
+	fclose( $pipes[0] );
+}
+
+function enable_maintenance_mode() {
+	$file = ABSPATH . '/.maintenance';
+
+	if ( FALSE === file_put_contents( $file, '<?php $upgrading = ' . time() .';' ) )
+		return FALSE;
+	else
+		return TRUE;
+}
+
+function disable_maintenance_mode() {
+	return unlink( ABSPATH . '/.maintenance' );
+}
 
 register_activation_hook( __FILE__, '_gitium_make_ssh_git_file_exe' );
 
@@ -297,7 +324,7 @@ function gitium_auto_push( $msg_prepend = '' ) {
 }
 add_action( 'upgrader_process_complete', 'gitium_auto_push', 11, 0 );
 
-function gitium_check_post_activate_modifications( $plugin ) {
+function gitium_check_after_event( $plugin, $event = 'activation' ) {
 	global $git;
 
 	if ( 'gitium/gitium.php' == $plugin ) return; // do not hook on activation of this plugin
@@ -310,28 +337,19 @@ function gitium_check_post_activate_modifications( $plugin ) {
 		} else {
 			$name = $plugin;
 		}
-		gitium_auto_push( _gitium_format_message( $name, $version, 'post activation of' ) );
+		gitium_auto_push( _gitium_format_message( $name, $version, "after $event of" ) );
 	}
 }
-add_action( 'activated_plugin', 'gitium_check_post_activate_modifications', 999 );
 
-function gitium_check_post_deactivate_modifications( $plugin ) {
-	global $git;
-
-	if ( 'gitium/gitium.php' == $plugin ) return; // do not hook on deactivation of this plugin
-
-	if ( $git->is_dirty() ) {
-		$versions = gitium_get_versions();
-		if ( isset( $versions['plugins'][ $plugin ] ) ) {
-			$name    = $versions['plugins'][ $plugin ]['name'];
-			$version = $versions['plugins'][ $plugin ]['version'];
-		} else {
-			$name = $plugin;
-		}
-		gitium_auto_push( _gitium_format_message( $name, $version, 'post deactivation of' ) );
-	}
+function gitium_check_after_activate_modifications( $plugin ) {
+	gitium_check_after_event( $plugin );
 }
-add_action( 'deactivated_plugin', 'gitium_check_post_deactivate_modifications', 999 );
+add_action( 'activated_plugin', 'gitium_check_after_activate_modifications', 999 );
+
+function gitium_check_after_deactivate_modifications( $plugin ) {
+	gitium_check_after_event( $plugin, 'deactivation' );
+}
+add_action( 'deactivated_plugin', 'gitium_check_after_deactivate_modifications', 999 );
 
 function gitium_check_for_plugin_deletions() { // Handle plugin deletion
 	if ( isset( $_GET['deleted'] ) && 'true' == $_GET['deleted'] )
@@ -362,8 +380,8 @@ add_action( 'admin_enqueue_scripts', 'gitium_hook_plugin_and_theme_editor_page' 
 
 function gitium_options_page_check() {
 	global $git;
-
 	if ( ! $git->can_exec_git() ) wp_die( 'Cannot exec git' );
+	return TRUE;
 }
 
 function _gitium_status( $update_transient = false ) {

@@ -5,7 +5,7 @@ Donate link: http://www.presslabs.com/
 Tags: git, version, versioning, deployment, version-control, github, bitbucket, travis, code, revision, testing, development, branch, production, staging, debug, plugin, gitium, presslabs, simple
 Requires at least: 3.9
 Tested up to: 3.9.1
-Stable tag: 0.3.2-alpha
+Stable tag: 0.4-beta
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -66,6 +66,14 @@ Currently submodules are not supported.
 
 
 == Changelog ==
+
+= 0.4-beta =
+* Add `Bitbucket` documentation link
+* Add the action `gitium_before_merge_with_accept_mine`
+* Moved to `travis-ci.org`
+* Add new tests
+* Added code climate coverage reporting
+* Refactoring
 
 = 0.3.2-alpha =
 * Fix plugin activation issues

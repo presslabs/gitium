@@ -15,7 +15,10 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-$gitignore = <<<EOF
+class Git_Wrapper {
+
+	private $last_error = '';
+	private $gitignore  = <<<EOF
 *.log
 *.swp
 *.back
@@ -62,69 +65,39 @@ wp-includes/
 /xmlrpc.php
 EOF;
 
-function _log() {
-	if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) return;
-	
-	if ( func_num_args() == 1 && is_string( func_get_arg( 0 ) ) ) {
-		error_log( func_get_arg( 0 ) );
-	} else {
-		ob_start();
-		$args = func_get_args();
-		foreach ( $args as $arg )
-			var_dump( $arg );
-		$out = ob_get_clean();
-		//error_log( $out );
-	}
-}
-
-function _gitium_make_ssh_git_file_exe() {
-	$ssh_wrapper = dirname( __FILE__ ) . '/ssh-git';
-	$process     = proc_open(
-		"chmod -f +x $ssh_wrapper",
-		array(
-			0 => array( 'pipe', 'r' ),  // stdin
-			1 => array( 'pipe', 'w' ),  // stdout
-		),
-		$pipes
-	);
-	fclose( $pipes[0] );
-}
-
-function _git_rrmdir( $dir ) {
-	if ( ! empty( $dir ) && is_dir( $dir ) ) {
-		$files = array_diff( scandir( $dir ), array( '.', '..' ) );
-		foreach ( $files as $file ) {
-			( is_dir( "$dir/$file" ) ) ? _git_rrmdir( "$dir/$file" ) : unlink( "$dir/$file" );
-		}
-		return rmdir( $dir );
-	}
-}
-
-function enable_maintenance_mode() {
-	$file = ABSPATH . '/.maintenance';
-
-	if ( FALSE === file_put_contents( $file, '<?php $upgrading = ' . time() .';' ) )
-		return FALSE;
-	else
-		return TRUE;
-}
-
-function disable_maintenance_mode() {
-	return unlink( ABSPATH . '/.maintenance' );
-}
-
-function _git_temp_key_file() {
-	$key_file = tempnam( sys_get_temp_dir(), 'ssh-git' );
-	return $key_file;
-}
-
-class Git_Wrapper {
-
-	private $last_error = '';
-
 	function __construct( $repo_dir ) {
 		$this->repo_dir    = $repo_dir;
 		$this->private_key = '';
+	}
+
+	function _git_rrmdir( $dir ) {
+		if ( ! empty( $dir ) && is_dir( $dir ) ) {
+			$files = array_diff( scandir( $dir ), array( '.', '..' ) );
+			foreach ( $files as $file ) {
+				( is_dir( "$dir/$file" ) ) ? $this->_git_rrmdir( "$dir/$file" ) : unlink( "$dir/$file" );
+			}
+			return rmdir( $dir );
+		}
+	}
+
+	function _log() {
+		if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) return;
+		
+		if ( func_num_args() == 1 && is_string( func_get_arg( 0 ) ) ) {
+			error_log( func_get_arg( 0 ) );
+		} else {
+			ob_start();
+			$args = func_get_args();
+			foreach ( $args as $arg )
+				var_dump( $arg );
+			$out = ob_get_clean();
+			//error_log( $out );
+		}
+	}
+
+	function _git_temp_key_file() {
+		$key_file = tempnam( sys_get_temp_dir(), 'ssh-git' );
+		return $key_file;
 	}
 
 	function set_key( $private_key ) {
@@ -148,7 +121,7 @@ class Git_Wrapper {
 		if ( defined( 'GIT_KEY_FILE' ) && GIT_KEY_FILE ) {
 			$env['GIT_KEY_FILE'] = GIT_KEY_FILE;
 		} elseif ( $this->private_key ) {
-			$key_file = _git_temp_key_file();
+			$key_file = $this->_git_temp_key_file();
 			chmod( $key_file, 0600 );
 			file_put_contents( $key_file, $this->private_key );
 			$env['GIT_KEY_FILE'] = $key_file;
@@ -171,7 +144,7 @@ class Git_Wrapper {
 
 		$return = (int)proc_close( $proc );
 		/* _log( $cmd, $env, $response, $return ); */
-		_log( "$return $cmd", join( "\n", $response ) );
+		$this->_log( "$return $cmd", join( "\n", $response ) );
 		if ( $key_file )
 			unlink( $key_file );
 
@@ -216,20 +189,8 @@ class Git_Wrapper {
 		return $commits;
 	}
 
-	function is_already_up_to_date() {
-		$ahead  = count( $git->get_ahead_commits() );
-		$behind = count( $git->get_behind_commits() );
-		return ( ! $ahead && ! $behind );
-	}
-
-	function has_remote() {
-		list( $return, $response ) = $this->_call( 'remote', 'show', '-n' );
-		return ( 0 == $return && in_array( 'origin', $response ) );
-	}
-
 	function init() {
-		global $gitignore;
-		file_put_contents( "$this->repo_dir/.gitignore", $gitignore );
+		file_put_contents( "$this->repo_dir/.gitignore", $this->gitignore );
 		list( $return, $response ) = $this->_call( 'init' );
 		$this->_call( 'config', 'user.email', 'gitium@presslabs.com' );
 		$this->_call( 'config', 'user.name', 'Gitium' );
@@ -238,8 +199,8 @@ class Git_Wrapper {
 	}
 
 	function cleanup() {
-		_log( "Cleaning up $this->repo_dir/.git" );
-		_git_rrmdir( $this->repo_dir . '/.git' );
+		//$this->_log( "Cleaning up $this->repo_dir/.git" ); // just for debug
+		$this->_git_rrmdir( $this->repo_dir . '/.git' );
 	}
 
 	function add_remote_url( $url ) {
@@ -274,8 +235,8 @@ class Git_Wrapper {
 	}
 
 	protected function _resolve_merge_conflicts( $message ) {
-		$changes = $this->status( true );
-		_log( $changes );
+		list( $branch_status, $changes ) = $this->status( TRUE );
+		$this->_log( $changes );
 		foreach ( $changes as $path => $change ) {
 			if ( in_array( $change, array( 'UD', 'DD' ) ) ) {
 				$this->_call( 'rm', $path );
@@ -318,7 +279,7 @@ class Git_Wrapper {
 			if ( empty( $commit ) ) return FALSE;
 
 			list( $return, $response ) = $this->_call(
-				'cherry-pick', '--strategy', 'recursive', '--strategy-option', 'theirs', $commit
+				'cherry-pick', $commit
 			);
 			if ( $return != 0 ) {
 				$this->_resolve_merge_conflicts( $this->get_commit_message( $commit ) );
@@ -330,7 +291,7 @@ class Git_Wrapper {
 			return TRUE;
 		} else {
 			$this->_call( 'cherry-pick', '--abort' );
-			$this->checkout( 'merge_local' );
+			$this->create_branch( 'merge_local' );
 			$this->_call( 'branch', '-D', $local_branch );
 			$this->_call( 'branch', '-m', $local_branch );
 			return FALSE;
@@ -338,7 +299,8 @@ class Git_Wrapper {
 	}
 
 	function successfully_merged() {
-		$changes = array_values( $this->status( true ) );
+		list( $branch_status, $response ) = $this->status( TRUE );
+		$changes = array_values( $response );
 		return ( 0 == count( array_intersect( $changes, array( 'DD', 'AU', 'UD', 'UA', 'DU', 'AA', 'UU' ) ) ) );
 	}
 
@@ -373,7 +335,7 @@ class Git_Wrapper {
 		return $response;
 	}
 
-	function checkout( $branch ) {
+	function create_branch( $branch ) {
 		list( $return, $response ) = $this->_call( 'checkout', '-b', $branch );
 		return ( $return == 0 );
 	}
@@ -460,7 +422,7 @@ class Git_Wrapper {
 		return $changes;
 	}
 
-	function status( $local_only = false ) {
+	function local_status() {
 		list( $return, $response ) = $this->_call( 'status', '-z', '-b', '-u' );
 		if ( 0 !== $return )
 			return array( '', array() );
@@ -490,21 +452,30 @@ class Git_Wrapper {
 				$new_response[ $to ] = trim( "$x$y $from" );
 			endforeach;
 		}
-		if ( $local_only ) return $new_response;
 
+		return array( $branch_status, $new_response );
+	}
+
+	function status( $local_only = false ) {
+		list( $branch_status, $new_response ) = $this->local_status();
+
+		if ( $local_only ) return array( $branch_status, $new_response );
+
+		$behind_count = 0;
+		$ahead_count  = 0;
 		if ( preg_match( '/## ([^.]+)\.+([^ ]+)/', $branch_status, $matches ) ) {
 			$local_branch  = $matches[1];
 			$remote_branch = $matches[2];
 
-			list( $retrn, $response ) = $this->_call( 'rev-list', "$local_branch..$remote_branch", '--count' );
+			list( $return, $response ) = $this->_call( 'rev-list', "$local_branch..$remote_branch", '--count' );
 			$behind_count = (int)$response[0];
 
-			list( $retrn, $response ) = $this->_call( 'rev-list', "$remote_branch..$local_branch", '--count' );
+			list( $return, $response ) = $this->_call( 'rev-list', "$remote_branch..$local_branch", '--count' );
 			$ahead_count = (int)$response[0];
 		}
 
 		if ( $behind_count ) {
-			list( $retrn, $response ) = $this->_call( 'diff', '-z', '--name-status', "$local_branch~$ahead_count", $remote_branch );
+			list( $return, $response ) = $this->_call( 'diff', '-z', '--name-status', "$local_branch~$ahead_count", $remote_branch );
 			$response = explode( chr( 0 ), $response[0] );
 			array_pop( $response );
 			for ( $idx = 0 ; $idx < count( $response ) / 2 ; $idx++ ) {
@@ -525,13 +496,6 @@ class Git_Wrapper {
 	function is_dirty() {
 		$changes = $this->get_uncommited_changes();
 		return ! empty( $changes );
-	}
-
-	/*
-	 * Pull changes from remote. By default accept local changes on conflicts
-	 */
-	function pull() {
-		$this->_call( 'pull', '-s', 'recursive', '-X', 'ours' );
 	}
 }
 
