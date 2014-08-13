@@ -423,15 +423,13 @@ EOF;
 	}
 
 	function local_status() {
-		list( $return, $response ) = $this->_call( 'status', '-z', '-b', '-u' );
+		list( $return, $response ) = $this->_call( 'status', '-s', '-b', '-u' );
 		if ( 0 !== $return )
 			return array( '', array() );
 
-		$response     = $response[0];
 		$new_response = array();
 
 		if ( ! empty( $response ) ) {
-			$response = explode( chr( 0 ), $response );
 			$branch_status = array_shift( $response );
 			foreach ( $response as $idx => $item ) :
 				if ( ! empty( $from ) ) {
