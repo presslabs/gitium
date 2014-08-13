@@ -1,4 +1,7 @@
-<?php require_once 'gitium-unittestcase.php';
+<?php
+
+require_once 'gitium-unittestcase.php';
+
 class Test_Gitium_Merge_Conflicts extends Gitium_UnitTestCase {
 	/**
 	 * Create merge conflict: AA -> unmerged, both added

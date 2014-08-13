@@ -1,4 +1,7 @@
-<?php require_once 'gitium-unittestcase.php';
+<?php
+
+require_once 'gitium-unittestcase.php';
+
 class Test_Gitium_Init_Process extends Gitium_UnitTestCase {
 	function test_repo_dir() {
 		global $git;

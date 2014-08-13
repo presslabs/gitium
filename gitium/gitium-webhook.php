@@ -23,7 +23,7 @@ require_once $wordpress_loader;
 require_once __DIR__ . '/gitium.php';
 
 function exit_with_error( $message ) {
-	disable_maintenance_mode();
+	gitium_disable_maintenance_mode();
 	wp_die( $message );
 }
 
@@ -34,7 +34,7 @@ if ( ! empty ( $webhook_key ) && isset( $_GET['key'] ) && $webhook_key == $_GET[
 	list( $git_public_key, $git_private_key ) = gitium_get_keypair();
 	$git->set_key( $git_private_key );
 
-	enable_maintenance_mode() or wp_die( 'Could not enable the maintenance mode!' );
+	gitium_enable_maintenance_mode() or wp_die( 'Could not enable the maintenance mode!...' );
 
 	$commitmsg = 'Merged changes from ' . $_SERVER['SERVER_NAME'] . ' on ' . date( 'm.d.Y' );
 	$commits   = array();
@@ -45,7 +45,7 @@ if ( ! empty ( $webhook_key ) && isset( $_GET['key'] ) && $webhook_key == $_GET[
 	$git->fetch_ref() or exit_with_error( 'Cound not fetch from remote repo.' );
 	$git->merge_with_accept_mine( $commits ) or exit_with_error( 'Could not merge changes.' );
 
-	disable_maintenance_mode();
+	gitium_disable_maintenance_mode();
 
 	if ( ! $git->push() ) {
 		wp_die( 'push failed! <pre>' . $git->get_last_error() . '</pre>' );

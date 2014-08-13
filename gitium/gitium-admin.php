@@ -149,7 +149,7 @@ class Gitium_Admin {
 		check_admin_referer( 'gitium-admin' );
 
 		$git = $this->git;
-		enable_maintenance_mode() or wp_die( 'Could not enable the maintenance mode!' );
+		gitium_enable_maintenance_mode() or wp_die( 'Could not enable the maintenance mode!' );
 		$git->add();
 		$commitmsg = 'Merged changes from ' . get_site_url() . ' on ' . date( 'm.d.Y' );
 		if ( isset( $_POST['commitmsg'] ) && ! empty( $_POST['commitmsg'] ) ) {
@@ -163,7 +163,7 @@ class Gitium_Admin {
 		}
 
 		$merge_success = gitium_merge_and_push( $commit );
-		disable_maintenance_mode();
+		gitium_disable_maintenance_mode();
 		if ( ! $merge_success )
 			$this->redirect( 'Merge failed: ' . $git->get_last_error() );
 		$this->success_redirect( "Pushed commit: `$commitmsg`" );

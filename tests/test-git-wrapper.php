@@ -1,27 +1,30 @@
-<?php require_once 'gitium-unittestcase.php';
+<?php
+
+require_once 'gitium-unittestcase.php';
+
 class Test_Git_Wrapper extends Gitium_UnitTestCase {
 	/**
 	 * Test is_dirty()
 	 *
-	 * 1.test if repo has uncommited changes(FALSE expected)
+	 * 1.test if repo has uncommited changes(false expected)
 	 * 2.add uncommited changes(local & remote)
-	 * 3.test if repo has uncommited changes(TRUE expected)
-	 * 4.commit all changes and test again(FALSE expected)
+	 * 3.test if repo has uncommited changes(true expected)
+	 * 4.commit all changes and test again(false expected)
 	 */
 	function test_is_dirty() {
 		global $git;
 
-		// 1.test if repo has uncommited changes(FALSE expected)
+		// 1.test if repo has uncommited changes(false expected)
 		$this->assertFalse( $git->is_dirty() );
 
 		// 2.add uncommited changes(local & remote)
-		$this->_add_uncommited_changes_remotely( 'Add remote file', TRUE );
-		$this->_add_uncommited_changes_locally();
+		$this->_add_changes_remotely( 'Add remote file', true );
+		$this->_add_changes_locally();
 
-		// 3.test if repo has uncommited changes(TRUE expected)
+		// 3.test if repo has uncommited changes(true expected)
 		$this->assertTrue( $git->is_dirty() );
 
-		// 4.commit all changes and test again(FALSE expected)
+		// 4.commit all changes and test again(false expected)
 		$git->commit( 'Add local file' );
 		$this->assertFalse( $git->is_dirty() );
 	}
@@ -41,8 +44,8 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		$this->assertEmpty( $git->get_uncommited_changes() );
 
 		// 2.add uncommited changes(local)
-		$this->_add_uncommited_changes_locally();
-		$this->_add_uncommited_changes_remotely();
+		$this->_add_changes_locally();
+		$this->_add_changes_remotely();
 
 		// 3.test if repo has uncommited changes(1 change expected)
 		$this->assertCount( 1, $git->get_uncommited_changes() );
@@ -63,8 +66,8 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		global $git;
 
 		// 1.add local changes and commit them(add two ahead commits)
-		$this->_add_uncommited_changes_locally( 'one', TRUE );
-		$this->_add_uncommited_changes_locally( 'two', TRUE );
+		$this->_add_changes_locally( 'one', true );
+		$this->_add_changes_locally( 'two', true );
 
 		// 2.test if there are ahead commits(two expected)
 		$this->assertCount( 2, $git->get_ahead_commits() );
@@ -80,9 +83,9 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		global $git;
 
 		// 1.add remote changes and commit them(add three behind commits)
-		$this->_add_uncommited_changes_remotely( 'one', TRUE );
-		$this->_add_uncommited_changes_remotely( 'two', TRUE );
-		$this->_add_uncommited_changes_remotely( 'three',TRUE );
+		$this->_add_changes_remotely( 'one', true );
+		$this->_add_changes_remotely( 'two', true );
+		$this->_add_changes_remotely( 'three',true );
 
 		$git->fetch_ref();
 
@@ -123,7 +126,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		$this->assertEmpty( $git->get_local_changes() );
 
 		// 2.add uncommited changes(local)
-		$this->_add_uncommited_changes_locally();
+		$this->_add_changes_locally();
 
 		// 3.test if repo has uncommited changes(1 change expected)
 		$this->assertCount( 1, $git->get_local_changes() );
@@ -146,9 +149,9 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 	function test_commit_with_dif_user_and_email() {
 		global $git;
 
-		$this->_add_uncommited_changes_locally();
+		$this->_add_changes_locally();
 		$git->add();
-		$this->assertNotEquals( FALSE, $git->commit( 'Add local changes', 'User', 'test@example.com' ) );
+		$this->assertNotEquals( false, $git->commit( 'Add local changes', 'User', 'test@example.com' ) );
 	}
 
 	function test_repo_dir_init() {
@@ -160,28 +163,102 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 	function test_merge_initial_commit() {
 		global $git;
 
-		$this->_add_uncommited_changes_locally();
+		$this->_add_changes_locally();
 		$git->add();
 		$commit_id = $git->commit( 'Add local changes' );
 		$this->assertTrue( $git->merge_initial_commit( $commit_id, 'master' ) );
 	}
 
+	function test_merge_with_accept_mine_1_ahead_and_1_behind_case_1() {
+		global $git;
+
+		$this->_add_changes_locally( 'local', true );
+		$this->_add_changes_remotely( 'remote', true );
+		$git->fetch_ref();
+
+		$this->assertTrue( $git->merge_with_accept_mine() );
+		$this->assertTrue( $git->successfully_merged() );
+	}
+
+	function test_merge_with_accept_mine_1_ahead_and_1_behind_case_2() {
+		global $git;
+
+		$this->_add_changes_locally( 'local', true );
+		$this->_add_changes_remotely( 'remote', true );
+		$git->fetch_ref();
+
+		$this->assertTrue( $git->merge_with_accept_mine() );
+		$this->assertTrue( $git->successfully_merged() );
+		$this->assertTrue( $git->push() );
+	}
+
+	function test_merge_with_accept_mine_1_ahead_and_1_behind_case_3() {
+		global $git;
+
+		$this->_add_changes_locally( 'local', true );
+		$this->_add_changes_remotely( 'remote', true );
+		$git->fetch_ref();
+		$this->_add_untracked_changes_locally();
+
+		$this->assertTrue( $git->merge_with_accept_mine() );
+		$this->assertTrue( $git->successfully_merged() );
+		$this->assertTrue( $git->push() );
+	}
+
+	function test_merge_with_accept_mine_1_ahead_and_1_behind_case_4() {
+		global $git;
+
+		$this->_add_changes_locally( 'local', true );
+		$this->_add_changes_remotely( 'remote', true );
+		$git->fetch_ref();
+		$this->_add_untracked_changes_remotely();
+
+		$this->assertTrue( $git->merge_with_accept_mine() );
+		$this->assertTrue( $git->successfully_merged() );
+		$this->assertTrue( $git->push() );
+	}
+
+	function test_merge_with_accept_mine_1_ahead_and_1_behind_case_5() {
+		global $git;
+
+		$this->_add_changes_locally( 'local', true );
+		$this->_add_changes_remotely( 'remote', true );
+		$git->fetch_ref();
+		$this->_add_untracked_changes_locally();
+		$this->_add_untracked_changes_remotely();
+
+		$this->assertTrue( $git->merge_with_accept_mine() );
+		$this->assertTrue( $git->successfully_merged() );
+		$this->assertTrue( $git->push() );
+	}
+
 	function test_local_status() {
 		global $git;
 
-		$this->_add_uncommited_changes_locally( 'local', TRUE );
-		$this->assertEquals( $git->local_status(), $git->status( TRUE ) );
+		$this->_add_changes_locally( 'local', true );
+		$this->assertEquals( $git->local_status(), $git->status( true ) );
+	}
+
+	function test_local_status_one_change() {
+		global $git;
+
+		$this->_add_changes_locally( 'one', true ); // 1 commit ahead
+		$this->_add_changes_locally( 'two' );
+		list( $branch_status, $changes ) = $git->local_status();
+
+		$this->assertStringEndsWith( '[ahead 1]', $branch_status );
+		$this->assertEquals( $changes['work-file.txt'], 'M' );
 	}
 
 	function test_status() {
 		global $git;
 
 		// 1.add local change
-		$this->_add_uncommited_changes_locally( 'locla', TRUE );
+		$this->_add_changes_locally( 'local', true );
 
 		// 2.add remote changes and commit them(add two behind commits)
-		$this->_add_uncommited_changes_remotely( 'one', TRUE );
-		$this->_add_uncommited_changes_remotely( 'two', TRUE );
+		$this->_add_changes_remotely( 'one', true );
+		$this->_add_changes_remotely( 'two', true );
 		$git->fetch_ref();
 
 		// 3.test if the changes are visible in status call

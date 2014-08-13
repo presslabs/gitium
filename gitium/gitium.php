@@ -40,18 +40,22 @@ function _gitium_make_ssh_git_file_exe() {
 	fclose( $pipes[0] );
 }
 
-function enable_maintenance_mode() {
-	$file = ABSPATH . '/.maintenance';
+if ( ! function_exists( 'gitium_enable_maintenance_mode' ) ) :
+	function gitium_enable_maintenance_mode() {
+		$file = ABSPATH . '/.maintenance';
 
-	if ( FALSE === file_put_contents( $file, '<?php $upgrading = ' . time() .';' ) )
-		return FALSE;
-	else
-		return TRUE;
-}
+		if ( FALSE === file_put_contents( $file, '<?php $upgrading = ' . time() .';' ) )
+			return FALSE;
+		else
+			return TRUE;
+	}
+endif;
 
-function disable_maintenance_mode() {
-	return unlink( ABSPATH . '/.maintenance' );
-}
+if ( ! function_exists( 'gitium_disable_maintenance_mode' ) ) :
+	function gitium_disable_maintenance_mode() {
+		return unlink( ABSPATH . '/.maintenance' );
+	}
+endif;
 
 register_activation_hook( __FILE__, '_gitium_make_ssh_git_file_exe' );
 

@@ -1,5 +1,7 @@
-<?php class Test_Gitium extends WP_UnitTestCase {
-	private $test_gitium_is_activated = FALSE;
+<?php
+
+class Test_Gitium extends WP_UnitTestCase {
+	private $test_gitium_is_activated = false;
 	private $plugin = 'gitium/gitium.php';
 	var $user_id;
 	var $factory;
