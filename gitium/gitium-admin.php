@@ -211,7 +211,7 @@ class Gitium_Admin {
 	public function add_menu_bubble() {
 		global $menu;
 		$git = $this->git;
-		$changes = _gitium_status();
+		list( $branch_status, $changes ) = _gitium_status();
 		if ( ! empty( $changes ) ) :
 			$bubble_count = count( $changes );
 			foreach ( $menu as $key => $value  ) {
@@ -346,7 +346,7 @@ class Gitium_Admin {
 	}
 
 	private function changes_page() {
-		$changes = _gitium_status();
+		list( $branch_status, $changes ) = _gitium_status();
 		list( $git_public_key, $git_private_key ) = gitium_get_keypair();
 		?>
 		<div class="wrap">
