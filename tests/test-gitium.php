@@ -182,7 +182,7 @@ class Test_Gitium extends WP_UnitTestCase {
 
 	function test_gitium_humanized_change_case_5() {
 		$admin = new Gitium_Admin();
-		$this->assertEquals( 'modified to remote', $admin->humanized_change( 'rM' ) );
+		$this->assertEquals( 'modified on remote', $admin->humanized_change( 'rM' ) );
 	}
 
 	function test_gitium_humanized_change_case_6() {
