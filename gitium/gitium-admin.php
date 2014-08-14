@@ -63,8 +63,9 @@ class Gitium_Admin {
 			'R'  => 'deleted from work tree',
 		);
 
-		if ( isset( $meaning[ $change ] ) )
+		if ( isset( $meaning[ $change ] ) ) {
 			return $meaning[ $change ];
+		}
 
 		if ( 0 === strpos( $change, 'R ' ) ) {
 			$old_filename = substr( $change, 2 );
@@ -77,8 +78,9 @@ class Gitium_Admin {
 		$message_id = substr(
 			md5( str_shuffle( 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789' ) . time() ), 0, 8
 		);
-		if ( $message )
+		if ( $message ) {
 			set_transient( 'message_' . $message_id, $message, 900 );
+		}
 		$url = admin_url( 'admin.php?page=' . $this->menu_slug );
 		$url = add_query_arg(
 			array(
@@ -106,27 +108,37 @@ class Gitium_Admin {
 			$git->commit( 'Initial commit', $current_user->display_name, $current_user->user_email );
 			if ( ! $git->push( 'master' ) ) {
 				$git->cleanup();
-				return FALSE;
+				return false;
 			}
 		}
-		return TRUE;
+		return true;
 	}
 
 	public function init_repo() {
-		if ( ! isset( $_POST['SubmitFetch'] ) || ! isset( $_POST['remote_url'] ) ) return;
-		check_admin_referer( 'gitium-admin' );
-		if ( empty( $_POST['remote_url'] ) ) $this->redirect( 'Please secify a valid repo.' );
+		if ( ! isset( $_POST['SubmitFetch'] ) || ! isset( $_POST['remote_url'] ) ) {
+			return;
+		}
 
-		if ( $this->init_process( $_POST['remote_url'] ) )
+		check_admin_referer( 'gitium-admin' );
+
+		if ( empty( $_POST['remote_url'] ) ) {
+			$this->redirect( 'Please secify a valid repo.' );
+		}
+
+		if ( $this->init_process( $_POST['remote_url'] ) ) {
 			$this->success_redirect();
-		else
-			$this->redirect( 'Could not push to remote ' . $_POST['remote_url']  );
+		} else {
+			$this->redirect( 'Could not push to remote ' . $_POST['remote_url'] );
+		}
 	}
 
 	public function choose_branch() {
-		if ( ! isset( $_POST['SubmitMergeAndPush'] ) || ! isset( $_POST['tracking_branch'] ) ) return;
+		if ( ! isset( $_POST['SubmitMergeAndPush'] ) || ! isset( $_POST['tracking_branch'] ) ) {
+			return;
+		}
+
 		check_admin_referer( 'gitium-admin' );
-		
+
 		$git = $this->git;
 		$git->add();
 		$branch       = $_POST['tracking_branch'];
@@ -145,7 +157,10 @@ class Gitium_Admin {
 	}
 
 	public function save_changes() {
-		if ( ! isset( $_POST['SubmitSave'] ) ) return;
+		if ( ! isset( $_POST['SubmitSave'] ) ) {
+			return;
+		}
+
 		check_admin_referer( 'gitium-admin' );
 
 		$git = $this->git;
@@ -164,24 +179,31 @@ class Gitium_Admin {
 
 		$merge_success = gitium_merge_and_push( $commit );
 		gitium_disable_maintenance_mode();
-		if ( ! $merge_success )
+		if ( ! $merge_success ) {
 			$this->redirect( 'Merge failed: ' . $git->get_last_error() );
+		}
 		$this->success_redirect( "Pushed commit: `$commitmsg`" );
 	}
 
 	public function regenerate_webhook() {
-		if ( ! isset( $_POST['SubmitRegenerateWebhook'] ) ) return;
+		if ( ! isset( $_POST['SubmitRegenerateWebhook'] ) ) {
+			return;
+		}
+
 		check_admin_referer( 'gitium-admin' );
 
-		gitium_get_webhook_key( TRUE );
+		gitium_get_webhook_key( true );
 		$this->success_redirect( 'Webhook URL regenrates. Please make sure you update any external references.' );
 	}
 
 	public function regenerate_keypair() {
-		if ( ! isset( $_POST['SubmitRegenerateKeypair'] ) ) return;
+		if ( ! isset( $_POST['SubmitRegenerateKeypair'] ) ) {
+			return;
+		}
+
 		check_admin_referer( 'gitium-admin' );
 
-		gitium_get_keypair( TRUE );
+		gitium_get_keypair( true );
 		$this->success_redirect( 'Keypair successfully regenerated.' );
 	}
 
@@ -196,16 +218,18 @@ class Gitium_Admin {
 
 		$git = $this->git;
 
-		if ( ! $git->is_versioned() )
+		if ( ! $git->is_versioned() ) {
 			return $this->setup_step_1();
+		}
 
-		if ( ! $git->get_remote_tracking_branch() )
+		if ( ! $git->get_remote_tracking_branch() ) {
 			return $this->setup_step_2();
+		}
 
 		_gitium_status( true );
-		if ( gitium_has_the_minimum_version() )
+		if ( gitium_has_the_minimum_version() ) {
 			$this->changes_page();
-
+		}
 	}
 
 	public function add_menu_bubble() {
@@ -307,10 +331,16 @@ class Gitium_Admin {
 		<p>
 		  Following remote branch <code><?php echo esc_html( $branch ); ?></code>.
 		  <?php
-			if ( ! $ahead && ! $behind && empty( $changes ) ) echo 'Everything is up to date';
-			if ( $ahead && $behind ) echo esc_html( "You are $ahead commits ahead and $behind behind remote." );
-			elseif ( $ahead ) echo esc_html( "You are $ahead commits ahead remote." );
-			elseif ( $behind ) echo esc_html( "You are $behind commits behind remote." );
+		if ( ! $ahead && ! $behind && empty( $changes ) ) {
+			echo 'Everything is up to date';
+		}
+		if ( $ahead && $behind ) {
+			echo esc_html( "You are $ahead commits ahead and $behind behind remote." );
+		} elseif ( $ahead ) {
+			echo esc_html( "You are $ahead commits ahead remote." );
+		} elseif ( $behind ) {
+			echo esc_html( "You are $behind commits behind remote." );
+		}
 			?>
 		</p>
 		<?php
@@ -367,7 +397,7 @@ class Gitium_Admin {
 			<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="Merged changes from <?php echo esc_url( get_site_url() ); ?> on <?php echo esc_html( date( 'm.d.Y' ) ); ?>" />
 			</p>
 			<p>
-			<input type="submit" name="SubmitSave" class="button-primary button" value="Save changes" <?php if ( get_transient( 'gitium_remote_disconnected', TRUE ) ) echo 'disabled="disabled" '; ?>/>
+			<input type="submit" name="SubmitSave" class="button-primary button" value="Save changes" <?php if ( get_transient( 'gitium_remote_disconnected', true ) ) { echo 'disabled="disabled" '; } ?>/>
 			</p>
 		<?php endif; ?>
 
@@ -403,7 +433,10 @@ class Gitium_Admin {
 	}
 }
 
-if ( is_admin() ) add_action( 'init', 'gitium_admin_page' );
-function gitium_admin_page() {
-	$gitium_options = new Gitium_Admin();
+if ( is_admin() ) {
+	add_action( 'init', 'gitium_admin_page' );
+	function gitium_admin_page() {
+		$gitium_options = new Gitium_Admin();
+	}
 }
+
