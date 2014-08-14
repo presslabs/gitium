@@ -32,7 +32,7 @@ class Gitium_UnitTestCase extends WP_UnitTestCase {
 	}
 
 	protected function _add_untracked_changes_locally( $change = 'local' ) {
-		file_put_contents( "$this->local_file", $change . PHP_EOL );
+		file_put_contents( "$this->local_file" . rand( 1, 999 ), $change . PHP_EOL );
 	}
 
 	protected function _add_changes_locally( $change = 'local', $commit = false ) {
@@ -43,10 +43,6 @@ class Gitium_UnitTestCase extends WP_UnitTestCase {
 		if ( $commit ) {
 			$git->commit( 'Commit local file' );
 		}
-	}
-
-	protected function _add_untracked_changes_remotely( $change = 'remote' ) {
-		exec( "cd {$this->work_repo} ; echo '$change' > $this->work_fname " );
 	}
 
 	protected function _add_changes_remotely( $change = 'remote', $commit = false ) {

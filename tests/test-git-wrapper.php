@@ -178,6 +178,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 
 		$this->assertTrue( $git->merge_with_accept_mine() );
 		$this->assertTrue( $git->successfully_merged() );
+		$this->assertTrue( $git->push() );
 	}
 
 	function test_merge_with_accept_mine_1_ahead_and_1_behind_case_2() {
@@ -186,46 +187,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		$this->_add_changes_locally( 'local', true );
 		$this->_add_changes_remotely( 'remote', true );
 		$git->fetch_ref();
-
-		$this->assertTrue( $git->merge_with_accept_mine() );
-		$this->assertTrue( $git->successfully_merged() );
-		$this->assertTrue( $git->push() );
-	}
-
-	function test_merge_with_accept_mine_1_ahead_and_1_behind_case_3() {
-		global $git;
-
-		$this->_add_changes_locally( 'local', true );
-		$this->_add_changes_remotely( 'remote', true );
-		$git->fetch_ref();
-		$this->_add_untracked_changes_locally();
-
-		$this->assertTrue( $git->merge_with_accept_mine() );
-		$this->assertTrue( $git->successfully_merged() );
-		$this->assertTrue( $git->push() );
-	}
-
-	function test_merge_with_accept_mine_1_ahead_and_1_behind_case_4() {
-		global $git;
-
-		$this->_add_changes_locally( 'local', true );
-		$this->_add_changes_remotely( 'remote', true );
-		$git->fetch_ref();
-		$this->_add_untracked_changes_remotely();
-
-		$this->assertTrue( $git->merge_with_accept_mine() );
-		$this->assertTrue( $git->successfully_merged() );
-		$this->assertTrue( $git->push() );
-	}
-
-	function test_merge_with_accept_mine_1_ahead_and_1_behind_case_5() {
-		global $git;
-
-		$this->_add_changes_locally( 'local', true );
-		$this->_add_changes_remotely( 'remote', true );
-		$git->fetch_ref();
-		$this->_add_untracked_changes_locally();
-		$this->_add_untracked_changes_remotely();
+		$this->_add_untracked_changes_locally('local1');
 
 		$this->assertTrue( $git->merge_with_accept_mine() );
 		$this->assertTrue( $git->successfully_merged() );
