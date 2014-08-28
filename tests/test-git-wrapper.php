@@ -187,7 +187,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		$this->_add_changes_locally( 'local', true );
 		$this->_add_changes_remotely( 'remote', true );
 		$git->fetch_ref();
-		$this->_add_untracked_changes_locally('local1');
+		$this->_add_untracked_changes_locally( 'local1' );
 
 		$this->assertTrue( $git->merge_with_accept_mine() );
 		$this->assertTrue( $git->successfully_merged() );

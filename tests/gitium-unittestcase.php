@@ -1,11 +1,12 @@
 <?php
 
 class Gitium_UnitTestCase extends WP_UnitTestCase {
-	protected $remote_repo = null;
-	protected $local_file  = null;
-	protected $work_file   = null;
-	protected $work_fname  = 'work-file.txt';
-	protected $work_repo   = '/tmp/gitium-repo';
+	protected $remote_repo        = null;
+	protected $local_file         = null;
+	protected $work_file          = null;
+	protected $work_fname         = 'work-file.txt';
+	protected $work_repo          = '/tmp/gitium-repo';
+	protected $delete_on_teardown = array();
 
 	protected function _create_work_fresh_clone() {
 		if ( $this->work_repo ) {
@@ -32,7 +33,10 @@ class Gitium_UnitTestCase extends WP_UnitTestCase {
 	}
 
 	protected function _add_untracked_changes_locally( $change = 'local' ) {
-		file_put_contents( "$this->local_file" . rand( 1, 999 ), $change . PHP_EOL );
+		$local_file_name = "$this->local_file" . rand( 1, 999 );
+		file_put_contents( $local_file_name, $change . PHP_EOL );
+		$this->delete_on_teardown[] = $local_file_name;
+		return $local_file_name;
 	}
 
 	protected function _add_changes_locally( $change = 'local', $commit = false ) {
@@ -85,6 +89,8 @@ class Gitium_UnitTestCase extends WP_UnitTestCase {
 	}
 
 	public function teardown() {
+		global $git;
+
 		if ( $this->remote_repo ) {
 			exec( "rm -rf {$this->remote_repo}" );
 		}
@@ -98,6 +104,10 @@ class Gitium_UnitTestCase extends WP_UnitTestCase {
 
 		// remove the files of the test
 		exec( "rm -rf {$this->local_file} ; rm -rf {$this->work_repo}" );
+		foreach ( $this->delete_on_teardown as $file ) {
+			exec( "rm -rf $file" );
+		}
+		$this->delete_on_teardown = array();
 	}
 
 	function test_class_exists_git_wrapper() {
