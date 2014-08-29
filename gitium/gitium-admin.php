@@ -105,7 +105,7 @@ class Gitium_Admin {
 		if ( count( $git->get_remote_branches() ) == 0 ) {
 			$git->add( 'wp-content', '.gitignore' );
 			$current_user = wp_get_current_user();
-			$git->commit( 'Initial commit', $current_user->display_name, $current_user->user_email );
+			$git->commit( __( 'Initial commit', 'gitium' ), $current_user->display_name, $current_user->user_email );
 			if ( ! $git->push( 'master' ) ) {
 				$git->cleanup();
 				return false;
@@ -166,7 +166,7 @@ class Gitium_Admin {
 		$git = $this->git;
 		gitium_enable_maintenance_mode() or wp_die( __( 'Could not enable the maintenance mode!', 'gitium' ) );
 		$git->add();
-		$commitmsg = 'Merged changes from ' . get_site_url() . ' on ' . date( 'm.d.Y' );
+		$commitmsg = sprintf( __( 'Merged changes from %s on %s', 'gitium' ), get_site_url(), date( 'm.d.Y' ) );
 		if ( isset( $_POST['commitmsg'] ) && ! empty( $_POST['commitmsg'] ) ) {
 			$commitmsg = $_POST['commitmsg'];
 		}
@@ -252,14 +252,14 @@ class Gitium_Admin {
 		$git = $this->git;
 		list( $git_public_key, $git_private_key ) = gitium_get_keypair(); ?>
 		<div class="wrap">
-		<h2>Status <code>unconfigured</code></h2>
+			<h2><?php _e( 'Status', 'gitium' ); ?> <code><?php _e( 'unconfigured', 'gitium' ); ?></code></h2>
 		
 		<form action="" method="POST">
 		<?php wp_nonce_field( 'gitium-admin' ) ?>
 
 		<table class="form-table">
 		<tr>
-			<th scope="row"><label for="remote_url">Remote URL</label></th>
+		<th scope="row"><label for="remote_url"><?php _e( 'Remote URL', 'gitium' ); ?></label></th>
 			<td>
 				<input type="text" class="regular-text" name="remote_url" id="remote_url" placeholder="git@github.com:user/example.git" value="">
 				<p class="description"><?php _e( 'This URL provide access to a Git repository via SSH, HTTPS, or Subversion.', 'gitium' ); ?><br />
@@ -269,7 +269,7 @@ class Gitium_Admin {
 
 		<?php if ( ! defined( 'GIT_KEY_FILE' ) || GIT_KEY_FILE == '' ) : ?>
 		<tr>
-			<th scope="row"><label for="key_pair">Key pair</label></th>
+		<th scope="row"><label for="key_pair"><?php _e( 'Key pair', 'gitium' ); ?></label></th>
 			<td>
 				<p>
 				<input type="text" class="regular-text" name="key_pair" id="key_pair" value="<?php echo esc_attr( $git_public_key ); ?>" readonly="readonly">
@@ -394,7 +394,7 @@ class Gitium_Admin {
 		<?php if ( ! empty( $changes ) ) : ?>
 			<p>
 			<label for="save-changes"><?php _e( 'Commit message', 'gitium' ); ?>:</label>
-			<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="Merged changes from <?php echo esc_url( get_site_url() ); ?> on <?php echo esc_html( date( 'm.d.Y' ) ); ?>" />
+			<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="<?php printf( __( 'Merged changes from %s on %s', 'gitium' ), get_site_url(), date( 'm.d.Y' ) ); ?>" />
 			</p>
 			<p>
 			<input type="submit" name="SubmitSave" class="button-primary button" value="<?php _e( 'Save changes', 'gitium' ); ?>" <?php if ( get_transient( 'gitium_remote_disconnected', true ) ) { echo 'disabled="disabled" '; } ?>/>
@@ -439,4 +439,3 @@ if ( is_admin() ) {
 		$gitium_options = new Gitium_Admin();
 	}
 }
-
