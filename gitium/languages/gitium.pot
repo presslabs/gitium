@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Gitium\n"
-"POT-Creation-Date: 2014-08-28 20:38+0200\n"
-"PO-Revision-Date: 2014-08-28 20:38+0200\n"
+"POT-Creation-Date: 2014-08-29 17:56+0200\n"
+"PO-Revision-Date: 2014-08-29 17:57+0200\n"
 "Last-Translator: PressLabs <ping@presslabs.com>\n"
 "Language-Team: PressLabs <ping@presslabs.com>\n"
 "Language: English\n"
@@ -56,6 +56,10 @@ msgstr ""
 msgid "renamed from `%s`"
 msgstr ""
 
+#: ../gitium-admin.php:108
+msgid "Initial commit"
+msgstr ""
+
 #: ../gitium-admin.php:125
 msgid "Please specify a valid repo."
 msgstr ""
@@ -80,6 +84,11 @@ msgstr ""
 msgid "Could not enable the maintenance mode!"
 msgstr ""
 
+#: ../gitium-admin.php:169 ../gitium-admin.php:413
+#, php-format
+msgid "Merged changes from %s on %s"
+msgstr ""
+
 #: ../gitium-admin.php:177
 msgid "Could not commit!"
 msgstr ""
@@ -102,28 +111,44 @@ msgstr ""
 msgid "Keypair successfully regenerated."
 msgstr ""
 
-#: ../gitium-admin.php:265
+#: ../gitium-admin.php:271 ../gitium-admin.php:400
+msgid "Status"
+msgstr ""
+
+#: ../gitium-admin.php:271
+msgid "unconfigured"
+msgstr ""
+
+#: ../gitium-admin.php:278
+msgid "Remote URL"
+msgstr ""
+
+#: ../gitium-admin.php:281
 msgid ""
 "This URL provide access to a Git repository via SSH, HTTPS, or Subversion."
 msgstr ""
 
-#: ../gitium-admin.php:266
+#: ../gitium-admin.php:282
 msgid ""
 "If you need to authenticate over \"https://\" instead of SSH use: "
 "<code>https://user:pass@github.com/user/example.git</code>"
 msgstr ""
 
-#: ../gitium-admin.php:276 ../gitium-admin.php:421
+#: ../gitium-admin.php:288
+msgid "Key pair"
+msgstr ""
+
+#: ../gitium-admin.php:292 ../gitium-admin.php:437
 msgid "Regenerate Key"
 msgstr ""
 
-#: ../gitium-admin.php:278 ../gitium-admin.php:422
+#: ../gitium-admin.php:294 ../gitium-admin.php:438
 msgid ""
 "If your use ssh keybased authentication for git you need to allow write "
 "access to your repository using this key."
 msgstr ""
 
-#: ../gitium-admin.php:279 ../gitium-admin.php:423
+#: ../gitium-admin.php:295 ../gitium-admin.php:439
 msgid ""
 "Checkout instructions for <a href=\"https://help.github.com/articles/"
 "generating-ssh-keys#step-3-add-your-ssh-key-to-github\" target=\"_blank"
@@ -132,86 +157,119 @@ msgid ""
 "HowtoaddakeyusingSSHforOSXorLinux\" target=\"_blank\">bitbucket</a>."
 msgstr ""
 
-#: ../gitium-admin.php:288
+#: ../gitium-admin.php:304
 msgid "Fetch"
 msgstr ""
 
-#: ../gitium-admin.php:306
+#: ../gitium-admin.php:322
 msgid "Choose tracking branch"
 msgstr ""
 
-#: ../gitium-admin.php:319
+#: ../gitium-admin.php:335
 msgid "Merge & Push"
 msgstr ""
 
-#: ../gitium-admin.php:332
+#: ../gitium-admin.php:348
 #, php-format
 msgid "Following remote branch <code>%s</code>."
 msgstr ""
 
-#: ../gitium-admin.php:334
+#: ../gitium-admin.php:350
 msgid "Everything is up to date"
 msgstr ""
 
-#: ../gitium-admin.php:337
+#: ../gitium-admin.php:353
 #, php-format
 msgid "You are %s commits ahead and %s behind remote."
 msgstr ""
 
-#: ../gitium-admin.php:339
+#: ../gitium-admin.php:355
 #, php-format
 msgid "You are %s commits ahead remote."
 msgstr ""
 
-#: ../gitium-admin.php:341
+#: ../gitium-admin.php:357
 #, php-format
 msgid "You are %s commits behind remote."
 msgstr ""
 
-#: ../gitium-admin.php:351 ../gitium-admin.php:352
+#: ../gitium-admin.php:367 ../gitium-admin.php:368
 msgid "Path"
 msgstr ""
 
-#: ../gitium-admin.php:351 ../gitium-admin.php:352
+#: ../gitium-admin.php:367 ../gitium-admin.php:368
 msgid "Change"
 msgstr ""
 
-#: ../gitium-admin.php:355
+#: ../gitium-admin.php:371
 msgid "Nothing to commit, working directory clean."
 msgstr ""
 
-#: ../gitium-admin.php:365
+#: ../gitium-admin.php:381
 msgid "Submodules are not supported in this version."
 msgstr ""
 
-#: ../gitium-admin.php:384
-msgid "Status"
-msgstr ""
-
-#: ../gitium-admin.php:384
+#: ../gitium-admin.php:400
 msgid "connected to"
 msgstr ""
 
-#: ../gitium-admin.php:396
+#: ../gitium-admin.php:412
 msgid "Commit message"
 msgstr ""
 
-#: ../gitium-admin.php:400
+#: ../gitium-admin.php:416
 msgid "Save changes"
 msgstr ""
 
-#: ../gitium-admin.php:406
+#: ../gitium-admin.php:422
 msgid "Webhook URL"
 msgstr ""
 
-#: ../gitium-admin.php:410
+#: ../gitium-admin.php:426
 msgid "Regenerate Webhook"
 msgstr ""
 
-#: ../gitium-admin.php:412
+#: ../gitium-admin.php:428
 msgid "Pinging this URL triggers an update from remote repository."
 msgstr ""
 
-#: ../gitium-admin.php:418
+#: ../gitium-admin.php:434
 msgid "Public Key"
+msgstr ""
+
+#: ../gitium-webhook.php:32
+msgid "Git Sauce plugin require minimum `git version 1.7`!"
+msgstr ""
+
+#: ../gitium-webhook.php:37
+msgid "Could not enable the maintenance mode!..."
+msgstr ""
+
+#: ../gitium-webhook.php:39
+#, php-format
+msgid "Merged changes from %s on $s"
+msgstr ""
+
+#: ../gitium-webhook.php:43
+msgid "Could not commit local changes!"
+msgstr ""
+
+#: ../gitium-webhook.php:46
+msgid "Cound not fetch from remote repo."
+msgstr ""
+
+#: ../gitium-webhook.php:47
+msgid "Could not merge changes."
+msgstr ""
+
+#: ../gitium-webhook.php:52
+msgid "Push failed!"
+msgstr ""
+
+#: ../gitium-webhook.php:54
+msgid "Pull done!"
+msgstr ""
+
+#: ../gitium-webhook.php:56
+msgid "Cheating uh?"
 msgstr ""
