@@ -16,7 +16,7 @@
 */
 
 header( 'Content-Type: text/html' );
-define( 'SHORTINIT', TRUE );
+define( 'SHORTINIT', true );
 $wordpress_loader = $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php';
 
 require_once $wordpress_loader;
@@ -29,28 +29,29 @@ function exit_with_error( $message ) {
 
 $webhook_key = get_option( 'gitium_webhook_key', '' );
 if ( ! empty ( $webhook_key ) && isset( $_GET['key'] ) && $webhook_key == $_GET['key'] ) :
-	( '1.7' <= substr( $git->get_version(), 0, 3 ) ) or wp_die( 'Git Sauce plugin require minimum `git version 1.7`!' );
+	( '1.7' <= substr( $git->get_version(), 0, 3 ) ) or wp_die( __( 'Git Sauce plugin require minimum `git version 1.7`!', 'gitium' ) );
 
 	list( $git_public_key, $git_private_key ) = gitium_get_keypair();
 	$git->set_key( $git_private_key );
 
-	gitium_enable_maintenance_mode() or wp_die( 'Could not enable the maintenance mode!...' );
+	gitium_enable_maintenance_mode() or wp_die( __( 'Could not enable the maintenance mode!...', 'gitium' ) );
 
-	$commitmsg = 'Merged changes from ' . $_SERVER['SERVER_NAME'] . ' on ' . date( 'm.d.Y' );
+	$commitmsg = sprintf( __( 'Merged changes from %s on $s', 'gitium' ), $_SERVER['SERVER_NAME'], date( 'm.d.Y' ) );
 	$commits   = array();
 
-	if ( $git->is_dirty() && $git->add() > 0 )
-		$commits[] = $git->commit( $commitmsg ) or wp_die( 'Could not commit local changes!' );
+	if ( $git->is_dirty() && $git->add() > 0 ) {
+		$commits[] = $git->commit( $commitmsg ) or wp_die( __( 'Could not commit local changes!', 'gitium' ) );
+	}
 
-	$git->fetch_ref() or exit_with_error( 'Cound not fetch from remote repo.' );
-	$git->merge_with_accept_mine( $commits ) or exit_with_error( 'Could not merge changes.' );
+	$git->fetch_ref() or exit_with_error( __( 'Cound not fetch from remote repo.', 'gitium' ) );
+	$git->merge_with_accept_mine( $commits ) or exit_with_error( __( 'Could not merge changes.', 'gitium' ) );
 
 	gitium_disable_maintenance_mode();
 
 	if ( ! $git->push() ) {
-		wp_die( 'push failed! <pre>' . $git->get_last_error() . '</pre>' );
+		wp_die( __( 'Push failed!', 'gitium' ) . ' <pre>' . $git->get_last_error() . '</pre>' );
 	}
-	wp_die( $commitmsg , 'Pull done!', array( 'response' => 200 ) );
+	wp_die( $commitmsg , __( 'Pull done!', 'gitium' ), array( 'response' => 200 ) );
 else :
-	wp_die( 'Cheating uh?', 'Cheating uh?', array( 'response' => 403 ) );
+	wp_die( __( 'Cheating uh?', 'gitium' ), __( 'Cheating uh?', 'gitium' ), array( 'response' => 403 ) );
 endif;

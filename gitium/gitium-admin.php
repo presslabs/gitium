@@ -42,8 +42,8 @@ class Gitium_Admin {
 
 	public function add_menu_page() {
 		$page = add_menu_page(
-			'Git Status',
-			'Code',
+			__( 'Git Status', 'gitium' ),
+			__( 'Code', 'gitium' ),
 			'manage_options',
 			$this->menu_slug,
 			array( $this, 'admin_page' )
@@ -52,15 +52,15 @@ class Gitium_Admin {
 
 	public function humanized_change( $change ) {
 		$meaning = array(
-			'??' => 'untracked',
-			'rM' => 'modified on remote',
-			'rA' => 'added to remote',
-			'rD' => 'deleted from remote',
-			'D'  => 'deleted from work tree',
-			'M'  => 'updated in work tree',
-			'A'  => 'added to work tree',
-			'AM' => 'added to work tree',
-			'R'  => 'deleted from work tree',
+			'??' => __( 'untracked', 'gitium' ),
+			'rM' => __( 'modified on remote', 'gitium' ),
+			'rA' => __( 'added to remote', 'gitium' ),
+			'rD' => __( 'deleted from remote', 'gitium' ),
+			'D'  => __( 'deleted from work tree', 'gitium' ),
+			'M'  => __( 'updated in work tree', 'gitium' ),
+			'A'  => __( 'added to work tree', 'gitium' ),
+			'AM' => __( 'added to work tree', 'gitium' ),
+			'R'  => __( 'deleted from work tree', 'gitium' ),
 		);
 
 		if ( isset( $meaning[ $change ] ) ) {
@@ -69,7 +69,7 @@ class Gitium_Admin {
 
 		if ( 0 === strpos( $change, 'R ' ) ) {
 			$old_filename = substr( $change, 2 );
-			$change = "renamed from `$old_filename`";
+			$change = sprintf( __( 'renamed from `%s`', 'gitium' ), $old_filename );
 		}
 		return $change;
 	}
@@ -105,7 +105,7 @@ class Gitium_Admin {
 		if ( count( $git->get_remote_branches() ) == 0 ) {
 			$git->add( 'wp-content', '.gitignore' );
 			$current_user = wp_get_current_user();
-			$git->commit( 'Initial commit', $current_user->display_name, $current_user->user_email );
+			$git->commit( __( 'Initial commit', 'gitium' ), $current_user->display_name, $current_user->user_email );
 			if ( ! $git->push( 'master' ) ) {
 				$git->cleanup();
 				return false;
@@ -122,13 +122,13 @@ class Gitium_Admin {
 		check_admin_referer( 'gitium-admin' );
 
 		if ( empty( $_POST['remote_url'] ) ) {
-			$this->redirect( 'Please secify a valid repo.' );
+			$this->redirect( __( 'Please specify a valid repo.', 'gitium' ) );
 		}
 
 		if ( $this->init_process( $_POST['remote_url'] ) ) {
 			$this->success_redirect();
 		} else {
-			$this->redirect( 'Could not push to remote ' . $_POST['remote_url'] );
+			$this->redirect( __( 'Could not push to remote', 'gitium' ) . ' ' . $_POST['remote_url'] );
 		}
 	}
 
@@ -143,14 +143,14 @@ class Gitium_Admin {
 		$git->add();
 		$branch       = $_POST['tracking_branch'];
 		$current_user = wp_get_current_user();
-		$commit = $git->commit( 'Merged existing code from ' . get_home_url(), $current_user->display_name, $current_user->user_email );
+		$commit = $git->commit( __( 'Merged existing code from ', 'gitium' ) . get_home_url(), $current_user->display_name, $current_user->user_email );
 		if ( ! $commit ) {
 			$git->cleanup();
-			$this->redirect( 'Could not create initial commit -> ' . $git->get_last_error() );
+			$this->redirect( __( 'Could not create initial commit -> ', 'gitium' ) . $git->get_last_error() );
 		}
 		if ( ! $git->merge_initial_commit( $commit, $branch ) ) {
 			$git->cleanup();
-			$this->redirect( 'Could not merge the initial commit -> ' . $git->get_last_error() );
+			$this->redirect( __( 'Could not merge the initial commit -> ', 'gitium' ) . $git->get_last_error() );
 		}
 		$git->push( $branch );
 		$this->success_redirect();
@@ -164,9 +164,9 @@ class Gitium_Admin {
 		check_admin_referer( 'gitium-admin' );
 
 		$git = $this->git;
-		gitium_enable_maintenance_mode() or wp_die( 'Could not enable the maintenance mode!' );
+		gitium_enable_maintenance_mode() or wp_die( __( 'Could not enable the maintenance mode!', 'gitium' ) );
 		$git->add();
-		$commitmsg = 'Merged changes from ' . get_site_url() . ' on ' . date( 'm.d.Y' );
+		$commitmsg = sprintf( __( 'Merged changes from %s on %s', 'gitium' ), get_site_url(), date( 'm.d.Y' ) );
 		if ( isset( $_POST['commitmsg'] ) && ! empty( $_POST['commitmsg'] ) ) {
 			$commitmsg = $_POST['commitmsg'];
 		}
@@ -174,15 +174,15 @@ class Gitium_Admin {
 		$current_user = wp_get_current_user();
 		$commit = $git->commit( $commitmsg, $current_user->display_name, $current_user->user_email );
 		if ( ! $commit ) {
-			$this->redirect( 'Could not commit!' );
+			$this->redirect( __( 'Could not commit!', 'gitium' ) );
 		}
 
 		$merge_success = gitium_merge_and_push( $commit );
 		gitium_disable_maintenance_mode();
 		if ( ! $merge_success ) {
-			$this->redirect( 'Merge failed: ' . $git->get_last_error() );
+			$this->redirect( __( 'Merge failed: ', 'gitium' ) . $git->get_last_error() );
 		}
-		$this->success_redirect( "Pushed commit: `$commitmsg`" );
+		$this->success_redirect( sprintf( __( 'Pushed commit: `%s`', 'gitium' ), $commitmsg ) );
 	}
 
 	public function regenerate_webhook() {
@@ -193,7 +193,7 @@ class Gitium_Admin {
 		check_admin_referer( 'gitium-admin' );
 
 		gitium_get_webhook_key( true );
-		$this->success_redirect( 'Webhook URL regenrates. Please make sure you update any external references.' );
+		$this->success_redirect( __( 'Webhook URL regenerates. Please make sure you update any external references.', 'gitium' ) );
 	}
 
 	public function regenerate_keypair() {
@@ -204,7 +204,7 @@ class Gitium_Admin {
 		check_admin_referer( 'gitium-admin' );
 
 		gitium_get_keypair( true );
-		$this->success_redirect( 'Keypair successfully regenerated.' );
+		$this->success_redirect( __( 'Keypair successfully regenerated.', 'gitium' ) );
 	}
 
 	public function admin_page() {
@@ -252,31 +252,31 @@ class Gitium_Admin {
 		$git = $this->git;
 		list( $git_public_key, $git_private_key ) = gitium_get_keypair(); ?>
 		<div class="wrap">
-		<h2>Status <code>unconfigured</code></h2>
+			<h2><?php _e( 'Status', 'gitium' ); ?> <code><?php _e( 'unconfigured', 'gitium' ); ?></code></h2>
 		
 		<form action="" method="POST">
 		<?php wp_nonce_field( 'gitium-admin' ) ?>
 
 		<table class="form-table">
 		<tr>
-			<th scope="row"><label for="remote_url">Remote URL</label></th>
+		<th scope="row"><label for="remote_url"><?php _e( 'Remote URL', 'gitium' ); ?></label></th>
 			<td>
 				<input type="text" class="regular-text" name="remote_url" id="remote_url" placeholder="git@github.com:user/example.git" value="">
-				<p class="description">This URL provide access to a Git repository via SSH, HTTPS, or Subversion.<br />
-				If you need to authenticate over "https://" instead of SSH use: <code>https://user:pass@github.com/user/example.git</code></p>
+				<p class="description"><?php _e( 'This URL provide access to a Git repository via SSH, HTTPS, or Subversion.', 'gitium' ); ?><br />
+		<?php _e( 'If you need to authenticate over "https://" instead of SSH use: <code>https://user:pass@github.com/user/example.git</code>', 'gitium' ); ?></p>
 			</td>
 		</tr>
 
 		<?php if ( ! defined( 'GIT_KEY_FILE' ) || GIT_KEY_FILE == '' ) : ?>
 		<tr>
-			<th scope="row"><label for="key_pair">Key pair</label></th>
+		<th scope="row"><label for="key_pair"><?php _e( 'Key pair', 'gitium' ); ?></label></th>
 			<td>
 				<p>
 				<input type="text" class="regular-text" name="key_pair" id="key_pair" value="<?php echo esc_attr( $git_public_key ); ?>" readonly="readonly">
-				<input type="submit" name="SubmitRegenerateKeypair" class="button" value="Regenerate Key" />
+				<input type="submit" name="SubmitRegenerateKeypair" class="button" value="<?php _e( 'Regenerate Key', 'gitium' ); ?>" />
 				</p>
-				<p class="description">If your use ssh keybased authentication for git you need to allow write access to your repository using this key.<br>
-				Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="https://confluence.atlassian.com/display/BITBUCKET/Add+an+SSH+key+to+an+account#AddanSSHkeytoanaccount-HowtoaddakeyusingSSHforOSXorLinux" target="_blank">bitbucket</a>.
+				<p class="description"><?php _e( 'If your use ssh keybased authentication for git you need to allow write access to your repository using this key.', 'gitium' ); ?><br />
+<?php _e( 'Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="https://confluence.atlassian.com/display/BITBUCKET/Add+an+SSH+key+to+an+account#AddanSSHkeytoanaccount-HowtoaddakeyusingSSHforOSXorLinux" target="_blank">bitbucket</a>.', 'gitium' ); ?>
 				</p>
 			</td>
 		</tr>
@@ -285,7 +285,7 @@ class Gitium_Admin {
 		</table>
 
 		<p class="submit">
-			<input type="submit" name="SubmitFetch" class="button-primary" value="Fetch" />
+		<input type="submit" name="SubmitFetch" class="button-primary" value="<?php _e( 'Fetch', 'gitium' ); ?>" />
 		</p>
 
 		</form>
@@ -303,20 +303,20 @@ class Gitium_Admin {
 
 		<table class="form-table">
 		<tr>
-			<th scope="row"><label for="tracking_branch">Choose tracking branch</label></th>
+		<th scope="row"><label for="tracking_branch"><?php _e( 'Choose tracking branch', 'gitium' ); ?></label></th>
 			<td>
 				<select name="tracking_branch" id="tracking_branch">
 				<?php foreach ( $git->get_remote_branches() as $branch ) : ?>
 					<option value="<?php echo esc_attr( $branch ); ?>"><?php echo esc_html( $branch ); ?></option>
 				<?php endforeach; ?>
 				</select>
-				<p class="description">Your code origin is set to <code><?php echo esc_html( $git->get_remote_url() ); ?></code></p>
+				<p class="description"><?php_e( 'Your code origin is set to', 'gitium' ); ?> <code><?php echo esc_html( $git->get_remote_url() ); ?></code></p>
 			</td>
 		</tr>
 		</table>
 
 		<p class="submit">
-			<input type="submit" name="SubmitMergeAndPush" class="button-primary" value="Merge & Push" />
+		<input type="submit" name="SubmitMergeAndPush" class="button-primary" value="<?php _e( 'Merge & Push', 'gitium' ); ?>" />
 		</p>
 		</form>
 		</div>
@@ -329,17 +329,16 @@ class Gitium_Admin {
 		$behind = count( $this->git->get_behind_commits() );
 		?>
 		<p>
-		  Following remote branch <code><?php echo esc_html( $branch ); ?></code>.
-		  <?php
+		  <?php printf( __( 'Following remote branch <code>%s</code>.', 'gitium' ), $branch );
 		if ( ! $ahead && ! $behind && empty( $changes ) ) {
-			echo 'Everything is up to date';
+			_e( 'Everything is up to date', 'gitium' );
 		}
 		if ( $ahead && $behind ) {
-			echo esc_html( "You are $ahead commits ahead and $behind behind remote." );
+			printf( __( 'You are %s commits ahead and %s behind remote.', 'gitium' ), $ahead, $behind );
 		} elseif ( $ahead ) {
-			echo esc_html( "You are $ahead commits ahead remote." );
+			printf( __( 'You are %s commits ahead remote.', 'gitium' ), $ahead );
 		} elseif ( $behind ) {
-			echo esc_html( "You are $behind commits behind remote." );
+			printf( __( 'You are %s commits behind remote.', 'gitium' ), $behind );
 		}
 			?>
 		</p>
@@ -349,11 +348,11 @@ class Gitium_Admin {
 	private function show_git_changes_table( $changes = '' ) {
 		?>
 		<table class="widefat" id="git-changes-table">
-		<thead><tr><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change</th></tr></thead>
-		<tfoot><tr><th scope="col" class="manage-column">Path</th><th scope="col" class="manage-column">Change</th></tr></tfoot>
+		<thead><tr><th scope="col" class="manage-column"><?php _e( 'Path', 'gitium' ); ?></th><th scope="col" class="manage-column"><?php _e( 'Change', 'gitium' ); ?></th></tr></thead>
+		<tfoot><tr><th scope="col" class="manage-column"><?php _e( 'Path', 'gitium' ); ?></th><th scope="col" class="manage-column"><?php _e( 'Change', 'gitium' ); ?></th></tr></tfoot>
 		<tbody>
 			<?php if ( empty( $changes ) ) : ?>
-				<tr><td><p>Nothing to commit, working directory clean.</p></td></tr>
+			<tr><td><p><?php _e( 'Nothing to commit, working directory clean.', 'gitium' ); ?></p></td></tr>
 			<?php else : ?>
 				<?php foreach ( $changes as $path => $type ) : ?>
 					<tr>
@@ -361,11 +360,12 @@ class Gitium_Admin {
 							<strong><?php echo esc_html( $path ); ?></strong>
 						</td>
 						<td>
-							<?php if ( is_dir( ABSPATH . '/' . $path ) && is_dir( ABSPATH . '/' . trailingslashit( $path ) . '.git' ) ) { // test if is submodule ?>
-								Submodules are not supported in this version.
-							<?php } else { ?>
-								<span title="<?php echo esc_html( $type ); ?>"><?php echo esc_html( $this->humanized_change( $type ) ); ?></span>
-							<?php } ?>
+			<?php
+				if ( is_dir( ABSPATH . '/' . $path ) && is_dir( ABSPATH . '/' . trailingslashit( $path ) . '.git' ) ) { // test if is submodule
+					_e( 'Submodules are not supported in this version.', 'gitium' );
+				} else { ?>
+					<span title="<?php echo esc_html( $type ); ?>"><?php echo esc_html( $this->humanized_change( $type ) ); ?></span>
+			<?php } ?>
 						</td>
 					</tr>
 				<?php endforeach; ?>
@@ -381,7 +381,7 @@ class Gitium_Admin {
 		?>
 		<div class="wrap">
 		<div id="icon-options-general" class="icon32">&nbsp;</div>
-		<h2>Status <code class="small">connected to <strong><?php echo esc_html( $this->git->get_remote_url() ); ?></strong></code></h2>
+		<h2><?php _e( 'Status', 'gitium' ); ?> <code class="small"><?php _e( 'connected to', 'gitium' ); ?> <strong><?php echo esc_html( $this->git->get_remote_url() ); ?></strong></code></h2>
 
 		<?php
 			$this->show_ahead_and_behind_info( $changes );
@@ -393,34 +393,34 @@ class Gitium_Admin {
 
 		<?php if ( ! empty( $changes ) ) : ?>
 			<p>
-			<label for="save-changes">Commit message:</label>
-			<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="Merged changes from <?php echo esc_url( get_site_url() ); ?> on <?php echo esc_html( date( 'm.d.Y' ) ); ?>" />
+			<label for="save-changes"><?php _e( 'Commit message', 'gitium' ); ?>:</label>
+			<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="<?php printf( __( 'Merged changes from %s on %s', 'gitium' ), get_site_url(), date( 'm.d.Y' ) ); ?>" />
 			</p>
 			<p>
-			<input type="submit" name="SubmitSave" class="button-primary button" value="Save changes" <?php if ( get_transient( 'gitium_remote_disconnected', true ) ) { echo 'disabled="disabled" '; } ?>/>
+			<input type="submit" name="SubmitSave" class="button-primary button" value="<?php _e( 'Save changes', 'gitium' ); ?>" <?php if ( get_transient( 'gitium_remote_disconnected', true ) ) { echo 'disabled="disabled" '; } ?>/>
 			</p>
 		<?php endif; ?>
 
 		<table class="form-table">
 		  <tr>
-			<th><label for="webhook-url">Webhook URL:</label></th>
+		  <th><label for="webhook-url"><?php _e( 'Webhook URL', 'gitium' ); ?>:</label></th>
 			<td>
 			  <p><code id="webhook-url"><?php echo esc_url( gitium_get_webhook() ); ?></code>
 			  <?php if ( ! defined( 'GIT_WEBHOOK_URL' ) || GIT_WEBHOOK_URL == '' ) : ?>
-			  <input type="submit" name="SubmitRegenerateWebhook" class="button" value="Regenerate Webhook" /></p>
+			  <input type="submit" name="SubmitRegenerateWebhook" class="button" value="<?php _e( 'Regenerate Webhook', 'gitium' ); ?>" /></p>
 			  <?php endif; ?>
-			  <p class="description">Pinging this URL triggers an update from remote repository.</p>
+			<p class="description"><?php _e( 'Pinging this URL triggers an update from remote repository.', 'gitium' ); ?></p>
 			</td>
 		  </tr>
 
 		  <?php if ( ! defined( 'GIT_KEY_FILE' ) || GIT_KEY_FILE == '' ) : ?>
 		  <tr>
-			<th><label for="public-key">Public Key:</label></th>
+		  <th><label for="public-key"><?php _e( 'Public Key', 'gitium' ); ?>:</label></th>
 			<td>
 			  <p><input type="text" class="regular-text" name="public_key" id="public-key" value="<?php echo esc_attr( $git_public_key ); ?>" readonly="readonly">
-			  <input type="submit" name="SubmitRegenerateKeypair" class="button" value="Regenerate Key" /></p>
-			  <p class="description">If your use ssh keybased authentication for git you need to allow write access to your repository using this key.<br>
-			  Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="https://confluence.atlassian.com/display/BITBUCKET/Add+an+SSH+key+to+an+account#AddanSSHkeytoanaccount-HowtoaddakeyusingSSHforOSXorLinux" target="_blank">bitbucket</a>.
+			  <input type="submit" name="SubmitRegenerateKeypair" class="button" value="<?php _e( 'Regenerate Key', 'gitium' ); ?>" /></p>
+			  <p class="description"><?php _e( 'If your use ssh keybased authentication for git you need to allow write access to your repository using this key.', 'gitium' ); ?><br />
+<?php _e( 'Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="https://confluence.atlassian.com/display/BITBUCKET/Add+an+SSH+key+to+an+account#AddanSSHkeytoanaccount-HowtoaddakeyusingSSHforOSXorLinux" target="_blank">bitbucket</a>.', 'gitium' ); ?>
 			  </p>
 			</td>
 		  </tr>
@@ -439,4 +439,3 @@ if ( is_admin() ) {
 		$gitium_options = new Gitium_Admin();
 	}
 }
-

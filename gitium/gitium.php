@@ -6,6 +6,8 @@
  * Author URI: http://www.presslabs.com
  * License: GPL2
  * Description: Keep all your code on git version control system.
+ * Text Domain: gitium
+ * Domain Path: /languages/
  */
 /*  Copyright 2014 PressLabs SRL <ping@presslabs.com>
 
@@ -26,6 +28,13 @@
 require_once __DIR__ . '/git-wrapper.php';
 require_once __DIR__ . '/gitium-admin.php';
 
+/**
+ * Load plugin textdomain.
+ */
+function gitium_load_textdomain() {
+	load_plugin_textdomain( 'gitium', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+}
+add_action( 'plugins_loaded', 'gitium_load_textdomain' );
 
 function _gitium_make_ssh_git_file_exe() {
 	$ssh_wrapper = dirname( __FILE__ ) . '/ssh-git';
