@@ -235,13 +235,29 @@ class Gitium_Admin {
 	public function add_menu_bubble() {
 		global $menu;
 		$git = $this->git;
+
+		if ( ! $git->is_versioned()  ) {
+			foreach ( $menu as $key => $value  ) {
+				if ( $this->menu_slug == $menu[ $key ][2] ) {
+					$menu_bubble = get_transient( 'gitium_menu_bubble' );
+					if ( false === $menu_bubble ) { $menu_bubble = ''; }
+					$menu[ $key ][0] = str_replace( $menu_bubble, '', $menu[ $key ][0] );
+					delete_transient( 'gitium_menu_bubble' );
+					return;
+				}
+			}
+		}
+
 		list( $branch_status, $changes ) = _gitium_status();
+
 		if ( ! empty( $changes ) ) :
 			$bubble_count = count( $changes );
 			foreach ( $menu as $key => $value  ) {
 				if ( $this->menu_slug == $menu[ $key ][2] ) {
-					$menu[ $key ][0] .= " <span class='update-plugins count-$bubble_count'><span class='plugin-count'>"
+					$menu_bubble = " <span class='update-plugins count-$bubble_count'><span class='plugin-count'>"
 						. $bubble_count . '</span></span>';
+					$menu[ $key ][0] .= $menu_bubble;
+					set_transient( 'gitium_menu_bubble', $menu_bubble );
 					return;
 				}
 			}
