@@ -15,7 +15,7 @@ Gitium is designed with sane development environments in mind, allowing staging
 and production to follow different branches of the same repository. You can also
 deploy code by simply using `git push`.
 
-Gitium requires the `git` command line tool with a minimum version of 1.7 installed on the
+The plugin requires the `git` command line tool with a minimum version of 1.7 installed on the
 server and the `proc_open` PHP function enabled.
 
 Gitium is the latest element discovered at
