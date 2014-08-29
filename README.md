@@ -58,7 +58,7 @@ or Bitbucket webhooks.
 
 ##### Does it work on multi site setups?
 
-Gitium is not supporting multisite setups at the moment.
+Gitium does not support multisite setups at the moment.
 
 ##### How does gitium handle submodules?
 
