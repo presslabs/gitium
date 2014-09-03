@@ -16,7 +16,6 @@
 */
 
 class Gitium_Admin {
-	private $options;
 	private $menu_slug = 'gitium/gitium.php';
 	private $git = null;
 
@@ -24,7 +23,7 @@ class Gitium_Admin {
 		global $git;
 		$this->git = $git;
 
-		list( $git_public_key, $git_private_key ) = gitium_get_keypair();
+		list( , $git_private_key ) = gitium_get_keypair();
 		$git->set_key( $git_private_key );
 
 		add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
@@ -41,7 +40,7 @@ class Gitium_Admin {
 	}
 
 	public function add_menu_page() {
-		$page = add_menu_page(
+		add_menu_page(
 			__( 'Git Status', 'gitium' ),
 			__( 'Code', 'gitium' ),
 			'manage_options',
@@ -248,7 +247,7 @@ class Gitium_Admin {
 			}
 		}
 
-		list( $branch_status, $changes ) = _gitium_status();
+		list( , $changes ) = _gitium_status();
 
 		if ( ! empty( $changes ) ) :
 			$bubble_count = count( $changes );
@@ -265,8 +264,7 @@ class Gitium_Admin {
 	}
 
 	private function setup_step_1() {
-		$git = $this->git;
-		list( $git_public_key, $git_private_key ) = gitium_get_keypair(); ?>
+		list( $git_public_key, ) = gitium_get_keypair(); ?>
 		<div class="wrap">
 			<h2><?php _e( 'Status', 'gitium' ); ?> <code><?php _e( 'unconfigured', 'gitium' ); ?></code></h2>
 		
@@ -392,8 +390,8 @@ class Gitium_Admin {
 	}
 
 	private function changes_page() {
-		list( $branch_status, $changes ) = _gitium_status();
-		list( $git_public_key, $git_private_key ) = gitium_get_keypair();
+		list( , $changes ) = _gitium_status();
+		list( $git_public_key, ) = gitium_get_keypair();
 		?>
 		<div class="wrap">
 		<div id="icon-options-general" class="icon32">&nbsp;</div>
@@ -452,6 +450,6 @@ class Gitium_Admin {
 if ( is_admin() ) {
 	add_action( 'init', 'gitium_admin_page' );
 	function gitium_admin_page() {
-		$gitium_options = new Gitium_Admin();
+		new Gitium_Admin();
 	}
 }
