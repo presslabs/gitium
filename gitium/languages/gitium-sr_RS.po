@@ -1,0 +1,288 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Gitium\n"
+"POT-Creation-Date: 2014-08-29 17:56+0200\n"
+"PO-Revision-Date: 2014-09-05 18:46+0200\n"
+"Last-Translator: PressLabs <ping@presslabs.com>\n"
+"Language-Team: PressLabs <ping@presslabs.com>\n"
+"Language: English\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.4\n"
+"X-Poedit-KeywordsList: __;_e\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-SearchPath-0: ..\n"
+
+#: ../gitium-admin.php:45
+msgid "Git Status"
+msgstr "Git Status"
+
+#: ../gitium-admin.php:46
+msgid "Code"
+msgstr "Kod"
+
+#: ../gitium-admin.php:55
+msgid "untracked"
+msgstr "neprepoznatljiv"
+
+#: ../gitium-admin.php:56
+msgid "modified on remote"
+msgstr "modifikovan na udaljenom skladištu"
+
+#: ../gitium-admin.php:57
+msgid "added to remote"
+msgstr "dodat na udaljeno skladište"
+
+#: ../gitium-admin.php:58
+msgid "deleted from remote"
+msgstr "izbrisan sa udaljenog skladišta"
+
+#: ../gitium-admin.php:59 ../gitium-admin.php:63
+msgid "deleted from work tree"
+msgstr "izbrisan sa drveta"
+
+#: ../gitium-admin.php:60
+msgid "updated in work tree"
+msgstr "ažuriran u drvetu"
+
+#: ../gitium-admin.php:61 ../gitium-admin.php:62
+msgid "added to work tree"
+msgstr "dodat drvetu"
+
+#: ../gitium-admin.php:72
+#, php-format
+msgid "renamed from `%s`"
+msgstr "naziv promenjen iz`%s`"
+
+#: ../gitium-admin.php:108
+msgid "Initial commit"
+msgstr "Initial commit"
+
+#: ../gitium-admin.php:125
+msgid "Please specify a valid repo."
+msgstr "Odredite validno skladište"
+
+#: ../gitium-admin.php:131
+msgid "Could not push to remote"
+msgstr "Neuspelo odbacivanje na udaljeno skladište"
+
+#: ../gitium-admin.php:146
+msgid "Merged existing code from "
+msgstr "Spojen postojeći kod sa"
+
+#: ../gitium-admin.php:149
+msgid "Could not create initial commit -> "
+msgstr "Nije uspeo da kreira initial commit ->"
+
+#: ../gitium-admin.php:153
+msgid "Could not merge the initial commit -> "
+msgstr "Nije uspeo da spoji initial commit ->"
+
+#: ../gitium-admin.php:167
+msgid "Could not enable the maintenance mode!"
+msgstr "Neuspelo aktiviranje režima održavanja!"
+
+#: ../gitium-admin.php:169 ../gitium-admin.php:413
+#, php-format
+msgid "Merged changes from %s on %s"
+msgstr "Promene spojene sa %s na %s"
+
+#: ../gitium-admin.php:177
+msgid "Could not commit!"
+msgstr "Neuspelo izvršenje!"
+
+#: ../gitium-admin.php:183
+msgid "Merge failed: "
+msgstr "Neuspelo spajanje:"
+
+#: ../gitium-admin.php:185
+#, php-format
+msgid "Pushed commit: `%s`"
+msgstr "Odbačena naredba commit  `%s`"
+
+#: ../gitium-admin.php:196
+msgid ""
+"Webhook URL regenerates. Please make sure you update any external references."
+msgstr ""
+"Webhook URL se regeneriše. Proverite da li su vam eksterne reference "
+"ažurirane."
+
+#: ../gitium-admin.php:207
+msgid "Keypair successfully regenerated."
+msgstr "Par ključeva uspešno regenerisan"
+
+#: ../gitium-admin.php:271 ../gitium-admin.php:400
+msgid "Status"
+msgstr "Status"
+
+#: ../gitium-admin.php:271
+msgid "unconfigured"
+msgstr "nekonfigurisan"
+
+#: ../gitium-admin.php:278
+msgid "Remote URL"
+msgstr "Udaljeni URL"
+
+#: ../gitium-admin.php:281
+msgid ""
+"This URL provide access to a Git repository via SSH, HTTPS, or Subversion."
+msgstr ""
+"Ovaj URL obezbeđuje pristup Git skladištu putem SSH-a, HTTPS-a ili "
+"subverzije."
+
+#: ../gitium-admin.php:282
+msgid ""
+"If you need to authenticate over \"https://\" instead of SSH use: "
+"<code>https://user:pass@github.com/user/example.git</code>"
+msgstr ""
+"Ako vam je potrebna provera za \"https://\", umesto SSH-a, koristite "
+"<code>https://user:pass@github.com/user/example.git</code>"
+
+#: ../gitium-admin.php:288
+msgid "Key pair"
+msgstr "Par ključeva"
+
+#: ../gitium-admin.php:292 ../gitium-admin.php:437
+msgid "Regenerate Key"
+msgstr "Ključ za regenerisanje"
+
+#: ../gitium-admin.php:294 ../gitium-admin.php:438
+msgid ""
+"If your use ssh keybased authentication for git you need to allow write "
+"access to your repository using this key."
+msgstr ""
+"Ako koristite ssh proveru na osnovu ključa za git, uz pomoć ovog ključa "
+"morate omogućiti upisivanje u svoje skladište.   "
+
+#: ../gitium-admin.php:295 ../gitium-admin.php:439
+msgid ""
+"Checkout instructions for <a href=\"https://help.github.com/articles/"
+"generating-ssh-keys#step-3-add-your-ssh-key-to-github\" target=\"_blank"
+"\">github</a> or <a href=\"https://confluence.atlassian.com/display/"
+"BITBUCKET/Add+an+SSH+key+to+an+account#AddanSSHkeytoanaccount-"
+"HowtoaddakeyusingSSHforOSXorLinux\" target=\"_blank\">bitbucket</a>."
+msgstr ""
+"Pogledajte uputstva na<a href=\"https://help.github.com/articles/generating-"
+"ssh-keys#step-3-add-your-ssh-key-to-github\" target=\"_blank\">github</a> "
+"ili na <a href=\"https://confluence.atlassian.com/display/BITBUCKET/Add+an"
+"+SSH+key+to+an+account#AddanSSHkeytoanaccount-"
+"HowtoaddakeyusingSSHforOSXorLinux\" target=\"_blank\">bitbucket</a>."
+
+#: ../gitium-admin.php:304
+msgid "Fetch"
+msgstr "Pribavi"
+
+#: ../gitium-admin.php:322
+msgid "Choose tracking branch"
+msgstr "Izaberi granu za praćenje"
+
+#: ../gitium-admin.php:335
+msgid "Merge & Push"
+msgstr "Spoji & odbaci"
+
+#: ../gitium-admin.php:348
+#, php-format
+msgid "Following remote branch <code>%s</code>."
+msgstr "Praćenje grane na udaljenom serveru <code>%s</code>."
+
+#: ../gitium-admin.php:350
+msgid "Everything is up to date"
+msgstr "Sve je ažurirano"
+
+#: ../gitium-admin.php:353
+#, php-format
+msgid "You are %s commits ahead and %s behind remote."
+msgstr "Vi ste %s  komandi commit ispred i %s  iza udaljenog servera"
+
+#: ../gitium-admin.php:355
+#, php-format
+msgid "You are %s commits ahead remote."
+msgstr "Vi ste %s komandi commit ispred udaljenog servera"
+
+#: ../gitium-admin.php:357
+#, php-format
+msgid "You are %s commits behind remote."
+msgstr "Vi ste %s komandi commit iza udaljenog servera"
+
+#: ../gitium-admin.php:367 ../gitium-admin.php:368
+msgid "Path"
+msgstr "Putanja"
+
+#: ../gitium-admin.php:367 ../gitium-admin.php:368
+msgid "Change"
+msgstr "Promeni"
+
+#: ../gitium-admin.php:371
+msgid "Nothing to commit, working directory clean."
+msgstr "Nema ništa za “commit”, radni direktorijum čist"
+
+#: ../gitium-admin.php:381
+msgid "Submodules are not supported in this version."
+msgstr "Submoduli nisu podržani u ovoj verziji"
+
+#: ../gitium-admin.php:400
+msgid "connected to"
+msgstr "povezan sa"
+
+#: ../gitium-admin.php:412
+msgid "Commit message"
+msgstr "Commit poruka "
+
+#: ../gitium-admin.php:416
+msgid "Save changes"
+msgstr "Sačuvaj izmene"
+
+#: ../gitium-admin.php:422
+msgid "Webhook URL"
+msgstr "Webhook URL"
+
+#: ../gitium-admin.php:426
+msgid "Regenerate Webhook"
+msgstr "Regeneriši Webhook"
+
+#: ../gitium-admin.php:428
+msgid "Pinging this URL triggers an update from remote repository."
+msgstr "Ping ovog URL-a pokreće ažuriranje sa udaljenog skladišta"
+
+#: ../gitium-admin.php:434
+msgid "Public Key"
+msgstr "Javni ključ"
+
+#: ../gitium-webhook.php:32
+msgid "Git Sauce plugin require minimum `git version 1.7`!"
+msgstr "Git Sauce plugin zahteva najmanje 1.7` `git verziju!"
+
+#: ../gitium-webhook.php:37
+msgid "Could not enable the maintenance mode!..."
+msgstr "Model održavanja nije se mogao aktivirati!"
+
+#: ../gitium-webhook.php:39
+#, php-format
+msgid "Merged changes from %s on $s"
+msgstr "Promene sa %s na $s spojene"
+
+#: ../gitium-webhook.php:43
+msgid "Could not commit local changes!"
+msgstr "Lokalne promene nisu uspešno sprovedene!"
+
+#: ../gitium-webhook.php:46
+msgid "Cound not fetch from remote repo."
+msgstr "Neuspešno preuzimanje sa udaljenog skladišta."
+
+#: ../gitium-webhook.php:47
+msgid "Could not merge changes."
+msgstr "Promene nisu spojene!"
+
+#: ../gitium-webhook.php:52
+msgid "Push failed!"
+msgstr "Odbacivanje neuspelo!"
+
+#: ../gitium-webhook.php:54
+msgid "Pull done!"
+msgstr "Povlačenje obavljeno!"
+
+#: ../gitium-webhook.php:56
+msgid "Cheating uh?"
+msgstr "Varanje?"
