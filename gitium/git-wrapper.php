@@ -185,17 +185,17 @@ EOF;
 	}
 
 	function can_exec_git() {
-		list( $return, $response ) = $this->_call( 'version' );
+		list( $return, ) = $this->_call( 'version' );
 		return ( 0 == $return );
 	}
 
 	function is_versioned() {
-		list( $return, $response ) = $this->_call( 'status', '-s' );
+		list( $return, ) = $this->_call( 'status', '-s' );
 		return ( 0 == $return );
 	}
 
 	function get_version() {
-		list( $return, $version ) = $this->_call( 'version' );
+		list( , $version ) = $this->_call( 'version' );
 		if ( ! empty( $version[0] ) )
 			return substr( $version[0], 12 );
 		return '';
@@ -203,19 +203,19 @@ EOF;
 
 	// git rev-list @{u}..
 	function get_ahead_commits() {
-		list( $return, $commits ) = $this->_call( 'rev-list', '@{u}..' );
+		list( , $commits ) = $this->_call( 'rev-list', '@{u}..' );
 		return $commits;
 	}
 
 	// git rev-list ..@{u}
 	function get_behind_commits() {
-		list( $return, $commits  ) = $this->_call( 'rev-list', '..@{u}' );
+		list( , $commits  ) = $this->_call( 'rev-list', '..@{u}' );
 		return $commits;
 	}
 
 	function init() {
 		file_put_contents( "$this->repo_dir/.gitignore", $this->gitignore );
-		list( $return, $response ) = $this->_call( 'init' );
+		list( $return, ) = $this->_call( 'init' );
 		$this->_call( 'config', 'user.email', 'gitium@presslabs.com' );
 		$this->_call( 'config', 'user.name', 'Gitium' );
 		$this->_call( 'config', 'push.default', 'matching' );
@@ -223,7 +223,6 @@ EOF;
 	}
 
 	function cleanup() {
-		//$this->_log( "Cleaning up $this->repo_dir/.git" ); // just for debug
 		$this->_git_rrmdir( $this->repo_dir . '/.git' );
 	}
 
@@ -233,7 +232,7 @@ EOF;
 	}
 
 	function get_remote_url() {
-		list( $return, $response ) = $this->_call( 'config', '--get', 'remote.origin.url' );
+		list( , $response ) = $this->_call( 'config', '--get', 'remote.origin.url' );
 		if ( isset( $response[0] ) )
 			return $response[0];
 		return '';
@@ -254,12 +253,12 @@ EOF;
 	}
 
 	function fetch_ref() {
-		list( $return, $response ) = $this->_call( 'fetch', 'origin' );
+		list( $return, ) = $this->_call( 'fetch', 'origin' );
 		return ( 0 == $return );
 	}
 
 	protected function _resolve_merge_conflicts( $message ) {
-		list( $branch_status, $changes ) = $this->status( TRUE );
+		list( , $changes ) = $this->status( TRUE );
 		$this->_log( $changes );
 		foreach ( $changes as $path => $change ) {
 			if ( in_array( $change, array( 'UD', 'DD' ) ) ) {
@@ -302,7 +301,7 @@ EOF;
 		foreach ( $commits as $commit ) {
 			if ( empty( $commit ) ) return FALSE;
 
-			list( $return, $response ) = $this->_call(
+			list( $return, ) = $this->_call(
 				'cherry-pick', $commit
 			);
 			if ( $return != 0 ) {
@@ -323,21 +322,21 @@ EOF;
 	}
 
 	function successfully_merged() {
-		list( $branch_status, $response ) = $this->status( TRUE );
+		list( , $response ) = $this->status( TRUE );
 		$changes = array_values( $response );
 		return ( 0 == count( array_intersect( $changes, array( 'DD', 'AU', 'UD', 'UA', 'DU', 'AA', 'UU' ) ) ) );
 	}
 
 	function merge_initial_commit( $commit, $branch ) {
-		list( $return, $response ) = $this->_call( 'branch', '-m', 'initial' );
+		list( $return, ) = $this->_call( 'branch', '-m', 'initial' );
 		if ( 0 != $return )
 			return false;
 
-		list( $return, $response ) = $this->_call( 'checkout', $branch );
+		list( $return, ) = $this->_call( 'checkout', $branch );
 		if ( 0 != $return )
 			return false;
 
-		list( $return, $response ) = $this->_call(
+		list( $return, ) = $this->_call(
 			'cherry-pick', '--strategy', 'recursive', '--strategy-option', 'theirs', $commit
 		);
 		if ( $return != 0 ) {
@@ -353,14 +352,14 @@ EOF;
 	}
 
 	function get_remote_branches() {
-		list( $return, $response ) = $this->_call( 'branch', '-r' );
+		list( , $response ) = $this->_call( 'branch', '-r' );
 		$response = array_map( 'trim', $response );
 		$response = array_map( create_function( '$b', 'return str_replace("origin/","",$b);' ), $response );
 		return $response;
 	}
 
 	function create_branch( $branch ) {
-		list( $return, $response ) = $this->_call( 'checkout', '-b', $branch );
+		list( $return, ) = $this->_call( 'checkout', '-b', $branch );
 		return ( $return == 0 );
 	}
 
@@ -370,11 +369,11 @@ EOF;
 			$args = $args[0];
 
 		$params = array_merge( array( 'add', '-n', '--all' ), $args );
-		list ( $return, $response ) = call_user_func_array( array( $this, '_call' ), $params );
+		list ( , $response ) = call_user_func_array( array( $this, '_call' ), $params );
 		$count = count( $response );
 
 		$params = array_merge( array( 'add', '--all' ), $args );
-		list ( $return, $response ) = call_user_func_array( array( $this, '_call' ), $params );
+		list ( , $response ) = call_user_func_array( array( $this, '_call' ), $params );
 
 		return $count;
 	}
@@ -401,9 +400,9 @@ EOF;
 
 	function push( $branch = '' ) {
 		if ( ! empty( $branch ) )
-			list( $return, $response ) = $this->_call( 'push', '--porcelain', '-u', 'origin', $branch );
+			list( $return, ) = $this->_call( 'push', '--porcelain', '-u', 'origin', $branch );
 		else
-			list( $return, $response ) = $this->_call( 'push', '--porcelain', '-u', 'origin' );
+			list( $return, ) = $this->_call( 'push', '--porcelain', '-u', 'origin' );
 		return ( $return == 0 );
 	}
 
@@ -426,7 +425,6 @@ EOF;
 		$new_response = array();
 		if ( ! empty( $response ) ) {
 			foreach ( $response as $item ) :
-				$x    = substr( $item, 0, 1 ); // X shows the status of the index
 				$y    = substr( $item, 1, 1 ); // Y shows the status of the work tree
 				$file = substr( $item, 3 );
 
@@ -489,15 +487,15 @@ EOF;
 			$local_branch  = $matches[1];
 			$remote_branch = $matches[2];
 
-			list( $return, $response ) = $this->_call( 'rev-list', "$local_branch..$remote_branch", '--count' );
+			list( , $response ) = $this->_call( 'rev-list', "$local_branch..$remote_branch", '--count' );
 			$behind_count = (int)$response[0];
 
-			list( $return, $response ) = $this->_call( 'rev-list', "$remote_branch..$local_branch", '--count' );
+			list( , $response ) = $this->_call( 'rev-list', "$remote_branch..$local_branch", '--count' );
 			$ahead_count = (int)$response[0];
 		}
 
 		if ( $behind_count ) {
-			list( $return, $response ) = $this->_call( 'diff', '-z', '--name-status', "$local_branch~$ahead_count", $remote_branch );
+			list( , $response ) = $this->_call( 'diff', '-z', '--name-status', "$local_branch~$ahead_count", $remote_branch );
 			$response = explode( chr( 0 ), $response[0] );
 			array_pop( $response );
 			for ( $idx = 0 ; $idx < count( $response ) / 2 ; $idx++ ) {

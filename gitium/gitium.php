@@ -163,8 +163,6 @@ function _gitium_format_message( $name, $version = FALSE, $prefix = '' ) {
 }
 
 function gitium_upgrader_post_install( $res, $hook_extra, $result ) {
-	global $git;
-
 	_gitium_make_ssh_git_file_exe();
 
 	$type    = isset( $hook_extra['type']) ? $hook_extra['type'] : 'plugin';
@@ -492,8 +490,6 @@ function gitium_get_webhook() {
 }
 
 function gitium_has_the_minimum_version() {
-	global $git;
-
 	return '1.7' <= substr( get_transient( 'gitium_version', '' ), 0, 3 );
 }
 
