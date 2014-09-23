@@ -166,7 +166,8 @@ function gitium_upgrader_post_install( $res, $hook_extra, $result ) {
 	_gitium_make_ssh_git_file_exe();
 
 	$type    = isset( $hook_extra['type']) ? $hook_extra['type'] : 'plugin';
-	$action  = isset( $hook_extra['action']) ? $hook_extra['action'] : 'update';
+	$action  = isset( $hook_extra['action']) ? $hook_extra['action'] : 'updated';
+	$action  = ( 'install' === $action ) ? 'installed' : $action ;
 	$git_dir = $result['destination'];
 
 	if ( ABSPATH == substr( $git_dir, 0, strlen( ABSPATH ) ) ) {
