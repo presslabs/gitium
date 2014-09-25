@@ -16,8 +16,9 @@
 */
 
 class Gitium_Admin {
-	private $menu_slug = 'gitium/gitium.php';
-	private $git = null;
+	private $menu_slug         = 'gitium/gitium.php';
+	private $commits_menu_slug = 'gitium/gitium.php?commits';
+	private $git               = null;
 
 	public function __construct() {
 		global $git;
@@ -46,6 +47,14 @@ class Gitium_Admin {
 			'manage_options',
 			$this->menu_slug,
 			array( $this, 'admin_page' )
+		);
+		add_submenu_page(
+			$this->menu_slug,
+			__( 'Git Commits', 'gitium' ),
+			__( 'Commits', 'gitium' ),
+			'manage_options',
+			$this->commits_menu_slug,
+			array( $this, 'commits_page' )
 		);
 	}
 
@@ -204,6 +213,43 @@ class Gitium_Admin {
 
 		gitium_get_keypair( true );
 		$this->success_redirect( __( 'Keypair successfully regenerated.', 'gitium' ) );
+	}
+
+	public function commits_page() {
+		$git = $this->git; ?>
+		<div class="wrap">
+		<h2><?php printf( __( 'Last %s commits', 'gitium' ), GITIUM_LAST_COMMITS ); ?></h2>
+
+		<table class="wp-list-table widefat plugins">
+		<thead>
+		<tr>
+			<th scope="col">#</th>
+			<th scope="col"><label for="commit_message"><?php _e( 'Date', 'gitium' ); ?></label></th>
+			<th scope="col"><label for="commit_message"><?php _e( 'Message', 'gitium' ); ?></label></th>
+			<th scope="col"><label for="commit_id"><?php _e( 'ID', 'gitium' ); ?></label></th>
+			<th scope="col"><label for="commit_author"><?php _e( 'Author', 'gitium' ); ?></label></th>
+		</tr>
+		</thead>
+		<tbody>
+		<?php
+
+		$last_commits = $git->get_last_commits( GITIUM_LAST_COMMITS );
+		$counter = 1;
+		foreach ( $last_commits as $commit_id => $data ) {
+			?>
+			<tr<?php if ( 0 != $counter % 2 ) { echo ' class="active"'; } else { echo ' class="inactive"'; } ?>>
+			<td><?php echo $counter++; ?></td>
+			<td><?php echo esc_html( $data['date'] ); ?></td>
+			<td><?php echo esc_html( $data['message'] ); ?></td>
+			<td><?php echo esc_html( $commit_id ); ?></td>
+			<td><?php echo esc_html( $data['author'] ); ?></td>
+			</tr>
+		<?php } ?>
+		</tbody>
+		</table>
+
+		</div>
+		<?php
 	}
 
 	public function admin_page() {

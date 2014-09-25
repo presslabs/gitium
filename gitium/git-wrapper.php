@@ -517,6 +517,34 @@ EOF;
 		$changes = $this->get_uncommited_changes();
 		return ! empty( $changes );
 	}
+
+	/**
+	 * Return the last n commits
+	 */
+	function get_last_commits( $n = 20 ) {
+		list( $return, $response ) = $this->_call( 'log', '-n', $n );
+		foreach ( $response as $index => $value ) {
+			if ( 0 === strpos( $value, 'commit ' ) ) {
+				$current_commit = trim( str_replace( 'commit', '', $value ) );
+				continue;
+			}
+			$data[ $current_commit ][] = $value;
+		}
+		foreach ( $data as $commit_id => $info ) {
+			foreach ( $info as $elem ) {
+				if ( 0 === strpos( $elem, 'Author: ' ) ) {
+					$commits[ $commit_id ]['author'] = trim( substr( $elem, strlen( 'Author:' ) ) );
+				}
+				if ( 0 === strpos( $elem, 'Date: ' ) ) {
+					$commits[ $commit_id ]['date'] = trim( substr( $elem, strlen( 'Date:' ) ) );
+				}
+			}
+			array_shift( $info );
+			array_shift( $info );
+			$commits[ $commit_id ]['message'] = trim( join( "\n", $info ) );
+		}
+		return ( $return !== 0 ? false : $commits );
+	}
 }
 
 if ( ! defined( 'GIT_DIR' ) )
