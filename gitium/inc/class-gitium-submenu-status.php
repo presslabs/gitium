@@ -52,8 +52,8 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		new Gitium_Help( $submenu_hook, 'GITIUM_STATUS' );
 	}
 
-	public function humanized_change( $change ) {
-		$meaning = array(
+	private function change_meanings() {
+		return array(
 			'??' => __( 'untracked', 'gitium' ),
 			'rM' => __( 'modified on remote', 'gitium' ),
 			'rA' => __( 'added to remote', 'gitium' ),
@@ -64,11 +64,14 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 			'AM' => __( 'added to work tree', 'gitium' ),
 			'R'  => __( 'deleted from work tree', 'gitium' ),
 		);
+	}
+
+	public function humanized_change( $change ) {
+		$meaning = $this->change_meanings();
 
 		if ( isset( $meaning[ $change ] ) ) {
 			return $meaning[ $change ];
 		}
-
 		if ( 0 === strpos( $change, 'R ' ) ) {
 			$old_filename = substr( $change, 2 );
 			$change = sprintf( __( 'renamed from `%s`', 'gitium' ), $old_filename );
