@@ -118,23 +118,22 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		if ( ! isset( $_POST['SubmitMergeAndPush'] ) || ! isset( $_POST['tracking_branch'] ) ) {
 			return;
 		}
-
 		check_admin_referer( 'gitium-admin' );
+		$this->git->add();
 
-		$git = $this->git;
-		$git->add();
 		$branch       = $_POST['tracking_branch'];
 		$current_user = wp_get_current_user();
-		$commit = $git->commit( __( 'Merged existing code from ', 'gitium' ) . get_home_url(), $current_user->display_name, $current_user->user_email );
+
+		$commit = $this->git->commit( __( 'Merged existing code from ', 'gitium' ) . get_home_url(), $current_user->display_name, $current_user->user_email );
 		if ( ! $commit ) {
-			$git->cleanup();
-			$this->redirect( __( 'Could not create initial commit -> ', 'gitium' ) . $git->get_last_error() );
+			$this->git->cleanup();
+			$this->redirect( __( 'Could not create initial commit -> ', 'gitium' ) . $this->git->get_last_error() );
 		}
-		if ( ! $git->merge_initial_commit( $commit, $branch ) ) {
-			$git->cleanup();
-			$this->redirect( __( 'Could not merge the initial commit -> ', 'gitium' ) . $git->get_last_error() );
+		if ( ! $this->git->merge_initial_commit( $commit, $branch ) ) {
+			$this->git->cleanup();
+			$this->redirect( __( 'Could not merge the initial commit -> ', 'gitium' ) . $this->git->get_last_error() );
 		}
-		$git->push( $branch );
+		$this->git->push( $branch );
 		$this->success_redirect();
 	}
 
