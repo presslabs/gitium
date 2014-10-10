@@ -161,72 +161,72 @@ class Test_Gitium extends WP_UnitTestCase {
 		'R'  => 'deleted from work tree',
 	 */
 	function test_gitium_humanized_change_case_1() {
-		$admin = new Gitium_Admin();
+		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'test', $admin->humanized_change( 'test' ) );
 	}
 
 	function test_gitium_humanized_change_case_2() {
-		$admin = new Gitium_Admin();
+		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( '', $admin->humanized_change( '' ) );
 	}
 
 	function test_gitium_humanized_change_case_3() {
-		$admin = new Gitium_Admin();
+		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( null, $admin->humanized_change( null ) );
 	}
 
 	function test_gitium_humanized_change_case_4() {
-		$admin = new Gitium_Admin();
+		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'untracked', $admin->humanized_change( '??' ) );
 	}
 
 	function test_gitium_humanized_change_case_5() {
-		$admin = new Gitium_Admin();
+		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'modified on remote', $admin->humanized_change( 'rM' ) );
 	}
 
 	function test_gitium_humanized_change_case_6() {
-		$admin = new Gitium_Admin();
+		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'added to remote', $admin->humanized_change( 'rA' ) );
 	}
 
 	function test_gitium_humanized_change_case_7() {
-		$admin = new Gitium_Admin();
+		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'deleted from remote', $admin->humanized_change( 'rD' ) );
 	}
 
 	function test_gitium_humanized_change_case_8() {
-		$admin = new Gitium_Admin();
+		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'deleted from work tree', $admin->humanized_change( 'D' ) );
 	}
 
 	function test_gitium_humanized_change_case_9() {
-		$admin = new Gitium_Admin();
+		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'updated in work tree', $admin->humanized_change( 'M' ) );
 	}
 
 	function test_gitium_humanized_change_case_10() {
-		$admin = new Gitium_Admin();
+		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'added to work tree', $admin->humanized_change( 'A' ) );
 	}
 
 	function test_gitium_humanized_change_case_11() {
-		$admin = new Gitium_Admin();
+		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'added to work tree', $admin->humanized_change( 'AM' ) );
 	}
 
 	function test_gitium_humanized_change_case_12() {
-		$admin = new Gitium_Admin();
+		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'deleted from work tree', $admin->humanized_change( 'R' ) );
 	}
 
 	function test_gitium_humanized_change_case_13() {
-		$admin = new Gitium_Admin();
+		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'renamed from `myfile.txt`', $admin->humanized_change( 'R myfile.txt' ) );
 	}
 
 	function test_gitium_humanized_change_case_14() {
-		$admin = new Gitium_Admin();
+		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 100, $admin->humanized_change( 100 ) );
 	}
 
@@ -234,7 +234,7 @@ class Test_Gitium extends WP_UnitTestCase {
 		$this->user_id = $this->factory->user->create( array( 'role' => 'administrator' ) );
 		wp_set_current_user( $this->user_id );
 		$this->assertTrue( current_user_can( 'manage_options' ) );
-		$admin = new Gitium_Admin();
+		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'zz', $admin->humanized_change( 'zz' ) );
 	}
 

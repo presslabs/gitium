@@ -9,7 +9,7 @@ class Test_Gitium_Init_Process extends Gitium_UnitTestCase {
 	}
 
 	function gitium_init_process() {
-		$admin = new Gitium_Admin();
+		$admin = new Gitium_Submenu_Status();
 		return $admin->init_process( $this->remote_repo );
 	}
 

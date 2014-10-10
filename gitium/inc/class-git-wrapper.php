@@ -81,15 +81,16 @@ EOF;
 	}
 
 	function _log() {
-		if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) return;
-		
+		if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) { return; }
+
 		if ( func_num_args() == 1 && is_string( func_get_arg( 0 ) ) ) {
 			error_log( func_get_arg( 0 ) );
 		} else {
 			ob_start();
 			$args = func_get_args();
-			foreach ( $args as $arg )
+			foreach ( $args as $arg ) {
 				var_dump( $arg );
+			}
 			$out = ob_get_clean();
 			//error_log( $out );
 		}
@@ -113,11 +114,11 @@ EOF;
 		$response = array();
 		$key_file = null;
 
-		if ( defined( 'GIT_SSH' ) && GIT_SSH )
+		if ( defined( 'GIT_SSH' ) && GIT_SSH ) {
 			$env['GIT_SSH'] = GIT_SSH;
-		else
+		} else {
 			$env['GIT_SSH'] = dirname( __FILE__ ) . '/ssh-git';
-
+		}
 		if ( defined( 'GIT_KEY_FILE' ) && GIT_KEY_FILE ) {
 			$env['GIT_KEY_FILE'] = GIT_KEY_FILE;
 		} elseif ( $this->private_key ) {
@@ -126,7 +127,6 @@ EOF;
 			file_put_contents( $key_file, $this->private_key );
 			$env['GIT_KEY_FILE'] = $key_file;
 		}
-
 		$proc = proc_open(
 			$cmd,
 			array(
@@ -139,20 +139,20 @@ EOF;
 		);
 		fclose( $pipes[0] );
 
-		while ( $line = fgets( $pipes[1] ) )
+		while ( $line = fgets( $pipes[1] ) ) {
 			$response[] = rtrim( $line, "\n\r" );
-
+		}
 		$return = (int)proc_close( $proc );
 		/* _log( $cmd, $env, $response, $return ); */
 		$this->_log( "$return $cmd", join( "\n", $response ) );
-		if ( $key_file )
+		if ( $key_file ) {
 			unlink( $key_file );
-
-		if ( 0 != $return )
+		}
+		if ( 0 != $return ) {
 			$this->last_error = join( "\n", $response );
-		else
+		} else {
 			$this->last_error = null;
-
+		}
 		return array( $return, $response );
 	}
 
@@ -172,8 +172,9 @@ EOF;
 
 	function get_version() {
 		list( , $version ) = $this->_call( 'version' );
-		if ( ! empty( $version[0] ) )
+		if ( ! empty( $version[0] ) ) {
 			return substr( $version[0], 12 );
+		}
 		return '';
 	}
 
@@ -209,22 +210,25 @@ EOF;
 
 	function get_remote_url() {
 		list( , $response ) = $this->_call( 'config', '--get', 'remote.origin.url' );
-		if ( isset( $response[0] ) )
+		if ( isset( $response[0] ) ) {
 			return $response[0];
+		}
 		return '';
 	}
 
 	function get_remote_tracking_branch() {
 		list( $return, $response ) = $this->_call( 'rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}' );
-		if ( 0 == $return )
+		if ( 0 == $return ) {
 			return $response[0];
+		}
 		return false;
 	}
 
 	function get_local_branch() {
 		list( $return, $response ) = $this->_call( 'rev-parse', '--abbrev-ref', 'HEAD' );
-		if ( 0 == $return )
+		if ( 0 == $return ) {
 			return $response[0];
+		}
 		return false;
 	}
 
@@ -234,7 +238,7 @@ EOF;
 	}
 
 	protected function _resolve_merge_conflicts( $message ) {
-		list( , $changes ) = $this->status( TRUE );
+		list( , $changes ) = $this->status( true );
 		$this->_log( $changes );
 		foreach ( $changes as $path => $change ) {
 			if ( in_array( $change, array( 'UD', 'DD' ) ) ) {
@@ -261,9 +265,9 @@ EOF;
 		do_action( 'gitium_before_merge_with_accept_mine' );
 
 		$commits = func_get_args();
-		if ( 1 == func_num_args() && is_array( $commits[0] ) )
+		if ( 1 == func_num_args() && is_array( $commits[0] ) ) {
 			$commits = $commits[0];
-
+		}
 		$ahead_commits = $this->get_ahead_commits();
 		$commits = array_unique( array_merge( array_reverse( $commits ), $ahead_commits ) );
 		$commits = array_reverse( $commits );
@@ -275,7 +279,7 @@ EOF;
 		$this->_call( 'branch', $local_branch, $remote_branch );
 		$this->_call( 'checkout', $local_branch );
 		foreach ( $commits as $commit ) {
-			if ( empty( $commit ) ) return FALSE;
+			if ( empty( $commit ) ) { return false; }
 
 			list( $return, ) = $this->_call(
 				'cherry-pick', $commit
@@ -287,31 +291,31 @@ EOF;
 
 		if ( $this->successfully_merged() ) { // git status without states: AA, DD, UA, AU ...
 			$this->_call( 'branch', '-D', 'merge_local' );
-			return TRUE;
+			return true;
 		} else {
 			$this->_call( 'cherry-pick', '--abort' );
 			$this->create_branch( 'merge_local' );
 			$this->_call( 'branch', '-D', $local_branch );
 			$this->_call( 'branch', '-m', $local_branch );
-			return FALSE;
+			return false;
 		}
 	}
 
 	function successfully_merged() {
-		list( , $response ) = $this->status( TRUE );
+		list( , $response ) = $this->status( true );
 		$changes = array_values( $response );
 		return ( 0 == count( array_intersect( $changes, array( 'DD', 'AU', 'UD', 'UA', 'DU', 'AA', 'UU' ) ) ) );
 	}
 
 	function merge_initial_commit( $commit, $branch ) {
 		list( $return, ) = $this->_call( 'branch', '-m', 'initial' );
-		if ( 0 != $return )
+		if ( 0 != $return ) {
 			return false;
-
+		}
 		list( $return, ) = $this->_call( 'checkout', $branch );
-		if ( 0 != $return )
+		if ( 0 != $return ) {
 			return false;
-
+		}
 		list( $return, ) = $this->_call(
 			'cherry-pick', '--strategy', 'recursive', '--strategy-option', 'theirs', $commit
 		);
@@ -320,11 +324,11 @@ EOF;
 			if ( ! $this->successfully_merged() ) {
 				$this->_call( 'cherry-pick', '--abort' );
 				$this->_call( 'checkout', 'initial' );
-				return FALSE;
+				return false;
 			}
 		}
 		$this->_call( 'branch', '-D', 'initial' );
-		return TRUE;
+		return true;
 	}
 
 	function get_remote_branches() {
@@ -341,9 +345,9 @@ EOF;
 
 	function add() {
 		$args = func_get_args();
-		if ( 1 == func_num_args() && is_array( $args[0] ) )
+		if ( 1 == func_num_args() && is_array( $args[0] ) ) {
 			$args = $args[0];
-
+		}
 		$params = array_merge( array( 'add', '-n', '--all' ), $args );
 		list ( , $response ) = call_user_func_array( array( $this, '_call' ), $params );
 		$count = count( $response );
@@ -357,17 +361,18 @@ EOF;
 	function commit( $message, $author_name = '', $author_email = '' ) {
 		$author = '';
 		if ( $author_email ) {
-			if ( empty( $author_name ) )
+			if ( empty( $author_name ) ) {
 				$author_name = $author_email;
+			}
 			$author = "$author_name <$author_email>";
 		}
 
-		if ( ! empty( $author ) )
+		if ( ! empty( $author ) ) {
 			list( $return, $response ) = $this->_call( 'commit', '-m', $message, '--author', $author );
-		else
+		} else {
 			list( $return, $response ) = $this->_call( 'commit', '-m', $message );
-
-		if ( $return !== 0 ) return false;
+		}
+		if ( $return !== 0 ) { return false; }
 
 		list( $return, $response ) = $this->_call( 'rev-parse', 'HEAD' );
 
@@ -375,10 +380,11 @@ EOF;
 	}
 
 	function push( $branch = '' ) {
-		if ( ! empty( $branch ) )
+		if ( ! empty( $branch ) ) {
 			list( $return, ) = $this->_call( 'push', '--porcelain', '-u', 'origin', $branch );
-		else
+		} else {
 			list( $return, ) = $this->_call( 'push', '--porcelain', '-u', 'origin' );
+		}
 		return ( $return == 0 );
 	}
 
@@ -386,7 +392,6 @@ EOF;
 	 * Get uncommited changes with status porcelain
 	 * git status --porcelain
 	 * It returns an array like this:
-	
 	 array(
 		file => deleted|modified
 		...
@@ -395,20 +400,20 @@ EOF;
 	function get_local_changes() {
 		list( $return, $response ) = $this->_call( 'status', '--porcelain'  );
 
-		if ( 0 !== $return )
+		if ( 0 !== $return ) {
 			return array();
-
+		}
 		$new_response = array();
 		if ( ! empty( $response ) ) {
 			foreach ( $response as $item ) :
 				$y    = substr( $item, 1, 1 ); // Y shows the status of the work tree
 				$file = substr( $item, 3 );
 
-				if ( 'D' == $y )
+				if ( 'D' == $y ) {
 					$action = 'deleted';
-				else
+				} else {
 					$action = 'modified';
-
+				}
 				$new_response[ $file ] = $action;
 			endforeach;
 		}
@@ -422,9 +427,9 @@ EOF;
 
 	function local_status() {
 		list( $return, $response ) = $this->_call( 'status', '-s', '-b', '-u' );
-		if ( 0 !== $return )
+		if ( 0 !== $return ) {
 			return array( '', array() );
-
+		}
 		$new_response = array();
 
 		if ( ! empty( $response ) ) {
@@ -435,16 +440,16 @@ EOF;
 					continue;
 				}
 				unset($x, $y, $to, $from);
-				if ( empty($item) ) continue; // ignore empty elements like the last item
-				if ( '#' == $item[0] ) continue; // ignore branch status
+				if ( empty( $item ) ) { continue; } // ignore empty elements like the last item
+				if ( '#' == $item[0] ) { continue; } // ignore branch status
 
 				$x    = substr( $item, 0, 1 ); // X shows the status of the index
 				$y    = substr( $item, 1, 1 ); // Y shows the status of the work tree
 				$to   = substr( $item, 3 );
 				$from = '';
-				if ( 'R' == $x )
+				if ( 'R' == $x ) {
 					$from = $response[ $idx + 1 ];
-
+				}
 				$new_response[ $to ] = trim( "$x$y $from" );
 			endforeach;
 		}
@@ -455,7 +460,7 @@ EOF;
 	function status( $local_only = false ) {
 		list( $branch_status, $new_response ) = $this->local_status();
 
-		if ( $local_only ) return array( $branch_status, $new_response );
+		if ( $local_only ) { return array( $branch_status, $new_response ); }
 
 		$behind_count = 0;
 		$ahead_count  = 0;
@@ -477,11 +482,11 @@ EOF;
 			for ( $idx = 0 ; $idx < count( $response ) / 2 ; $idx++ ) {
 				$file   = $response[ $idx * 2 + 1 ];
 				$change = $response[ $idx * 2 ];
-				if ( ! isset( $new_response[$file] ) )
-					$new_response[$file] = "r$change";
+				if ( ! isset( $new_response[ $file ] ) ) {
+					$new_response[ $file ] = "r$change";
+				}
 			}
 		}
-
 		return array( $branch_status, $new_response );
 	}
 
@@ -498,32 +503,40 @@ EOF;
 	 * Return the last n commits
 	 */
 	function get_last_commits( $n = 20 ) {
-		list( $return, $response ) = $this->_call( 'log', '-n', $n );
+		list( $return, $message )  = $this->_call( 'log', '-n', $n, '--pretty=format:%s' );
+		if ( 0 !== $return ) { return false; }
+
+		list( $return, $response ) = $this->_call( 'log', '-n', $n, '--pretty=format:%h|%an|%ae|%ad|%cn|%ce|%cd' );
+		if ( 0 !== $return ) { return false; }
+
 		foreach ( $response as $index => $value ) {
-			if ( 0 === strpos( $value, 'commit ' ) ) {
-				$current_commit = trim( str_replace( 'commit', '', $value ) );
-				continue;
+			$commit_info = explode( '|', $value );
+			$commits[ $commit_info[0] ] = array(
+				'subject'         => $message[ $index ],
+				'author_name'     => $commit_info[1],
+				'author_email'    => $commit_info[2],
+				'author_date'     => $commit_info[3],
+			);
+			if ( $commit_info[1] != $commit_info[4] && $commit_info[2] != $commit_info[5] ) {
+				$commits[ $commit_info[0] ]['committer_name']  = $commit_info[4];
+				$commits[ $commit_info[0] ]['committer_email'] = $commit_info[5];
+				$commits[ $commit_info[0] ]['committer_date']  = $commit_info[6];
 			}
-			$data[ $current_commit ][] = $value;
 		}
-		foreach ( $data as $commit_id => $info ) {
-			foreach ( $info as $elem ) {
-				if ( 0 === strpos( $elem, 'Author: ' ) ) {
-					$commits[ $commit_id ]['author'] = trim( substr( $elem, strlen( 'Author:' ) ) );
-				}
-				if ( 0 === strpos( $elem, 'Date: ' ) ) {
-					$commits[ $commit_id ]['date'] = trim( substr( $elem, strlen( 'Date:' ) ) );
-				}
-			}
-			array_shift( $info );
-			array_shift( $info );
-			$commits[ $commit_id ]['message'] = trim( join( "\n", $info ) );
-		}
-		return ( $return !== 0 ? false : $commits );
+		return $commits;
+	}
+
+	public function set_gitignore( $content ) {
+		file_put_contents( $this->repo_dir . '/.gitignore', $content );
+		return true;
+	}
+
+	public function get_gitignore() {
+		return file_get_contents( $this->repo_dir . '/.gitignore' );
 	}
 }
 
-if ( ! defined( 'GIT_DIR' ) )
+if ( ! defined( 'GIT_DIR' ) ) {
 	define( 'GIT_DIR', dirname( WP_CONTENT_DIR ) );
-
+}
 $git = new Git_Wrapper( GIT_DIR );

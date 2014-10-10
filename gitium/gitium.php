@@ -27,8 +27,14 @@
 
 define( 'GITIUM_LAST_COMMITS', 20 );
 
-require_once __DIR__ . '/git-wrapper.php';
-require_once __DIR__ . '/gitium-admin.php';
+require_once __DIR__ . '/inc/class-git-wrapper.php';
+require_once __DIR__ . '/inc/class-gitium-admin.php';
+require_once __DIR__ . '/inc/class-gitium-help.php';
+require_once __DIR__ . '/inc/class-gitium-menu.php';
+require_once __DIR__ . '/inc/class-gitium-menu-bubble.php';
+require_once __DIR__ . '/inc/class-gitium-submenu-status.php';
+require_once __DIR__ . '/inc/class-gitium-submenu-commits.php';
+require_once __DIR__ . '/inc/class-gitium-submenu-gitignore.php';
 
 /**
  * Load plugin textdomain.
@@ -39,7 +45,7 @@ function gitium_load_textdomain() {
 add_action( 'plugins_loaded', 'gitium_load_textdomain' );
 
 function _gitium_make_ssh_git_file_exe() {
-	$ssh_wrapper = dirname( __FILE__ ) . '/ssh-git';
+	$ssh_wrapper = dirname( __FILE__ ) . '/inc/ssh-git';
 	$process     = proc_open(
 		"chmod -f +x $ssh_wrapper",
 		array(
@@ -55,10 +61,11 @@ if ( ! function_exists( 'gitium_enable_maintenance_mode' ) ) :
 	function gitium_enable_maintenance_mode() {
 		$file = ABSPATH . '/.maintenance';
 
-		if ( FALSE === file_put_contents( $file, '<?php $upgrading = ' . time() .';' ) )
-			return FALSE;
-		else
-			return TRUE;
+		if ( false === file_put_contents( $file, '<?php $upgrading = ' . time() .';' ) ) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 endif;
 
@@ -102,15 +109,15 @@ function gitium_update_versions() {
 		}
 	endforeach;
 
-	if ( ! empty( $theme_versions ) )
+	if ( ! empty( $theme_versions ) ) {
 		$new_versions['themes'] = $theme_versions;
-
+	}
 	//
 	// get all plugins from WP
 	//
-	if ( ! function_exists( 'get_plugins' ) )
+	if ( ! function_exists( 'get_plugins' ) ) {
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
-
+	}
 	$all_plugins = get_plugins();
 	foreach ( $all_plugins as $name => $data ) :
 		$plugin_versions[ $name ] = array(
@@ -125,9 +132,9 @@ function gitium_update_versions() {
 		}
 	endforeach;
 
-	if ( ! empty( $plugin_versions ) )
+	if ( ! empty( $plugin_versions ) ) {
 		$new_versions['plugins'] = $plugin_versions;
-
+	}
 	set_transient( 'gitium_versions', $new_versions );
 
 	return $new_versions;
@@ -136,8 +143,9 @@ add_action( 'load-plugins.php', 'gitium_update_versions', 999 );
 
 function gitium_get_versions() {
 	$versions = get_transient( 'gitium_versions', array() );
-	if ( empty( $versions ) )
+	if ( empty( $versions ) ) {
 		$versions = gitium_update_versions();
+	}
 	return $versions;
 }
 
@@ -153,7 +161,7 @@ function _gitium_commit_changes( $message, $dir = '.' ) {
 	return $git->commit( $message, $current_user->display_name, $current_user->user_email );
 }
 
-function _gitium_format_message( $name, $version = FALSE, $prefix = '' ) {
+function _gitium_format_message( $name, $version = false, $prefix = '' ) {
 	$commit_message = "`$name`";
 	if ( $version ) {
 		$commit_message .= " version $version";
@@ -185,7 +193,7 @@ function gitium_upgrader_post_install( $res, $hook_extra, $result ) {
 		break;
 		case 'plugin':
 			foreach ( $result['source_files'] as $file ) :
-				if ( '.php' != substr( $file, -4 ) ) continue;
+				if ( '.php' != substr( $file, -4 ) ) { continue; }
 				// every .php file is a possible plugin so we check if it's a plugin
 				$filepath    = trailingslashit( $result['destination'] ) . $file;
 				$plugin_data = get_plugin_data( $filepath );
@@ -199,11 +207,11 @@ function gitium_upgrader_post_install( $res, $hook_extra, $result ) {
 		break;
 	}
 
-	if ( empty( $name ) )
+	if ( empty( $name ) ) {
 		$name = $result['destination_name'];
-
+	}
 	$commit_message = _gitium_format_message( $name,$version,"$action $type" );
-	$commit = _gitium_commit_changes( $commit_message, $git_dir, FALSE );
+	$commit = _gitium_commit_changes( $commit_message, $git_dir, false );
 	gitium_merge_and_push( $commit );
 
 	return $res;
@@ -290,9 +298,9 @@ function gitium_group_commit_modified_plugins_and_themes( $msg_append = '' ) {
 	$commit_groups = array();
 	$commits = array();
 
-	if ( ! empty( $msg_append ) )
+	if ( ! empty( $msg_append ) ) {
 		$msg_append = "($msg_append)";
-
+	}
 	foreach ( $uncommited_changes as $path => $action ) {
 		$change = _gitium_module_by_path( $path );
 		$change['action'] = $action;
@@ -301,26 +309,39 @@ function gitium_group_commit_modified_plugins_and_themes( $msg_append = '' ) {
 
 	foreach ( $commit_groups as $base_path => $change ) {
 		$commit_message = _gitium_format_message( $change['name'], $change['version'], "${change['action']} ${change['type']}" );
-		$commit = _gitium_commit_changes( "$commit_message $msg_append", $base_path, FALSE );
-		if ( $commit )
+		$commit = _gitium_commit_changes( "$commit_message $msg_append", $base_path, false );
+		if ( $commit ) {
 			$commits[] = $commit;
+		}
 	}
 
 	return $commits;
+}
+
+function gitium_commit_gitignore_file() {
+	global $git;
+
+	$current_user = wp_get_current_user();
+	$git->add( '.gitignore' );
+	$commit = $git->commit( 'Update the `.gitignore` file', $current_user->display_name, $current_user->user_email );
+	gitium_merge_and_push( $commit );
 }
 
 // Merges the commits with remote and pushes them back
 function gitium_merge_and_push( $commits ) {
 	global $git;
 
-	if ( ! $git->fetch_ref() )
+	if ( ! $git->fetch_ref() ) {
 		return false;
+	}
 
-	if ( ! $git->merge_with_accept_mine( $commits ) )
+	if ( ! $git->merge_with_accept_mine( $commits ) ) {
 		return false;
+	}
 
-	if ( ! $git->push() )
+	if ( ! $git->push() ) {
 		return false;
+	}
 
 	return true;
 }
@@ -341,7 +362,7 @@ add_action( 'upgrader_process_complete', 'gitium_auto_push', 11, 0 );
 function gitium_check_after_event( $plugin, $event = 'activation' ) {
 	global $git;
 
-	if ( 'gitium/gitium.php' == $plugin ) return; // do not hook on activation of this plugin
+	if ( 'gitium/gitium.php' == $plugin ) { return; } // do not hook on activation of this plugin
 
 	if ( $git->is_dirty() ) {
 		$versions = gitium_update_versions();
@@ -366,14 +387,16 @@ function gitium_check_after_deactivate_modifications( $plugin ) {
 add_action( 'deactivated_plugin', 'gitium_check_after_deactivate_modifications', 999 );
 
 function gitium_check_for_plugin_deletions() { // Handle plugin deletion
-	if ( isset( $_GET['deleted'] ) && 'true' == $_GET['deleted'] )
+	if ( isset( $_GET['deleted'] ) && 'true' == $_GET['deleted'] ) {
 		gitium_auto_push();
+	}
 }
 add_action( 'load-plugins.php', 'gitium_check_for_plugin_deletions' );
 
 function gitium_check_for_themes_deletions() { // Handle theme deletion
-	if ( isset( $_GET['deleted'] ) && 'true' == $_GET['deleted'] )
+	if ( isset( $_GET['deleted'] ) && 'true' == $_GET['deleted'] ) {
 		gitium_auto_push();
+	}
 }
 add_action( 'load-themes.php', 'gitium_check_for_themes_deletions' );
 
@@ -381,11 +404,11 @@ add_action( 'load-themes.php', 'gitium_check_for_themes_deletions' );
 function gitium_hook_plugin_and_theme_editor_page( $hook ) {
 	switch ( $hook ) {
 		case 'plugin-editor.php':
-			if ( 'te' == $_GET['a'] ) gitium_auto_push();
+			if ( 'te' == $_GET['a'] ) { gitium_auto_push(); }
 		break;
 
 		case 'theme-editor.php':
-			if ( 'true' == $_GET['updated'] ) gitium_auto_push();
+			if ( 'true' == $_GET['updated'] ) { gitium_auto_push(); }
 		break;
 	}
 	return;
@@ -394,8 +417,8 @@ add_action( 'admin_enqueue_scripts', 'gitium_hook_plugin_and_theme_editor_page' 
 
 function gitium_options_page_check() {
 	global $git;
-	if ( ! $git->can_exec_git() ) wp_die( 'Cannot exec git' );
-	return TRUE;
+	if ( ! $git->can_exec_git() ) { wp_die( 'Cannot exec git' ); }
+	return true;
 }
 
 function _gitium_status( $update_transient = false ) {
@@ -406,8 +429,9 @@ function _gitium_status( $update_transient = false ) {
 	}
 
 	$git_version = get_transient( 'gitium_version', '' );
-	if ( empty( $git_version ) )
+	if ( empty( $git_version ) ) {
 		set_transient( 'gitium_version', $git->get_version() );
+	}
 
 	if ( $git->is_versioned() && $git->get_remote_tracking_branch() ) {
 		if ( ! $git->fetch_ref() ) {
@@ -454,15 +478,15 @@ function _gitium_generate_keypair() {
 	return array( $public_key, $pem );
 }
 
-function gitium_get_keypair( $generate_new_keypair = FALSE ) {
+function gitium_get_keypair( $generate_new_keypair = false ) {
 	if ( $generate_new_keypair ) {
 		$keypair = _gitium_generate_keypair();
 		delete_option( 'gitium_keypair' );
-		add_option( 'gitium_keypair', $keypair, '', FALSE );
+		add_option( 'gitium_keypair', $keypair, '', false );
 	}
-	if ( FALSE === ( $keypair = get_option( 'gitium_keypair', FALSE ) ) ) {
+	if ( false === ( $keypair = get_option( 'gitium_keypair', false ) ) ) {
 		$keypair = _gitium_generate_keypair();
-		add_option( 'gitium_keypair', $keypair, '', FALSE );
+		add_option( 'gitium_keypair', $keypair, '', false );
 	}
 	return $keypair;
 }
@@ -471,22 +495,22 @@ function _gitium_generate_webhook_key() {
 	return md5( str_shuffle( 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.()[]{}-_=+!@#%^&*~<>:;' ) );
 }
 
-function gitium_get_webhook_key( $generate_new_webhook_key = FALSE ) {
+function gitium_get_webhook_key( $generate_new_webhook_key = false ) {
 	if ( $generate_new_webhook_key ) {
 		$key = _gitium_generate_webhook_key();
 		delete_option( 'gitium_webhook_key' );
-		add_option( 'gitium_webhook_key', $key, '', FALSE );
+		add_option( 'gitium_webhook_key', $key, '', false );
 		return $key;
 	}
-	if ( FALSE === ( $key = get_option( 'gitium_webhook_key', FALSE ) ) ) {
+	if ( false === ( $key = get_option( 'gitium_webhook_key', false ) ) ) {
 		$key = _gitium_generate_webhook_key();
-		add_option( 'gitium_webhook_key', $key, '', FALSE );
+		add_option( 'gitium_webhook_key', $key, '', false );
 	}
 	return $key;
 }
 
 function gitium_get_webhook() {
-	if ( defined( 'GIT_WEBHOOK_URL' ) && GIT_WEBHOOK_URL ) return GIT_WEBHOOK_URL;
+	if ( defined( 'GIT_WEBHOOK_URL' ) && GIT_WEBHOOK_URL ) { return GIT_WEBHOOK_URL; }
 	$key = gitium_get_webhook_key();
 	$url = add_query_arg( 'key', $key, plugins_url( 'gitium-webhook.php', __FILE__ ) );
 	return apply_filters( 'gitium_webhook_url', $url, $key );

@@ -15,47 +15,41 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-class Gitium_Admin {
-	private $menu_slug         = 'gitium/gitium.php';
-	private $commits_menu_slug = 'gitium/gitium.php?commits';
-	private $git               = null;
+class Gitium_Submenu_Status extends Gitium_Menu {
 
 	public function __construct() {
-		global $git;
-		$this->git = $git;
+		parent::__construct( $this->gitium_menu_slug, $this->gitium_menu_slug );
 
-		list( , $git_private_key ) = gitium_get_keypair();
-		$git->set_key( $git_private_key );
-
-		add_action( 'admin_menu', array( $this, 'add_menu_page' ) );
-		add_action( 'admin_menu', array( $this, 'add_menu_bubble' ) );
-
-		// admin actions
 		if ( current_user_can( 'manage_options' ) ) {
+			add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 			add_action( 'admin_init', array( $this, 'init_repo' ) );
 			add_action( 'admin_init', array( $this, 'choose_branch' ) );
 			add_action( 'admin_init', array( $this, 'save_changes' ) );
+			add_action( 'admin_init', array( $this, 'save_ignorelist' ) );
 			add_action( 'admin_init', array( $this, 'regenerate_webhook' ) );
 			add_action( 'admin_init', array( $this, 'regenerate_keypair' ) );
 		}
 	}
 
-	public function add_menu_page() {
+	public function admin_menu() {
 		add_menu_page(
 			__( 'Git Status', 'gitium' ),
-			__( 'Code', 'gitium' ),
+			'Gitium',
 			'manage_options',
 			$this->menu_slug,
-			array( $this, 'admin_page' )
+			array( $this, 'page' ),
+			'http://marius.trypl.com/wp-content/uploads/2014/09/gitium.png'
 		);
-		add_submenu_page(
+
+		$submenu_hook = add_submenu_page(
 			$this->menu_slug,
-			__( 'Git Commits', 'gitium' ),
-			__( 'Commits', 'gitium' ),
+			__( 'Git Status', 'gitium' ),
+			__( 'Status', 'gitium' ),
 			'manage_options',
-			$this->commits_menu_slug,
-			array( $this, 'commits_page' )
+			$this->menu_slug,
+			array( $this, 'page' )
 		);
+		new Gitium_Help( $submenu_hook, 'GITIUM_STATUS' );
 	}
 
 	public function humanized_change( $change ) {
@@ -80,29 +74,6 @@ class Gitium_Admin {
 			$change = sprintf( __( 'renamed from `%s`', 'gitium' ), $old_filename );
 		}
 		return $change;
-	}
-
-	public function redirect( $message, $success = false ) {
-		$message_id = substr(
-			md5( str_shuffle( 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789' ) . time() ), 0, 8
-		);
-		if ( $message ) {
-			set_transient( 'message_' . $message_id, $message, 900 );
-		}
-		$url = admin_url( 'admin.php?page=' . $this->menu_slug );
-		$url = add_query_arg(
-			array(
-				'message' => $message_id,
-				'success' => $success,
-			),
-			$url
-		);
-		wp_safe_redirect( $url );
-		die();
-	}
-
-	public function success_redirect( $message = '' ) {
-		$this->redirect( $message, true );
 	}
 
 	public function init_process( $remote_url ) {
@@ -164,6 +135,23 @@ class Gitium_Admin {
 		$this->success_redirect();
 	}
 
+	public function save_ignorelist() {
+		if ( ! isset( $_POST['SubmitIgnore'] ) ) {
+			return;
+		}
+		if ( ! isset( $_POST['checked'] ) ) {
+			$this->redirect( __( 'There is no path selected in order to be added to the `.gitignore` file.', 'gitium' ), false, $this->gitium_menu_slug );
+		}
+		check_admin_referer( 'gitium-admin' );
+
+		if ( $this->git->set_gitignore( join( "\n", array_unique( array_merge( explode( "\n", $this->git->get_gitignore() ), $_POST['checked'] ) ) ) ) ) {
+			gitium_commit_gitignore_file();
+			$this->success_redirect( __( 'The file `.gitignore` is saved!', 'gitium' ), $this->gitium_menu_slug );
+		} else {
+			$this->redirect( __( 'The file `.gitignore` could not be saved!', 'gitium' ), false, $this->gitium_menu_slug );
+		}
+	}
+
 	public function save_changes() {
 		if ( ! isset( $_POST['SubmitSave'] ) ) {
 			return;
@@ -215,107 +203,13 @@ class Gitium_Admin {
 		$this->success_redirect( __( 'Keypair successfully regenerated.', 'gitium' ) );
 	}
 
-	public function commits_page() {
-		$git = $this->git; ?>
-		<div class="wrap">
-		<h2><?php printf( __( 'Last %s commits', 'gitium' ), GITIUM_LAST_COMMITS ); ?></h2>
-
-		<table class="wp-list-table widefat plugins">
-		<thead>
-		<tr>
-			<th scope="col">#</th>
-			<th scope="col"><label for="commit_message"><?php _e( 'Date', 'gitium' ); ?></label></th>
-			<th scope="col"><label for="commit_message"><?php _e( 'Message', 'gitium' ); ?></label></th>
-			<th scope="col"><label for="commit_id"><?php _e( 'ID', 'gitium' ); ?></label></th>
-			<th scope="col"><label for="commit_author"><?php _e( 'Author', 'gitium' ); ?></label></th>
-		</tr>
-		</thead>
-		<tbody>
-		<?php
-
-		$last_commits = $git->get_last_commits( GITIUM_LAST_COMMITS );
-		$counter = 1;
-		foreach ( $last_commits as $commit_id => $data ) {
-			?>
-			<tr<?php if ( 0 != $counter % 2 ) { echo ' class="active"'; } else { echo ' class="inactive"'; } ?>>
-			<td><?php echo $counter++; ?></td>
-			<td><?php echo esc_html( $data['date'] ); ?></td>
-			<td><?php echo esc_html( $data['message'] ); ?></td>
-			<td><?php echo esc_html( $commit_id ); ?></td>
-			<td><?php echo esc_html( $data['author'] ); ?></td>
-			</tr>
-		<?php } ?>
-		</tbody>
-		</table>
-
-		</div>
-		<?php
-	}
-
-	public function admin_page() {
-		if ( isset( $_GET['message'] ) && $_GET['message'] ) {
-			$type    = ( isset( $_GET['success'] ) && $_GET['success'] == 1 ? 'updated' : 'error' );
-			$message = get_transient( 'message_'. $_GET['message'], '' );
-			if ( ! empty( $message ) ) : ?>
-				<div class="<?php echo esc_attr( $type ); ?>"><p><?php echo esc_html( $message ); ?></p></div>
-			<?php endif;
-		}
-
-		$git = $this->git;
-
-		if ( ! $git->is_versioned() ) {
-			return $this->setup_step_1();
-		}
-
-		if ( ! $git->get_remote_tracking_branch() ) {
-			return $this->setup_step_2();
-		}
-
-		_gitium_status( true );
-		if ( gitium_has_the_minimum_version() ) {
-			$this->changes_page();
-		}
-	}
-
-	public function add_menu_bubble() {
-		global $menu;
-		$git = $this->git;
-
-		if ( ! $git->is_versioned()  ) {
-			foreach ( $menu as $key => $value  ) {
-				if ( $this->menu_slug == $menu[ $key ][2] ) {
-					$menu_bubble = get_transient( 'gitium_menu_bubble' );
-					if ( false === $menu_bubble ) { $menu_bubble = ''; }
-					$menu[ $key ][0] = str_replace( $menu_bubble, '', $menu[ $key ][0] );
-					delete_transient( 'gitium_menu_bubble' );
-					return;
-				}
-			}
-		}
-
-		list( , $changes ) = _gitium_status();
-
-		if ( ! empty( $changes ) ) :
-			$bubble_count = count( $changes );
-			foreach ( $menu as $key => $value  ) {
-				if ( $this->menu_slug == $menu[ $key ][2] ) {
-					$menu_bubble = " <span class='update-plugins count-$bubble_count'><span class='plugin-count'>"
-						. $bubble_count . '</span></span>';
-					$menu[ $key ][0] .= $menu_bubble;
-					set_transient( 'gitium_menu_bubble', $menu_bubble );
-					return;
-				}
-			}
-		endif;
-	}
-
 	private function setup_step_1() {
 		list( $git_public_key, ) = gitium_get_keypair(); ?>
 		<div class="wrap">
 			<h2><?php _e( 'Status', 'gitium' ); ?> <code><?php _e( 'unconfigured', 'gitium' ); ?></code></h2>
 		
 		<form action="" method="POST">
-		<?php wp_nonce_field( 'gitium-admin' ) ?>
+		<?php wp_nonce_field( 'gitium-admin' ); ?>
 
 		<table class="form-table">
 		<tr>
@@ -359,7 +253,7 @@ class Gitium_Admin {
 		<h2>Status</h2>
 
 		<form action="" method="POST">
-		<?php wp_nonce_field( 'gitium-admin' ) ?>
+		<?php wp_nonce_field( 'gitium-admin' ); ?>
 
 		<table class="form-table">
 		<tr>
@@ -408,17 +302,19 @@ class Gitium_Admin {
 	private function show_git_changes_table( $changes = '' ) {
 		?>
 		<table class="widefat" id="git-changes-table">
-		<thead><tr><th scope="col" class="manage-column"><?php _e( 'Path', 'gitium' ); ?></th><th scope="col" class="manage-column"><?php _e( 'Change', 'gitium' ); ?></th></tr></thead>
-		<tfoot><tr><th scope="col" class="manage-column"><?php _e( 'Path', 'gitium' ); ?></th><th scope="col" class="manage-column"><?php _e( 'Change', 'gitium' ); ?></th></tr></tfoot>
+		<thead><tr><th scope="col" class="manage-column column-cb check-column"><input id="cb-select-all-1" type="checkbox"></th><th scope="col" class="manage-column"><?php _e( 'Path', 'gitium' ); ?></th><th scope="col" class="manage-column"><?php _e( 'Change', 'gitium' ); ?></th></tr></thead>
+		<tfoot><tr><th scope="col" class="manage-column column-cb check-column"><input id="cb-select-all-2" type="checkbox"></th><th scope="col" class="manage-column"><?php _e( 'Path', 'gitium' ); ?></th><th scope="col" class="manage-column"><?php _e( 'Change', 'gitium' ); ?></th></tr></tfoot>
 		<tbody>
 			<?php if ( empty( $changes ) ) : ?>
-			<tr><td><p><?php _e( 'Nothing to commit, working directory clean.', 'gitium' ); ?></p></td></tr>
+			<tr><th></th><td><p><?php _e( 'Nothing to commit, working directory clean.', 'gitium' ); ?></p></td></tr>
 			<?php else : ?>
 				<?php foreach ( $changes as $path => $type ) : ?>
 					<tr>
-						<td>
-							<strong><?php echo esc_html( $path ); ?></strong>
-						</td>
+						<th scope="row" class="check-column">
+							<label class="screen-reader-text" for="checkbox_<?php echo esc_attr( md5( $path ) ); ?>">Select <?php echo esc_html( $path ); ?></label>
+							<input type="checkbox" name="checked[]" value="<?php echo esc_html( $path ); ?>" id="checkbox_<?php echo esc_attr( md5( $path ) ); ?>" />
+						</th>
+						<td><strong><?php echo esc_html( $path ); ?></strong></td>
 						<td>
 			<?php
 				if ( is_dir( ABSPATH . '/' . $path ) && is_dir( ABSPATH . '/' . trailingslashit( $path ) . '.git' ) ) { // test if is submodule
@@ -443,13 +339,12 @@ class Gitium_Admin {
 		<div id="icon-options-general" class="icon32">&nbsp;</div>
 		<h2><?php _e( 'Status', 'gitium' ); ?> <code class="small"><?php _e( 'connected to', 'gitium' ); ?> <strong><?php echo esc_html( $this->git->get_remote_url() ); ?></strong></code></h2>
 
+		<form action="" method="POST">
 		<?php
 			$this->show_ahead_and_behind_info( $changes );
 			$this->show_git_changes_table( $changes );
+			wp_nonce_field( 'gitium-admin' );
 		?>
-
-		<form action="" method="POST">
-		<?php wp_nonce_field( 'gitium-admin' ) ?>
 
 		<?php if ( ! empty( $changes ) ) : ?>
 			<p>
@@ -457,7 +352,8 @@ class Gitium_Admin {
 			<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="<?php printf( __( 'Merged changes from %s on %s', 'gitium' ), get_site_url(), date( 'm.d.Y' ) ); ?>" />
 			</p>
 			<p>
-			<input type="submit" name="SubmitSave" class="button-primary button" value="<?php _e( 'Save changes', 'gitium' ); ?>" <?php if ( get_transient( 'gitium_remote_disconnected', true ) ) { echo 'disabled="disabled" '; } ?>/>
+			<input type="submit" name="SubmitSave" class="button-primary button" value="<?php _e( 'Save changes', 'gitium' ); ?>" <?php if ( get_transient( 'gitium_remote_disconnected', true ) ) { echo 'disabled="disabled" '; } ?>/>&nbsp;
+			<input type="submit" name="SubmitIgnore" class="button" value="<?php _e( 'Ignore', 'gitium' ); ?>" title="<?php _e( 'Push this button to add the selected files to `.gitignore` file', 'gitium' ); ?>" />
 			</p>
 		<?php endif; ?>
 
@@ -491,11 +387,23 @@ class Gitium_Admin {
 		</div>
 		<?php
 	}
-}
 
-if ( is_admin() ) {
-	add_action( 'init', 'gitium_admin_page' );
-	function gitium_admin_page() {
-		new Gitium_Admin();
+	public function page() {
+		$this->show_message();
+
+		$git = $this->git;
+
+		if ( ! $git->is_versioned() ) {
+			return $this->setup_step_1();
+		}
+
+		if ( ! $git->get_remote_tracking_branch() ) {
+			return $this->setup_step_2();
+		}
+
+		_gitium_status( true );
+		if ( gitium_has_the_minimum_version() ) {
+			$this->changes_page();
+		}
 	}
 }
