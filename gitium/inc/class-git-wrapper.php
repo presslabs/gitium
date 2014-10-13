@@ -261,6 +261,15 @@ EOF;
 		return ( $return !== 0 ? false : join( "\n", $response ) );
 	}
 
+	function cherry_pick_abort() {
+		$local_branch  = $this->get_local_branch();
+		$this->_call( 'cherry-pick', '--abort' );
+		$this->create_branch( 'merge_local' );
+		$this->_call( 'branch', '-D', $local_branch );
+		$this->_call( 'branch', '-m', $local_branch );
+		return false;
+	}
+
 	function merge_with_accept_mine() {
 		do_action( 'gitium_before_merge_with_accept_mine' );
 
@@ -293,11 +302,7 @@ EOF;
 			$this->_call( 'branch', '-D', 'merge_local' );
 			return true;
 		} else {
-			$this->_call( 'cherry-pick', '--abort' );
-			$this->create_branch( 'merge_local' );
-			$this->_call( 'branch', '-D', $local_branch );
-			$this->_call( 'branch', '-m', $local_branch );
-			return false;
+			return $this->cherry_pick_abort();
 		}
 	}
 
