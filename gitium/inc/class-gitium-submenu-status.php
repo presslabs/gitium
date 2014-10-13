@@ -98,27 +98,23 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		if ( ! isset( $_POST['SubmitSave'] ) ) {
 			return;
 		}
-
 		check_admin_referer( 'gitium-admin' );
 
-		$git = $this->git;
 		gitium_enable_maintenance_mode() or wp_die( __( 'Could not enable the maintenance mode!', 'gitium' ) );
-		$git->add();
+		$this->git->add();
 		$commitmsg = sprintf( __( 'Merged changes from %s on %s', 'gitium' ), get_site_url(), date( 'm.d.Y' ) );
 		if ( isset( $_POST['commitmsg'] ) && ! empty( $_POST['commitmsg'] ) ) {
 			$commitmsg = $_POST['commitmsg'];
 		}
-
 		$current_user = wp_get_current_user();
-		$commit = $git->commit( $commitmsg, $current_user->display_name, $current_user->user_email );
+		$commit = $this->git->commit( $commitmsg, $current_user->display_name, $current_user->user_email );
 		if ( ! $commit ) {
 			$this->redirect( __( 'Could not commit!', 'gitium' ) );
 		}
-
 		$merge_success = gitium_merge_and_push( $commit );
 		gitium_disable_maintenance_mode();
 		if ( ! $merge_success ) {
-			$this->redirect( __( 'Merge failed: ', 'gitium' ) . $git->get_last_error() );
+			$this->redirect( __( 'Merge failed: ', 'gitium' ) . $this->git->get_last_error() );
 		}
 		$this->success_redirect( sprintf( __( 'Pushed commit: `%s`', 'gitium' ), $commitmsg ) );
 	}
