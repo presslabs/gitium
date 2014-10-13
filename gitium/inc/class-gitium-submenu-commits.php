@@ -34,6 +34,17 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 		new Gitium_Help( $submenu_hook, 'GITIUM_COMMITS' );
 	}
 
+	public function table_head() {
+		?>
+		<thead>
+		<tr>
+			<th scope="col"><?php _e( 'Commits', 'gitium' ); ?></th>
+			<th scope="col"></th>
+		</tr>
+		</thead>
+		<?php
+	}
+
 	public function table_end_row() {
 		echo '</tr>';
 	}
@@ -49,12 +60,7 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 		<div class="wrap">
 		<h2><?php printf( __( 'Last %s commits', 'gitium' ), GITIUM_LAST_COMMITS ); ?></h2>
 		<table class="wp-list-table widefat plugins">
-		<thead>
-		<tr>
-			<th scope="col"><?php _e( 'Commits', 'gitium' ); ?></th>
-			<th scope="col"></th>
-		</tr>
-		</thead>
+		<?php $this->table_head(); ?>
 		<tbody>
 		<?php
 		foreach ( $this->git->get_last_commits( GITIUM_LAST_COMMITS ) as $commit_id => $data ) {
@@ -72,10 +78,10 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 			<td style="position:relative">
 				<div style="float:left; width:auto; height:auto; padding-left:2px; padding-right:5px; padding-top:2px; margin-right:5px; border-radius:2px"><?php echo get_avatar( $author_email, 32 ); ?></div>
 				<?php echo $committers_avatar; ?>
-				<div style="float:left; width:auto; height:auto;"><strong><?php echo esc_html( $subject ); ?></strong><br />
+				<div style="float:left; width:auto; height:auto;"><strong><?php echo $subject; ?></strong><br />
 				<span title="<?php echo esc_attr( $author_email ); ?>"><?php echo $author_name . ' ' . sprintf( __( 'authored %s ago', 'gitium' ), human_time_diff( strtotime( $author_date ) ) ); ?></span><?php echo $committer; ?></div>
 			</td>
-			<td><p style="padding-top:8px"><?php echo esc_html( $commit_id ); ?></p></td>
+			<td><p style="padding-top:8px"><?php echo $commit_id; ?></p></td>
 		<?php
 			$this->table_end_row();
 		}

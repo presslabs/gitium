@@ -1,5 +1,6 @@
 {
     "require-dev": {
-        "codeclimate/php-test-reporter": "dev-master"
+        "codeclimate/php-test-reporter": "dev-master",
+        "phpmd/phpmd" : "@stable"
     }
 }
