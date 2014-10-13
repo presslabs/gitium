@@ -269,6 +269,18 @@ EOF;
 		return ( $return !== 0 ? false : join( "\n", $response ) );
 	}
 
+	private function cherry_pick( $commits ) {
+		foreach ( $commits as $commit ) {
+			if ( empty( $commit ) ) { return false; }
+
+			list( $return, ) = $this->_call( 'cherry-pick', $commit );
+
+			if ( $return != 0 ) {
+				$this->_resolve_merge_conflicts( $this->get_commit_message( $commit ) );
+			}
+		}
+	}
+
 	function merge_with_accept_mine() {
 		do_action( 'gitium_before_merge_with_accept_mine' );
 
@@ -286,16 +298,7 @@ EOF;
 		$this->_call( 'branch', '-m', 'merge_local' );
 		$this->_call( 'branch', $local_branch, $remote_branch );
 		$this->_call( 'checkout', $local_branch );
-		foreach ( $commits as $commit ) {
-			if ( empty( $commit ) ) { return false; }
-
-			list( $return, ) = $this->_call(
-				'cherry-pick', $commit
-			);
-			if ( $return != 0 ) {
-				$this->_resolve_merge_conflicts( $this->get_commit_message( $commit ) );
-			}
-		}
+		$this->cherry_pick( $commits );
 
 		if ( $this->successfully_merged() ) { // git status without states: AA, DD, UA, AU ...
 			$this->_call( 'branch', '-D', 'merge_local' );
