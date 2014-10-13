@@ -163,64 +163,49 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		<?php
 	}
 
+	private function show_git_changes_table_rows( $changes = '' ) {
+		foreach ( $changes as $path => $type ) : ?>
+			<tr>
+				<th scope="row" class="check-column">
+					<label class="screen-reader-text" for="checkbox_<?php echo esc_attr( md5( $path ) ); ?>">Select <?php echo esc_html( $path ); ?></label>
+					<input type="checkbox" name="checked[]" value="<?php echo esc_html( $path ); ?>" id="checkbox_<?php echo esc_attr( md5( $path ) ); ?>" />
+				</th>
+				<td><strong><?php echo esc_html( $path ); ?></strong></td>
+				<td>
+		<?php
+			if ( is_dir( ABSPATH . '/' . $path ) && is_dir( ABSPATH . '/' . trailingslashit( $path ) . '.git' ) ) { // test if is submodule
+				_e( 'Submodules are not supported in this version.', 'gitium' );
+			} else { ?>
+				<span title="<?php echo esc_html( $type ); ?>"><?php echo esc_html( $this->humanized_change( $type ) ); ?></span>
+		<?php } ?>
+				</td>
+			</tr>
+		<?php endforeach;
+	}
+
 	private function show_git_changes_table( $changes = '' ) {
 		?>
 		<table class="widefat" id="git-changes-table">
 		<thead><tr><th scope="col" class="manage-column column-cb check-column"><input id="cb-select-all-1" type="checkbox"></th><th scope="col" class="manage-column"><?php _e( 'Path', 'gitium' ); ?></th><th scope="col" class="manage-column"><?php _e( 'Change', 'gitium' ); ?></th></tr></thead>
 		<tfoot><tr><th scope="col" class="manage-column column-cb check-column"><input id="cb-select-all-2" type="checkbox"></th><th scope="col" class="manage-column"><?php _e( 'Path', 'gitium' ); ?></th><th scope="col" class="manage-column"><?php _e( 'Change', 'gitium' ); ?></th></tr></tfoot>
 		<tbody>
-			<?php if ( empty( $changes ) ) : ?>
-			<tr><th></th><td><p><?php _e( 'Nothing to commit, working directory clean.', 'gitium' ); ?></p></td></tr>
-			<?php else : ?>
-				<?php foreach ( $changes as $path => $type ) : ?>
-					<tr>
-						<th scope="row" class="check-column">
-							<label class="screen-reader-text" for="checkbox_<?php echo esc_attr( md5( $path ) ); ?>">Select <?php echo esc_html( $path ); ?></label>
-							<input type="checkbox" name="checked[]" value="<?php echo esc_html( $path ); ?>" id="checkbox_<?php echo esc_attr( md5( $path ) ); ?>" />
-						</th>
-						<td><strong><?php echo esc_html( $path ); ?></strong></td>
-						<td>
-			<?php
-				if ( is_dir( ABSPATH . '/' . $path ) && is_dir( ABSPATH . '/' . trailingslashit( $path ) . '.git' ) ) { // test if is submodule
-					_e( 'Submodules are not supported in this version.', 'gitium' );
-				} else { ?>
-					<span title="<?php echo esc_html( $type ); ?>"><?php echo esc_html( $this->humanized_change( $type ) ); ?></span>
-			<?php } ?>
-						</td>
-					</tr>
-				<?php endforeach; ?>
-			<?php endif; ?>
+		<?php
+		if ( empty( $changes ) ) :
+			echo '<tr><th></th><td><p>';
+			_e( 'Nothing to commit, working directory clean.', 'gitium' );
+			echo '</p></td></tr>';
+		else :
+			$this->show_git_changes_table_rows( $changes );
+		endif;
+		?>
 		</tbody>
 		</table>
 		<?php
 	}
 
-	private function changes_page() {
-		list( , $changes ) = _gitium_status();
+	public function show_webhook_table() {
 		list( $git_public_key, ) = gitium_get_keypair();
 		?>
-		<div class="wrap">
-		<div id="icon-options-general" class="icon32">&nbsp;</div>
-		<h2><?php _e( 'Status', 'gitium' ); ?> <code class="small"><?php _e( 'connected to', 'gitium' ); ?> <strong><?php echo esc_html( $this->git->get_remote_url() ); ?></strong></code></h2>
-
-		<form action="" method="POST">
-		<?php
-			$this->show_ahead_and_behind_info( $changes );
-			$this->show_git_changes_table( $changes );
-			wp_nonce_field( 'gitium-admin' );
-		?>
-
-		<?php if ( ! empty( $changes ) ) : ?>
-			<p>
-			<label for="save-changes"><?php _e( 'Commit message', 'gitium' ); ?>:</label>
-			<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="<?php printf( __( 'Merged changes from %s on %s', 'gitium' ), get_site_url(), date( 'm.d.Y' ) ); ?>" />
-			</p>
-			<p>
-			<input type="submit" name="SubmitSave" class="button-primary button" value="<?php _e( 'Save changes', 'gitium' ); ?>" <?php if ( get_transient( 'gitium_remote_disconnected', true ) ) { echo 'disabled="disabled" '; } ?>/>&nbsp;
-			<input type="submit" name="SubmitIgnore" class="button" value="<?php _e( 'Ignore', 'gitium' ); ?>" title="<?php _e( 'Push this button to add the selected files to `.gitignore` file', 'gitium' ); ?>" />
-			</p>
-		<?php endif; ?>
-
 		<table class="form-table">
 		  <tr>
 		  <th><label for="webhook-url"><?php _e( 'Webhook URL', 'gitium' ); ?>:</label></th>
@@ -246,7 +231,35 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		  </tr>
 		  <?php endif; ?>
 		</table>
+		<?php
+	}
 
+	private function changes_page() {
+		list( , $changes ) = _gitium_status();
+		?>
+		<div class="wrap">
+		<div id="icon-options-general" class="icon32">&nbsp;</div>
+		<h2><?php _e( 'Status', 'gitium' ); ?> <code class="small"><?php _e( 'connected to', 'gitium' ); ?> <strong><?php echo esc_html( $this->git->get_remote_url() ); ?></strong></code></h2>
+
+		<form action="" method="POST">
+		<?php
+			$this->show_ahead_and_behind_info( $changes );
+			$this->show_git_changes_table( $changes );
+			wp_nonce_field( 'gitium-admin' );
+		?>
+
+		<?php if ( ! empty( $changes ) ) : ?>
+			<p>
+			<label for="save-changes"><?php _e( 'Commit message', 'gitium' ); ?>:</label>
+			<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="<?php printf( __( 'Merged changes from %s on %s', 'gitium' ), get_site_url(), date( 'm.d.Y' ) ); ?>" />
+			</p>
+			<p>
+			<input type="submit" name="SubmitSave" class="button-primary button" value="<?php _e( 'Save changes', 'gitium' ); ?>" <?php if ( get_transient( 'gitium_remote_disconnected', true ) ) { echo 'disabled="disabled" '; } ?>/>&nbsp;
+			<input type="submit" name="SubmitIgnore" class="button" value="<?php _e( 'Ignore', 'gitium' ); ?>" title="<?php _e( 'Push this button to add the selected files to `.gitignore` file', 'gitium' ); ?>" />
+			</p>
+		<?php endif; ?>
+
+		<?php $this->show_webhook_table(); ?>
 		</form>
 		</div>
 		<?php
