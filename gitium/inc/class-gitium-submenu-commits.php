@@ -34,11 +34,20 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 		new Gitium_Help( $submenu_hook, 'GITIUM_COMMITS' );
 	}
 
+	public function table_end_row() {
+		echo '</tr>';
+	}
+
+	public function table_start_row() {
+		static $counter = 0;
+		$counter++;
+		echo ( 0 != $counter % 2 ) ? '<tr class="active">' : '<tr class="inactive">';
+	}
+
 	public function page() {
-		$git = $this->git; ?>
+		?>
 		<div class="wrap">
 		<h2><?php printf( __( 'Last %s commits', 'gitium' ), GITIUM_LAST_COMMITS ); ?></h2>
-
 		<table class="wp-list-table widefat plugins">
 		<thead>
 		<tr>
@@ -48,11 +57,7 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 		</thead>
 		<tbody>
 		<?php
-
-		$last_commits = $git->get_last_commits( GITIUM_LAST_COMMITS );
-		$counter = 0;
-		foreach ( $last_commits as $commit_id => $data ) {
-			$counter++;
+		foreach ( $this->git->get_last_commits( GITIUM_LAST_COMMITS ) as $commit_id => $data ) {
 			$committer = '';
 			$committers_avatar = '';
 			unset( $committer_name );
@@ -61,8 +66,8 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 				$committer         = "<span title='$committer_email'> -> $committer_name " . sprintf( __( 'committed %s ago', 'gitium' ), human_time_diff( strtotime( $committer_date ) ) ) . '</span>';
 				$committers_avatar = '<div style="position:absolute; left:30px; border: 1px solid white; background:white; height:17px; top:30px; border-radius:2px">' . get_avatar( $committer_email, 16 ) . '</div>';
 			}
+			$this->table_start_row();
 			?>
-			<tr<?php if ( 0 != $counter % 2 ) { echo ' class="active"'; } else { echo ' class="inactive"'; } ?>>
 			<td style="position:relative">
 				<div style="float:left; width:auto; height:auto; padding-left:2px; padding-right:5px; padding-top:2px; margin-right:5px; border-radius:2px"><?php echo get_avatar( $author_email, 32 ); ?></div>
 				<?php echo $committers_avatar; ?>
@@ -70,11 +75,12 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 				<span title="<?php echo esc_attr( $author_email ); ?>"><?php echo $author_name . ' ' . sprintf( __( 'authored %s ago', 'gitium' ), human_time_diff( strtotime( $author_date ) ) ); ?></span><?php echo $committer; ?></div>
 			</td>
 			<td><p style="padding-top:8px"><?php echo esc_html( $commit_id ); ?></p></td>
-			</tr>
-		<?php } ?>
+		<?php
+			$this->table_end_row();
+		}
+		?>
 		</tbody>
 		</table>
-
 		</div>
 		<?php
 	}
