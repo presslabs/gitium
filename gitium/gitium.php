@@ -32,6 +32,7 @@ require_once __DIR__ . '/inc/class-gitium-admin.php';
 require_once __DIR__ . '/inc/class-gitium-help.php';
 require_once __DIR__ . '/inc/class-gitium-menu.php';
 require_once __DIR__ . '/inc/class-gitium-menu-bubble.php';
+require_once __DIR__ . '/inc/class-gitium-submenu-configure.php';
 require_once __DIR__ . '/inc/class-gitium-submenu-status.php';
 require_once __DIR__ . '/inc/class-gitium-submenu-commits.php';
 require_once __DIR__ . '/inc/class-gitium-submenu-gitignore.php';
