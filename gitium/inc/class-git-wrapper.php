@@ -132,7 +132,7 @@ EOF;
 		$cmd      = "git $args 2>&1";
 		$return   = -1;
 		$response = array();
-		$key_file = null;
+		$env      = $this->get_env();
 
 		$proc = proc_open(
 			$cmd,
@@ -142,7 +142,7 @@ EOF;
 			),
 			$pipes,
 			$this->repo_dir,
-			$this->get_env()
+			$env
 		);
 		fclose( $pipes[0] );
 
@@ -152,8 +152,8 @@ EOF;
 		$return = (int)proc_close( $proc );
 
 		$this->_log( "$return $cmd", join( "\n", $response ) );
-		if ( $key_file ) {
-			unlink( $key_file );
+		if ( isset( $env['GIT_KEY_FILE'] ) ) {
+			unlink( $env['GIT_KEY_FILE'] );
 		}
 		if ( 0 != $return ) {
 			$this->last_error = join( "\n", $response );
