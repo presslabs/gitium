@@ -208,33 +208,42 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		<?php
 	}
 
-	public function show_webhook_table() {
-		list( $git_public_key, ) = gitium_get_keypair();
+	private function show_webhook_table_webhook_url() {
 		?>
-		<table class="form-table">
-		  <tr>
-		  <th><label for="webhook-url"><?php _e( 'Webhook URL', 'gitium' ); ?>:</label></th>
+		<tr>
+			<th><label for="webhook-url"><?php _e( 'Webhook URL', 'gitium' ); ?>:</label></th>
 			<td>
 			  <p><code id="webhook-url"><?php echo esc_url( gitium_get_webhook() ); ?></code>
 			  <?php if ( ! defined( 'GIT_WEBHOOK_URL' ) || GIT_WEBHOOK_URL == '' ) : ?>
 			  <input type="submit" name="SubmitRegenerateWebhook" class="button" value="<?php _e( 'Regenerate Webhook', 'gitium' ); ?>" /></p>
 			  <?php endif; ?>
-			<p class="description"><?php _e( 'Pinging this URL triggers an update from remote repository.', 'gitium' ); ?></p>
+			  <p class="description"><?php _e( 'Pinging this URL triggers an update from remote repository.', 'gitium' ); ?></p>
 			</td>
-		  </tr>
+		</tr>
+		<?php
+	}
 
-		  <?php if ( ! defined( 'GIT_KEY_FILE' ) || GIT_KEY_FILE == '' ) : ?>
-		  <tr>
-		  <th><label for="public-key"><?php _e( 'Public Key', 'gitium' ); ?>:</label></th>
-			<td>
-			  <p><input type="text" class="regular-text" name="public_key" id="public-key" value="<?php echo esc_attr( $git_public_key ); ?>" readonly="readonly">
-			  <input type="submit" name="SubmitRegenerateKeypair" class="button" value="<?php _e( 'Regenerate Key', 'gitium' ); ?>" /></p>
-			  <p class="description"><?php _e( 'If your use ssh keybased authentication for git you need to allow write access to your repository using this key.', 'gitium' ); ?><br />
-<?php _e( 'Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="https://confluence.atlassian.com/display/BITBUCKET/Add+an+SSH+key+to+an+account#AddanSSHkeytoanaccount-HowtoaddakeyusingSSHforOSXorLinux" target="_blank">bitbucket</a>.', 'gitium' ); ?>
-			  </p>
-			</td>
-		  </tr>
-		  <?php endif; ?>
+	private function show_webhook_table_public_key() {
+		list( $git_public_key, ) = gitium_get_keypair();
+		if ( ! defined( 'GIT_KEY_FILE' ) || GIT_KEY_FILE == '' ) : ?>
+			<tr>
+				<th><label for="public-key"><?php _e( 'Public Key', 'gitium' ); ?>:</label></th>
+				<td>
+					<p><input type="text" class="regular-text" name="public_key" id="public-key" value="<?php echo esc_attr( $git_public_key ); ?>" readonly="readonly">
+					<input type="submit" name="SubmitRegenerateKeypair" class="button" value="<?php _e( 'Regenerate Key', 'gitium' ); ?>" /></p>
+					<p class="description"><?php _e( 'If your use ssh keybased authentication for git you need to allow write access to your repository using this key.', 'gitium' ); ?><br />
+					<?php _e( 'Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="https://confluence.atlassian.com/display/BITBUCKET/Add+an+SSH+key+to+an+account#AddanSSHkeytoanaccount-HowtoaddakeyusingSSHforOSXorLinux" target="_blank">bitbucket</a>.', 'gitium' ); ?>
+					</p>
+				</td>
+			</tr>
+		<?php endif;
+	}
+
+	public function show_webhook_table() {
+		?>
+		<table class="form-table">
+			<?php $this->show_webhook_table_webhook_url() ?>
+			<?php $this->show_webhook_table_public_key(); ?>
 		</table>
 		<?php
 	}
