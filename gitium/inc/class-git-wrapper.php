@@ -105,13 +105,8 @@ EOF;
 		$this->private_key = $private_key;
 	}
 
-	protected function _call() {
-		$args     = func_get_args();
-		$args     = join( ' ', array_map( 'escapeshellarg', $args ) );
-		$cmd      = "git $args 2>&1";
+	private function get_env() {
 		$env      = array();
-		$return   = -1;
-		$response = array();
 		$key_file = null;
 
 		if ( defined( 'GIT_SSH' ) && GIT_SSH ) {
@@ -119,6 +114,7 @@ EOF;
 		} else {
 			$env['GIT_SSH'] = dirname( __FILE__ ) . '/ssh-git';
 		}
+
 		if ( defined( 'GIT_KEY_FILE' ) && GIT_KEY_FILE ) {
 			$env['GIT_KEY_FILE'] = GIT_KEY_FILE;
 		} elseif ( $this->private_key ) {
@@ -127,6 +123,18 @@ EOF;
 			file_put_contents( $key_file, $this->private_key );
 			$env['GIT_KEY_FILE'] = $key_file;
 		}
+
+		return $env;
+	}
+
+	protected function _call() {
+		$args     = func_get_args();
+		$args     = join( ' ', array_map( 'escapeshellarg', $args ) );
+		$cmd      = "git $args 2>&1";
+		$return   = -1;
+		$response = array();
+		$key_file = null;
+
 		$proc = proc_open(
 			$cmd,
 			array(
@@ -135,7 +143,7 @@ EOF;
 			),
 			$pipes,
 			$this->repo_dir,
-			$env
+			$this->get_env()
 		);
 		fclose( $pipes[0] );
 
@@ -143,7 +151,7 @@ EOF;
 			$response[] = rtrim( $line, "\n\r" );
 		}
 		$return = (int)proc_close( $proc );
-		/* _log( $cmd, $env, $response, $return ); */
+
 		$this->_log( "$return $cmd", join( "\n", $response ) );
 		if ( $key_file ) {
 			unlink( $key_file );
