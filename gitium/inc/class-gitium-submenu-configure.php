@@ -106,15 +106,8 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 		$this->success_redirect();
 	}
 
-	private function setup_step_1() {
-		list( $git_public_key, ) = gitium_get_keypair(); ?>
-		<div class="wrap">
-			<h2><?php _e( 'Status', 'gitium' ); ?> <code><?php _e( 'unconfigured', 'gitium' ); ?></code></h2>
-		
-		<form action="" method="POST">
-		<?php wp_nonce_field( 'gitium-admin' ); ?>
-
-		<table class="form-table">
+	private function setup_step_1_remote_url() {
+		?>
 		<tr>
 		<th scope="row"><label for="remote_url"><?php _e( 'Remote URL', 'gitium' ); ?></label></th>
 			<td>
@@ -123,29 +116,41 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 		<?php _e( 'If you need to authenticate over "https://" instead of SSH use: <code>https://user:pass@github.com/user/example.git</code>', 'gitium' ); ?></p>
 			</td>
 		</tr>
+		<?php
+	}
 
-		<?php if ( ! defined( 'GIT_KEY_FILE' ) || GIT_KEY_FILE == '' ) : ?>
-		<tr>
-		<th scope="row"><label for="key_pair"><?php _e( 'Key pair', 'gitium' ); ?></label></th>
-			<td>
-				<p>
-				<input type="text" class="regular-text" name="key_pair" id="key_pair" value="<?php echo esc_attr( $git_public_key ); ?>" readonly="readonly">
-				<input type="submit" name="SubmitRegenerateKeypair" class="button" value="<?php _e( 'Regenerate Key', 'gitium' ); ?>" />
+	private function setup_step_1_key_pair() {
+		if ( ! defined( 'GIT_KEY_FILE' ) || GIT_KEY_FILE == '' ) :
+			list( $git_public_key, ) = gitium_get_keypair(); ?>
+			<tr>
+			<th scope="row"><label for="key_pair"><?php _e( 'Key pair', 'gitium' ); ?></label></th>
+				<td>
+					<p>
+					<input type="text" class="regular-text" name="key_pair" id="key_pair" value="<?php echo esc_attr( $git_public_key ); ?>" readonly="readonly">
+					<input type="submit" name="SubmitRegenerateKeypair" class="button" value="<?php _e( 'Regenerate Key', 'gitium' ); ?>" />
+					</p>
+					<p class="description"><?php _e( 'If your use ssh keybased authentication for git you need to allow write access to your repository using this key.', 'gitium' ); ?><br />
+			<?php _e( 'Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="https://confluence.atlassian.com/display/BITBUCKET/Add+an+SSH+key+to+an+account#AddanSSHkeytoanaccount-HowtoaddakeyusingSSHforOSXorLinux" target="_blank">bitbucket</a>.', 'gitium' ); ?>
+					</p>
+				</td>
+			</tr>
+		<?php endif;
+	}
+
+	private function setup_step_1() {
+		?>
+		<div class="wrap">
+			<h2><?php _e( 'Status', 'gitium' ); ?> <code><?php _e( 'unconfigured', 'gitium' ); ?></code></h2>
+			<form action="" method="POST">
+				<?php wp_nonce_field( 'gitium-admin' ); ?>
+				<table class="form-table">
+					<?php $this->setup_step_1_remote_url(); ?>
+					<?php $this->setup_step_1_key_pair(); ?>
+				</table>
+				<p class="submit">
+				<input type="submit" name="SubmitFetch" class="button-primary" value="<?php _e( 'Fetch', 'gitium' ); ?>" />
 				</p>
-				<p class="description"><?php _e( 'If your use ssh keybased authentication for git you need to allow write access to your repository using this key.', 'gitium' ); ?><br />
-<?php _e( 'Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="https://confluence.atlassian.com/display/BITBUCKET/Add+an+SSH+key+to+an+account#AddanSSHkeytoanaccount-HowtoaddakeyusingSSHforOSXorLinux" target="_blank">bitbucket</a>.', 'gitium' ); ?>
-				</p>
-			</td>
-		</tr>
-		<?php endif; ?>
-
-		</table>
-
-		<p class="submit">
-		<input type="submit" name="SubmitFetch" class="button-primary" value="<?php _e( 'Fetch', 'gitium' ); ?>" />
-		</p>
-
-		</form>
+			</form>
 		</div>
 		<?php
 	}
