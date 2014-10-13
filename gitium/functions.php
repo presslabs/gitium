@@ -44,7 +44,7 @@ function gitium_get_versions() {
 function _gitium_commit_changes( $message, $dir = '.' ) {
 	global $git;
 
-	list( $git_public_key, $git_private_key ) = gitium_get_keypair();
+	list( , $git_private_key ) = gitium_get_keypair();
 	$git->set_key( $git_private_key );
 
 	$git->add( $dir );
@@ -65,7 +65,7 @@ function _gitium_format_message( $name, $version = false, $prefix = '' ) {
 }
 
 function _gitium_module_by_path( $path ) {
-/*
+	/*
   wp-content/themes/twentyten/style.css => array(
     'base_path' => wp-content/themes/twentyten
     'type' => 'theme'
@@ -97,7 +97,7 @@ function _gitium_module_by_path( $path ) {
     'name' => 'autover'
     'varsion' => 3.12
   )
-*/
+	*/
 	$versions = gitium_get_versions();
 	$module   = array(
 		'base_path' => $path,

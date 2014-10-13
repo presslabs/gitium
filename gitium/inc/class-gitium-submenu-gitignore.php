@@ -17,8 +17,6 @@
 
 class Gitium_Submenu_Gitignore extends Gitium_Menu {
 
-	private $gitignore_filename = '.gitignore';
-
 	public function __construct() {
 		parent::__construct( $this->gitium_menu_slug, $this->gitignore_menu_slug );
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );

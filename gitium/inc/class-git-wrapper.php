@@ -91,8 +91,7 @@ EOF;
 			foreach ( $args as $arg ) {
 				var_dump( $arg );
 			}
-			$out = ob_get_clean();
-			//error_log( $out );
+			ob_get_clean();
 		}
 	}
 

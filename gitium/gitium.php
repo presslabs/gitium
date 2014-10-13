@@ -48,7 +48,7 @@ add_action( 'plugins_loaded', 'gitium_load_textdomain' );
 
 function _gitium_make_ssh_git_file_exe() {
 	$ssh_wrapper = dirname( __FILE__ ) . '/inc/ssh-git';
-	$process     = proc_open(
+	proc_open(
 		"chmod -f +x $ssh_wrapper",
 		array(
 			0 => array( 'pipe', 'r' ),  // stdin
@@ -167,10 +167,9 @@ add_filter( 'upgrader_post_install', 'gitium_upgrader_post_install', 10, 3 );
 // Checks for local changes, tries to group them by plugin/theme and pushes the changes
 function gitium_auto_push( $msg_prepend = '' ) {
 	global $git;
-	list( $git_public_key, $git_private_key ) = gitium_get_keypair();
+	list( , $git_private_key ) = gitium_get_keypair();
 	$git->set_key( $git_private_key );
 
-	$remote_branch = $git->get_remote_tracking_branch();
 	$commits = gitium_group_commit_modified_plugins_and_themes( $msg_prepend );
 	gitium_merge_and_push( $commits );
 	gitium_update_versions();
