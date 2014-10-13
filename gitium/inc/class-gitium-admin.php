@@ -24,15 +24,20 @@ class Gitium_Admin {
 		$git->set_key( $git_private_key );
 
 		if ( current_user_can( 'manage_options' ) ) { // admin actions
-			new Gitium_Submenu_Status();
-
-			// those menus are visibile only when it is all set up
-			if ( $git->is_versioned() && $git->get_remote_tracking_branch() ) {
+			if ( $this->has_configuration() ) {
 				new Gitium_Menu_Bubble();
+				new Gitium_Submenu_Status();
 				new Gitium_Submenu_Commits();
 				new Gitium_Submenu_Gitignore();
+			} else {
+				new Gitium_Submenu_Configure();
 			}
 		}
+	}
+
+	public function has_configuration() {
+		global $git;
+		return $git->is_versioned() && $git->get_remote_tracking_branch();
 	}
 }
 
