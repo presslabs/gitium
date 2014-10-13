@@ -58,13 +58,14 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 		<tbody>
 		<?php
 		foreach ( $this->git->get_last_commits( GITIUM_LAST_COMMITS ) as $commit_id => $data ) {
-			$committer = '';
-			$committers_avatar = '';
 			unset( $committer_name );
 			extract( $data );
 			if ( isset( $committer_name ) ) {
 				$committer         = "<span title='$committer_email'> -> $committer_name " . sprintf( __( 'committed %s ago', 'gitium' ), human_time_diff( strtotime( $committer_date ) ) ) . '</span>';
 				$committers_avatar = '<div style="position:absolute; left:30px; border: 1px solid white; background:white; height:17px; top:30px; border-radius:2px">' . get_avatar( $committer_email, 16 ) . '</div>';
+			} else {
+				$committer = '';
+				$committers_avatar = '';
 			}
 			$this->table_start_row();
 			?>
