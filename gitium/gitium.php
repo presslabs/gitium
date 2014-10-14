@@ -48,7 +48,7 @@ add_action( 'plugins_loaded', 'gitium_load_textdomain' );
 
 function _gitium_make_ssh_git_file_exe() {
 	$ssh_wrapper = dirname( __FILE__ ) . '/inc/ssh-git';
-	proc_open(
+	$process = proc_open(
 		"chmod -f +x $ssh_wrapper",
 		array(
 			0 => array( 'pipe', 'r' ),  // stdin
@@ -56,7 +56,10 @@ function _gitium_make_ssh_git_file_exe() {
 		),
 		$pipes
 	);
-	fclose( $pipes[0] );
+	if ( is_resource( $process ) ) {
+		fclose( $pipes[0] );
+		proc_close( $process );
+	}
 }
 register_activation_hook( __FILE__, '_gitium_make_ssh_git_file_exe' );
 
