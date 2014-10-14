@@ -86,7 +86,8 @@ class Gitium_Help {
 		);
 	}
 
-	public function prepare( $screen = null, $tab ) {
+	public function prepare( $screen, $tab ) {
+		unset( $screen );
 		foreach ( $tab['callback'][0]->tabs[ $tab['id'] ]['help'] as $help ) {
 			printf( '<p>%s</p>', __( $help, 'gitium' ) );
 		}

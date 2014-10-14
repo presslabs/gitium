@@ -211,7 +211,7 @@ EOF;
 	}
 
 	function add_remote_url( $url ) {
-		list( $return, $response ) = $this->_call( 'remote', 'add', 'origin', $url );
+		list( $return, ) = $this->_call( 'remote', 'add', 'origin', $url );
 		return ( 0 == $return );
 	}
 
@@ -431,7 +431,7 @@ EOF;
 	}
 
 	function get_uncommited_changes() {
-		list( $branch_status, $changes ) = $this->status();
+		list( , $changes ) = $this->status();
 		return $changes;
 	}
 

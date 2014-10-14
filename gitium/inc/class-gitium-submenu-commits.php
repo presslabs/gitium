@@ -78,8 +78,8 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 			<td style="position:relative">
 				<div style="float:left; width:auto; height:auto; padding-left:2px; padding-right:5px; padding-top:2px; margin-right:5px; border-radius:2px"><?php echo get_avatar( $author_email, 32 ); ?></div>
 				<?php echo $committers_avatar; ?>
-				<div style="float:left; width:auto; height:auto;"><strong><?php echo $subject; ?></strong><br />
-				<span title="<?php echo esc_attr( $author_email ); ?>"><?php echo $author_name . ' ' . sprintf( __( 'authored %s ago', 'gitium' ), human_time_diff( strtotime( $author_date ) ) ); ?></span><?php echo $committer; ?></div>
+				<div style="float:left; width:auto; height:auto;"><strong><?php echo esc_html( $subject ); ?></strong><br />
+				<span title="<?php echo esc_attr( $author_email ); ?>"><?php echo esc_html( $author_name ) . ' ' . sprintf( __( 'authored %s ago', 'gitium' ), human_time_diff( strtotime( $author_date ) ) ); ?></span><?php echo $committer; ?></div>
 			</td>
 			<td><p style="padding-top:8px"><?php echo $commit_id; ?></p></td>
 		<?php
