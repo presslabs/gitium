@@ -144,13 +144,13 @@ EOF;
 			$this->repo_dir,
 			$env
 		);
-		fclose( $pipes[0] );
-
-		while ( $line = fgets( $pipes[1] ) ) {
-			$response[] = rtrim( $line, "\n\r" );
+		if ( is_resource( $proc ) ) {
+			fclose( $pipes[0] );
+			while ( $line = fgets( $pipes[1] ) ) {
+				$response[] = rtrim( $line, "\n\r" );
+			}
+			$return = (int)proc_close( $proc );
 		}
-		$return = (int)proc_close( $proc );
-
 		$this->_log( "$return $cmd", join( "\n", $response ) );
 		if ( isset( $env['GIT_KEY_FILE'] ) ) {
 			unlink( $env['GIT_KEY_FILE'] );
