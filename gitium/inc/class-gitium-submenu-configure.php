@@ -45,7 +45,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 			$this->menu_slug,
 			array( $this, 'page' )
 		);
-		new Gitium_Help( $submenu_hook, 'GITIUM_STATUS' );
+		new Gitium_Help( $submenu_hook, 'GITIUM_CONFIGURATION' );
 	}
 
 	public function init_process( $remote_url ) {
@@ -140,7 +140,8 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 	private function setup_step_1() {
 		?>
 		<div class="wrap">
-			<h2><?php _e( 'Status', 'gitium' ); ?> <code><?php _e( 'unconfigured', 'gitium' ); ?></code></h2>
+			<h2><?php _e( 'Configuration step 1', 'gitium' ); ?></h2>
+			<p><?php _e( 'If you need help to set this up, please click on the "Help" button from the top right corner of this screen.' ); ?></p>
 			<form action="" method="POST">
 				<?php wp_nonce_field( 'gitium-admin' ); ?>
 				<table class="form-table">
@@ -158,7 +159,9 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 	private function setup_step_2() {
 		$git = $this->git; ?>
 		<div class="wrap">
-		<h2>Status</h2>
+		<h2><?php _e( 'Configuration step 2', 'gitium' ); ?></h2>
+		<p><?php _e( 'If you need help to set this up, please click on the "Help" button from the top right corner of this screen.' ); ?></p>
+
 
 		<form action="" method="POST">
 		<?php wp_nonce_field( 'gitium-admin' ); ?>
