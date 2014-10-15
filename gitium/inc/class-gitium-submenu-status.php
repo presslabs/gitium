@@ -24,8 +24,6 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 			add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 			add_action( 'admin_init', array( $this, 'save_changes' ) );
 			add_action( 'admin_init', array( $this, 'save_ignorelist' ) );
-			add_action( 'admin_init', array( $this, 'regenerate_webhook' ) );
-			add_action( 'admin_init', array( $this, 'regenerate_keypair' ) );
 		}
 	}
 
@@ -118,26 +116,6 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		$this->success_redirect( sprintf( __( 'Pushed commit: `%s`', 'gitium' ), $commitmsg ) );
 	}
 
-	public function regenerate_webhook() {
-		if ( ! isset( $_POST['SubmitRegenerateWebhook'] ) ) {
-			return;
-		}
-		check_admin_referer( 'gitium-admin' );
-
-		gitium_get_webhook_key( true );
-		$this->success_redirect( __( 'Webhook URL regenerates. Please make sure you update any external references.', 'gitium' ) );
-	}
-
-	public function regenerate_keypair() {
-		if ( ! isset( $_POST['SubmitRegenerateKeypair'] ) ) {
-			return;
-		}
-		check_admin_referer( 'gitium-admin' );
-
-		gitium_get_keypair( true );
-		$this->success_redirect( __( 'Keypair successfully regenerated.', 'gitium' ) );
-	}
-
 	private function show_ahead_and_behind_info( $changes = '' ) {
 		$branch = $this->git->get_remote_tracking_branch();
 		$ahead  = count( $this->git->get_ahead_commits() );
@@ -211,46 +189,6 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		<?php
 	}
 
-	private function show_webhook_table_webhook_url() {
-		?>
-		<tr>
-			<th><label for="webhook-url"><?php _e( 'Webhook URL', 'gitium' ); ?>:</label></th>
-			<td>
-			  <p><code id="webhook-url"><?php echo esc_url( gitium_get_webhook() ); ?></code>
-			  <?php if ( ! defined( 'GIT_WEBHOOK_URL' ) || GIT_WEBHOOK_URL == '' ) : ?>
-			  <input type="submit" name="SubmitRegenerateWebhook" class="button" value="<?php _e( 'Regenerate Webhook', 'gitium' ); ?>" /></p>
-			  <?php endif; ?>
-			  <p class="description"><?php _e( 'Pinging this URL triggers an update from remote repository.', 'gitium' ); ?></p>
-			</td>
-		</tr>
-		<?php
-	}
-
-	private function show_webhook_table_public_key() {
-		list( $git_public_key, ) = gitium_get_keypair();
-		if ( ! defined( 'GIT_KEY_FILE' ) || GIT_KEY_FILE == '' ) : ?>
-			<tr>
-				<th><label for="public-key"><?php _e( 'Public Key', 'gitium' ); ?>:</label></th>
-				<td>
-					<p><input type="text" class="regular-text" name="public_key" id="public-key" value="<?php echo esc_attr( $git_public_key ); ?>" readonly="readonly">
-					<input type="submit" name="SubmitRegenerateKeypair" class="button" value="<?php _e( 'Regenerate Key', 'gitium' ); ?>" /></p>
-					<p class="description"><?php _e( 'If your use ssh keybased authentication for git you need to allow write access to your repository using this key.', 'gitium' ); ?><br />
-					<?php _e( 'Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="https://confluence.atlassian.com/display/BITBUCKET/Add+an+SSH+key+to+an+account#AddanSSHkeytoanaccount-HowtoaddakeyusingSSHforOSXorLinux" target="_blank">bitbucket</a>.', 'gitium' ); ?>
-					</p>
-				</td>
-			</tr>
-		<?php endif;
-	}
-
-	public function show_webhook_table() {
-		?>
-		<table class="form-table">
-			<?php $this->show_webhook_table_webhook_url() ?>
-			<?php $this->show_webhook_table_public_key(); ?>
-		</table>
-		<?php
-	}
-
 	private function show_git_changes_table_submit_buttons( $changes ) {
 		if ( ! empty( $changes ) ) : ?>
 			<p>
@@ -276,7 +214,6 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 			$this->show_ahead_and_behind_info( $changes );
 			$this->show_git_changes_table( $changes );
 			$this->show_git_changes_table_submit_buttons( $changes );
-			$this->show_webhook_table();
 		?>
 		</form>
 		</div>
