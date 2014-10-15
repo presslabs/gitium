@@ -78,16 +78,15 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 	}
 
 	public function save_ignorelist() {
-		if ( ! isset( $_POST['SubmitIgnore'] ) ) {
+		if ( ! isset( $_POST['path'] ) ) {
 			return;
-		}
-		if ( ! isset( $_POST['checked'] ) ) {
-			$this->redirect( __( 'There is no path selected in order to be added to the `.gitignore` file.', 'gitium' ), false, $this->gitium_menu_slug );
+		} else {
+			$path = $_POST['path'];
 		}
 		check_admin_referer( 'gitium-admin' );
 
-		if ( $this->git->set_gitignore( join( "\n", array_unique( array_merge( explode( "\n", $this->git->get_gitignore() ), $_POST['checked'] ) ) ) ) ) {
-			gitium_commit_gitignore_file();
+		if ( $this->git->set_gitignore( join( "\n", array_unique( array_merge( explode( "\n", $this->git->get_gitignore() ), array( $path ) ) ) ) ) ) {
+			gitium_commit_gitignore_file( $path );
 			$this->success_redirect( __( 'The file `.gitignore` is saved!', 'gitium' ), $this->gitium_menu_slug );
 		} else {
 			$this->redirect( __( 'The file `.gitignore` could not be saved!', 'gitium' ), false, $this->gitium_menu_slug );
@@ -123,7 +122,6 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		if ( ! isset( $_POST['SubmitRegenerateWebhook'] ) ) {
 			return;
 		}
-
 		check_admin_referer( 'gitium-admin' );
 
 		gitium_get_webhook_key( true );
@@ -134,7 +132,6 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		if ( ! isset( $_POST['SubmitRegenerateKeypair'] ) ) {
 			return;
 		}
-
 		check_admin_referer( 'gitium-admin' );
 
 		gitium_get_keypair( true );
@@ -163,20 +160,26 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		<?php
 	}
 
-	private function show_git_changes_table_head( $path ) {
-		?>
-			<th scope="row" class="check-column">
-				<label class="screen-reader-text" for="checkbox_<?php echo esc_attr( md5( $path ) ); ?>">Select <?php echo esc_html( $path ); ?></label>
-				<input type="checkbox" name="checked[]" value="<?php echo esc_html( $path ); ?>" id="checkbox_<?php echo esc_attr( md5( $path ) ); ?>" />
-			</th>
-		<?php
-	}
-
 	private function show_git_changes_table_rows( $changes = '' ) {
+		?>
+		<script type="application/javascript">
+		function add_path_and_submit( elem ) {
+			var container = document.getElementById( 'form_status' );
+			var input     = document.createElement( 'input' );
+			input.type    = 'hidden';
+			input.name    = 'path';
+			input.value   = elem;
+			container.appendChild( input );
+			container.submit();
+		}
+		</script>
+		<?php
+		$counter = 0;
 		foreach ( $changes as $path => $type ) :
-			echo '<tr>';
-			$this->show_git_changes_table_head( $path );
-			echo '<td><strong>' . esc_html( $path ) . '</strong></td>';
+			$counter++;
+			echo ( 0 != $counter % 2 ) ? '<tr class="alternate">' : '<tr>';
+			echo '<td><strong>' . esc_html( $path ) . '</strong>';
+			echo '<div class="row-actions"><span class="edit"><a href="#" onclick="add_path_and_submit(\'' . $path . '\');">' . __( 'Add this file to the `.gitignore` list.', 'gitium' ) . '</a></span></div></td>';
 			echo '<td>';
 			if ( is_dir( ABSPATH . '/' . $path ) && is_dir( ABSPATH . '/' . trailingslashit( $path ) . '.git' ) ) { // test if is submodule
 				_e( 'Submodules are not supported in this version.', 'gitium' );
@@ -191,12 +194,12 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 	private function show_git_changes_table( $changes = '' ) {
 		?>
 		<table class="widefat" id="git-changes-table">
-		<thead><tr><th scope="col" class="manage-column column-cb check-column"><input id="cb-select-all-1" type="checkbox"></th><th scope="col" class="manage-column"><?php _e( 'Path', 'gitium' ); ?></th><th scope="col" class="manage-column"><?php _e( 'Change', 'gitium' ); ?></th></tr></thead>
-		<tfoot><tr><th scope="col" class="manage-column column-cb check-column"><input id="cb-select-all-2" type="checkbox"></th><th scope="col" class="manage-column"><?php _e( 'Path', 'gitium' ); ?></th><th scope="col" class="manage-column"><?php _e( 'Change', 'gitium' ); ?></th></tr></tfoot>
+		<thead><tr><th scope="col" class="manage-column"><?php _e( 'Path', 'gitium' ); ?></th><th scope="col" class="manage-column"><?php _e( 'Change', 'gitium' ); ?></th></tr></thead>
+		<tfoot><tr><th scope="col" class="manage-column"><?php _e( 'Path', 'gitium' ); ?></th><th scope="col" class="manage-column"><?php _e( 'Change', 'gitium' ); ?></th></tr></tfoot>
 		<tbody>
 		<?php
 		if ( empty( $changes ) ) :
-			echo '<tr><th></th><td><p>';
+			echo '<tr><td><p>';
 			_e( 'Nothing to commit, working directory clean.', 'gitium' );
 			echo '</p></td></tr>';
 		else :
@@ -256,7 +259,6 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 			</p>
 			<p>
 			<input type="submit" name="SubmitSave" class="button-primary button" value="<?php _e( 'Save changes', 'gitium' ); ?>" <?php if ( get_transient( 'gitium_remote_disconnected', true ) ) { echo 'disabled="disabled" '; } ?>/>&nbsp;
-			<input type="submit" name="SubmitIgnore" class="button" value="<?php _e( 'Ignore', 'gitium' ); ?>" title="<?php _e( 'Push this button to add the selected files to `.gitignore` file', 'gitium' ); ?>" />
 			</p>
 		<?php endif;
 	}
@@ -268,7 +270,7 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		<div id="icon-options-general" class="icon32">&nbsp;</div>
 		<h2><?php _e( 'Status', 'gitium' ); ?> <code class="small"><?php _e( 'connected to', 'gitium' ); ?> <strong><?php echo esc_html( $this->git->get_remote_url() ); ?></strong></code></h2>
 
-		<form action="" method="POST">
+		<form name="form_status" id="form_status" action="" method="POST">
 		<?php
 			wp_nonce_field( 'gitium-admin' );
 			$this->show_ahead_and_behind_info( $changes );

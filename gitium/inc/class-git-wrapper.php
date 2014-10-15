@@ -544,6 +544,14 @@ EOF;
 	public function get_gitignore() {
 		return file_get_contents( $this->repo_dir . '/.gitignore' );
 	}
+
+	/**
+	 * Remove files in .gitignore from version control
+	 */
+	function rm_cached( $path ) {
+		list( $return, ) = $this->_call( 'rm', '--cached', $path );
+		return ( $return == 0 );
+	}
 }
 
 if ( ! defined( 'GIT_DIR' ) ) {

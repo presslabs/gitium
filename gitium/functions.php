@@ -164,13 +164,13 @@ function gitium_group_commit_modified_plugins_and_themes( $msg_append = '' ) {
 	return $commits;
 }
 
-function gitium_commit_gitignore_file() {
+function gitium_commit_gitignore_file( $path ) {
 	global $git;
 
 	$current_user = wp_get_current_user();
+	$git->rm_cached( $path );
 	$git->add( '.gitignore' );
 	$commit = $git->commit( 'Update the `.gitignore` file', $current_user->display_name, $current_user->user_email );
-	gitium_merge_and_push( $commit );
 }
 
 // Merges the commits with remote and pushes them back
@@ -304,5 +304,3 @@ function gitium_get_webhook() {
 function gitium_has_the_minimum_version() {
 	return '1.7' <= substr( get_transient( 'gitium_version', '' ), 0, 3 );
 }
-
-
