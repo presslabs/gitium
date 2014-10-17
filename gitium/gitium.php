@@ -36,7 +36,7 @@ require_once __DIR__ . '/inc/class-gitium-menu-bubble.php';
 require_once __DIR__ . '/inc/class-gitium-submenu-configure.php';
 require_once __DIR__ . '/inc/class-gitium-submenu-status.php';
 require_once __DIR__ . '/inc/class-gitium-submenu-commits.php';
-require_once __DIR__ . '/inc/class-gitium-submenu-gitignore.php';
+require_once __DIR__ . '/inc/class-gitium-submenu-settings.php';
 
 /**
  * Load plugin textdomain.
@@ -207,11 +207,11 @@ add_action( 'load-themes.php', 'gitium_check_for_themes_deletions' );
 function gitium_hook_plugin_and_theme_editor_page( $hook ) {
 	switch ( $hook ) {
 		case 'plugin-editor.php':
-			if ( 'te' == $_GET['a'] ) { gitium_auto_push(); }
+			if ( isset( $_GET['a'] ) && 'te' == $_GET['a'] ) { gitium_auto_push(); }
 		break;
 
 		case 'theme-editor.php':
-			if ( 'true' == $_GET['updated'] ) { gitium_auto_push(); }
+			if ( isset( $_GET['updated'] ) && 'true' == $_GET['updated'] ) { gitium_auto_push(); }
 		break;
 	}
 	return;

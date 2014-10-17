@@ -39,6 +39,20 @@ class Gitium_Help {
 				'<strong>How does gitium handle submodules?</strong><br />Currently submodules are not supported.',
 			)
 		),
+		'GITIUM_CONFIGURATION' => array(
+			'general' => false,
+			'title'   => 'Configuration',
+			'help'    => array(
+				'<strong>Configuration step 1</strong><br />In this step you must specify the <code>Remote URL</code>. This URL represents the link between the git sistem and your site.',
+				'You can get this URL from your Git repository and it looks like this:',
+				'github.com -> git@github.com:user/example.git',
+				'bitbucket.org -> git@bitbucket.org:user/glowing-happiness.git',
+				'To go to the next step, fill the <code>Remote URL</code> and then press the <code>Fetch</code> button.',
+				'<strong>Configuration step 2</strong><br />In this step you must select the <code>branch</code> you want to follow.',
+				'Only this branch will have all of your code modifications.',
+				'When you push the button <code>Merge & Push</code>, all code(plugins & themes) will be pushed on the git repository.',
+			),
+		),
 		'GITIUM_STATUS' => array(
 			'general' => false,
 			'title'   => 'Status',
@@ -55,11 +69,10 @@ class Gitium_Help {
 				'So, if you send in a patch to a project and one of the core members applies the patch, both of you get credit — you as the author and the core member as the committer.',
 			),
 		),
-		'GITIUM_GITIGNORE' => array(
+		'GITIUM_SETTINGS' => array(
 			'general' => false,
-			'title'   => 'Gitignore',
+			'title'   => 'Settings',
 			'help'    => array(
-				'<span style="color:red;">Be careful when you modify this list!</span>',
 				'Each line in a gitignore file specifies a pattern.',
 				'When deciding whether to ignore a path, Git normally checks gitignore patterns from multiple sources, with the following order of precedence, from highest to lowest (within one level of precedence, the last matching pattern decides the outcome)',
 				'Read more on <a href="http://git-scm.com/docs/gitignore" target="_blank">git documentation</a>',

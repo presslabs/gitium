@@ -92,7 +92,7 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 	}
 
 	public function save_changes() {
-		if ( ! isset( $_POST['SubmitSave'] ) ) {
+		if ( ! isset( $_POST['GitiumSubmitSaveChanges'] ) ) {
 			return;
 		}
 		check_admin_referer( 'gitium-admin' );
@@ -196,7 +196,7 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 			<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="<?php printf( __( 'Merged changes from %s on %s', 'gitium' ), get_site_url(), date( 'm.d.Y' ) ); ?>" />
 			</p>
 			<p>
-			<input type="submit" name="SubmitSave" class="button-primary button" value="<?php _e( 'Save changes', 'gitium' ); ?>" <?php if ( get_transient( 'gitium_remote_disconnected', true ) ) { echo 'disabled="disabled" '; } ?>/>&nbsp;
+			<input type="submit" name="GitiumSubmitSaveChanges" class="button-primary button" value="<?php _e( 'Save changes', 'gitium' ); ?>" <?php if ( get_transient( 'gitium_remote_disconnected', true ) ) { echo 'disabled="disabled" '; } ?>/>&nbsp;
 			</p>
 		<?php endif;
 	}

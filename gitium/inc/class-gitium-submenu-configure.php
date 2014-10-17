@@ -22,6 +22,8 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 
 		if ( current_user_can( 'manage_options' ) ) {
 			add_action( 'admin_menu', array( $this, 'admin_menu' ) );
+			add_action( 'admin_init', array( $this, 'regenerate_keypair' ) );
+			add_action( 'admin_init', array( $this, 'gitium_warning' ) );
 			add_action( 'admin_init', array( $this, 'init_repo' ) );
 			add_action( 'admin_init', array( $this, 'choose_branch' ) );
 		}
@@ -48,6 +50,23 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 		new Gitium_Help( $submenu_hook, 'GITIUM_CONFIGURATION' );
 	}
 
+	public function regenerate_keypair() {
+		if ( ! isset( $_POST['GitiumSubmitRegenerateKeypair'] ) ) {
+			return;
+		}
+		check_admin_referer( 'gitium-admin' );
+		gitium_get_keypair( true );
+		$this->success_redirect( __( 'Keypair successfully regenerated.', 'gitium' ) );
+	}
+
+	public function gitium_warning() {
+		if ( ! isset( $_POST['GitiumSubmitWarning'] ) ) {
+			return;
+		}
+		check_admin_referer( 'gitium-admin' );
+		$this->git->remove_wp_content_from_version_control();
+	}
+
 	public function init_process( $remote_url ) {
 		$git = $this->git;
 		$git->init();
@@ -66,16 +85,14 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 	}
 
 	public function init_repo() {
-		if ( ! isset( $_POST['SubmitFetch'] ) || ! isset( $_POST['remote_url'] ) ) {
+		if ( ! isset( $_POST['GitiumSubmitFetch'] ) || ! isset( $_POST['remote_url'] ) ) {
 			return;
 		}
-
 		check_admin_referer( 'gitium-admin' );
 
 		if ( empty( $_POST['remote_url'] ) ) {
 			$this->redirect( __( 'Please specify a valid repo.', 'gitium' ) );
 		}
-
 		if ( $this->init_process( $_POST['remote_url'] ) ) {
 			$this->success_redirect();
 		} else {
@@ -84,7 +101,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 	}
 
 	public function choose_branch() {
-		if ( ! isset( $_POST['SubmitMergeAndPush'] ) || ! isset( $_POST['tracking_branch'] ) ) {
+		if ( ! isset( $_POST['GitiumSubmitMergeAndPush'] ) || ! isset( $_POST['tracking_branch'] ) ) {
 			return;
 		}
 		check_admin_referer( 'gitium-admin' );
@@ -127,14 +144,28 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 				<td>
 					<p>
 					<input type="text" class="regular-text" name="key_pair" id="key_pair" value="<?php echo esc_attr( $git_public_key ); ?>" readonly="readonly">
-					<input type="submit" name="SubmitRegenerateKeypair" class="button" value="<?php _e( 'Regenerate Key', 'gitium' ); ?>" />
+					<input type="submit" name="GitiumSubmitRegenerateKeypair" class="button" value="<?php _e( 'Regenerate Key', 'gitium' ); ?>" />
 					</p>
-					<p class="description"><?php _e( 'If your use ssh keybased authentication for git you need to allow write access to your repository using this key.', 'gitium' ); ?><br />
+					<p class="description"><?php _e( 'If your code use ssh keybased authentication for git you need to allow write access to your repository using this key.', 'gitium' ); ?><br />
 			<?php _e( 'Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="https://confluence.atlassian.com/display/BITBUCKET/Add+an+SSH+key+to+an+account#AddanSSHkeytoanaccount-HowtoaddakeyusingSSHforOSXorLinux" target="_blank">bitbucket</a>.', 'gitium' ); ?>
 					</p>
 				</td>
 			</tr>
 		<?php endif;
+	}
+
+	private function setup_warning() {
+		?>
+		<div class="wrap">
+			<h2><?php _e( 'Warning!', 'gitium' ); ?></h2>
+			<form name="gitium_form_warning" id="gitium_form_warning" action="" method="POST">
+				<?php wp_nonce_field( 'gitium-admin' ); ?>
+				<p><code>wp-content</code> is already under version control. You <a onclick="document.getElementById('gitium_form_warning').submit();" style="color:red;" href="#">must remove it from version control</a> in order to continue.</p>
+				<p><strong>NOTE</strong> by doing this you WILL LOSE commit history, but NOT the actual files.</p>
+				<input type="hidden" name="GitiumSubmitWarning" class="button-primary" value="1" />
+			</form>
+		</div>
+		<?php
 	}
 
 	private function setup_step_1() {
@@ -149,7 +180,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 					<?php $this->setup_step_1_key_pair(); ?>
 				</table>
 				<p class="submit">
-				<input type="submit" name="SubmitFetch" class="button-primary" value="<?php _e( 'Fetch', 'gitium' ); ?>" />
+				<input type="submit" name="GitiumSubmitFetch" class="button-primary" value="<?php _e( 'Fetch', 'gitium' ); ?>" />
 				</p>
 			</form>
 		</div>
@@ -181,7 +212,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 		</table>
 
 		<p class="submit">
-		<input type="submit" name="SubmitMergeAndPush" class="button-primary" value="<?php _e( 'Merge & Push', 'gitium' ); ?>" />
+		<input type="submit" name="GitiumSubmitMergeAndPush" class="button-primary" value="<?php _e( 'Merge & Push', 'gitium' ); ?>" />
 		</p>
 		</form>
 		</div>
@@ -190,6 +221,10 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 
 	public function page() {
 		$this->show_message();
+
+		if ( wp_content_is_versioned() ) {
+			return $this->setup_warning();
+		}
 
 		if ( ! $this->git->is_versioned() ) {
 			return $this->setup_step_1();

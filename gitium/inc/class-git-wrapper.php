@@ -552,6 +552,23 @@ EOF;
 		list( $return, ) = $this->_call( 'rm', '--cached', $path );
 		return ( $return == 0 );
 	}
+
+	function remove_wp_content_from_version_control() {
+		$process = proc_open(
+			'rm -rf ' . ABSPATH . '/wp-content/.git',
+			array(
+				0 => array( 'pipe', 'r' ),  // stdin
+				1 => array( 'pipe', 'w' ),  // stdout
+			),
+			$pipes
+		);
+		if ( is_resource( $process ) ) {
+			fclose( $pipes[0] );
+			proc_close( $process );
+			return true;
+		}
+		return false;
+	}
 }
 
 if ( ! defined( 'GIT_DIR' ) ) {

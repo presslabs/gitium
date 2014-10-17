@@ -28,7 +28,7 @@ class Gitium_Admin {
 				new Gitium_Menu_Bubble();
 				new Gitium_Submenu_Status();
 				new Gitium_Submenu_Commits();
-				new Gitium_Submenu_Gitignore();
+				new Gitium_Submenu_Settings();
 			} else {
 				new Gitium_Submenu_Configure();
 			}

@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Gitium\n"
-"POT-Creation-Date: 2014-08-29 17:56+0200\n"
-"PO-Revision-Date: 2014-08-29 17:57+0200\n"
+"POT-Creation-Date: 2014-10-17 12:50+0200\n"
+"PO-Revision-Date: 2014-10-17 17:31+0200\n"
 "Last-Translator: PressLabs <ping@presslabs.com>\n"
 "Language-Team: PressLabs <ping@presslabs.com>\n"
 "Language: English\n"
@@ -15,261 +15,309 @@ msgstr ""
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-SearchPath-0: ..\n"
 
-#: ../gitium-admin.php:45
-msgid "Git Status"
+#: ../inc/class-gitium-submenu-configure.php:33
+#: ../inc/class-gitium-submenu-configure.php:43
+msgid "Git Configuration"
 msgstr ""
 
-#: ../gitium-admin.php:46
-msgid "Code"
+#: ../inc/class-gitium-submenu-configure.php:44
+msgid "Configuration"
 msgstr ""
 
-#: ../gitium-admin.php:55
-msgid "untracked"
-msgstr ""
-
-#: ../gitium-admin.php:56
-msgid "modified on remote"
-msgstr ""
-
-#: ../gitium-admin.php:57
-msgid "added to remote"
-msgstr ""
-
-#: ../gitium-admin.php:58
-msgid "deleted from remote"
-msgstr ""
-
-#: ../gitium-admin.php:59 ../gitium-admin.php:63
-msgid "deleted from work tree"
-msgstr ""
-
-#: ../gitium-admin.php:60
-msgid "updated in work tree"
-msgstr ""
-
-#: ../gitium-admin.php:61 ../gitium-admin.php:62
-msgid "added to work tree"
-msgstr ""
-
-#: ../gitium-admin.php:72
-#, php-format
-msgid "renamed from `%s`"
-msgstr ""
-
-#: ../gitium-admin.php:108
+#: ../inc/class-gitium-submenu-configure.php:68
 msgid "Initial commit"
 msgstr ""
 
-#: ../gitium-admin.php:125
+#: ../inc/class-gitium-submenu-configure.php:84
 msgid "Please specify a valid repo."
 msgstr ""
 
-#: ../gitium-admin.php:131
+#: ../inc/class-gitium-submenu-configure.php:89
 msgid "Could not push to remote"
 msgstr ""
 
-#: ../gitium-admin.php:146
+#: ../inc/class-gitium-submenu-configure.php:103
 msgid "Merged existing code from "
 msgstr ""
 
-#: ../gitium-admin.php:149
+#: ../inc/class-gitium-submenu-configure.php:106
 msgid "Could not create initial commit -> "
 msgstr ""
 
-#: ../gitium-admin.php:153
+#: ../inc/class-gitium-submenu-configure.php:110
 msgid "Could not merge the initial commit -> "
 msgstr ""
 
-#: ../gitium-admin.php:167
-msgid "Could not enable the maintenance mode!"
-msgstr ""
-
-#: ../gitium-admin.php:169 ../gitium-admin.php:413
-#, php-format
-msgid "Merged changes from %s on %s"
-msgstr ""
-
-#: ../gitium-admin.php:177
-msgid "Could not commit!"
-msgstr ""
-
-#: ../gitium-admin.php:183
-msgid "Merge failed: "
-msgstr ""
-
-#: ../gitium-admin.php:185
-#, php-format
-msgid "Pushed commit: `%s`"
-msgstr ""
-
-#: ../gitium-admin.php:196
-msgid ""
-"Webhook URL regenerates. Please make sure you update any external references."
-msgstr ""
-
-#: ../gitium-admin.php:207
-msgid "Keypair successfully regenerated."
-msgstr ""
-
-#: ../gitium-admin.php:271 ../gitium-admin.php:400
-msgid "Status"
-msgstr ""
-
-#: ../gitium-admin.php:271
-msgid "unconfigured"
-msgstr ""
-
-#: ../gitium-admin.php:278
+#: ../inc/class-gitium-submenu-configure.php:119
 msgid "Remote URL"
 msgstr ""
 
-#: ../gitium-admin.php:281
+#: ../inc/class-gitium-submenu-configure.php:122
 msgid ""
 "This URL provide access to a Git repository via SSH, HTTPS, or Subversion."
 msgstr ""
 
-#: ../gitium-admin.php:282
+#: ../inc/class-gitium-submenu-configure.php:123
 msgid ""
 "If you need to authenticate over \"https://\" instead of SSH use: "
 "<code>https://user:pass@github.com/user/example.git</code>"
 msgstr ""
 
-#: ../gitium-admin.php:288
+#: ../inc/class-gitium-submenu-configure.php:133
 msgid "Key pair"
 msgstr ""
 
-#: ../gitium-admin.php:292 ../gitium-admin.php:437
+#: ../inc/class-gitium-submenu-configure.php:137
+#: ../inc/class-gitium-submenu-settings.php:80
 msgid "Regenerate Key"
 msgstr ""
 
-#: ../gitium-admin.php:294 ../gitium-admin.php:438
+#: ../inc/class-gitium-submenu-configure.php:139
 msgid ""
 "If your use ssh keybased authentication for git you need to allow write "
 "access to your repository using this key."
 msgstr ""
 
-#: ../gitium-admin.php:295 ../gitium-admin.php:439
-msgid ""
-"Checkout instructions for <a href=\"https://help.github.com/articles/"
-"generating-ssh-keys#step-3-add-your-ssh-key-to-github\" target=\"_blank"
-"\">github</a> or <a href=\"https://confluence.atlassian.com/display/"
-"BITBUCKET/Add+an+SSH+key+to+an+account#AddanSSHkeytoanaccount-"
-"HowtoaddakeyusingSSHforOSXorLinux\" target=\"_blank\">bitbucket</a>."
+#: ../inc/class-gitium-submenu-configure.php:143
+#: ../inc/class-gitium-submenu-settings.php:85
+#, php-format
+msgid "Checkout instructions for %s or %s."
 msgstr ""
 
-#: ../gitium-admin.php:304
+#: ../inc/class-gitium-submenu-configure.php:154
+msgid "Warning!"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-configure.php:168
+msgid "Configuration step 1"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-configure.php:169
+#: ../inc/class-gitium-submenu-configure.php:188
+msgid ""
+"If you need help to set this up, please click on the \"Help\" button from "
+"the top right corner of this screen."
+msgstr ""
+
+#: ../inc/class-gitium-submenu-configure.php:177
 msgid "Fetch"
 msgstr ""
 
-#: ../gitium-admin.php:322
+#: ../inc/class-gitium-submenu-configure.php:187
+msgid "Configuration step 2"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-configure.php:196
 msgid "Choose tracking branch"
 msgstr ""
 
-#: ../gitium-admin.php:335
+#: ../inc/class-gitium-submenu-configure.php:209
 msgid "Merge & Push"
 msgstr ""
 
-#: ../gitium-admin.php:348
+#: ../inc/class-gitium-submenu-status.php:32
+#: ../inc/class-gitium-submenu-status.php:42
+msgid "Git Status"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-status.php:43
+#: ../inc/class-gitium-submenu-status.php:209
+msgid "Status"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-status.php:53
+msgid "untracked"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-status.php:54
+msgid "modified on remote"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-status.php:55
+msgid "added to remote"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-status.php:56
+msgid "deleted from remote"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-status.php:57
+#: ../inc/class-gitium-submenu-status.php:61
+msgid "deleted from work tree"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-status.php:58
+msgid "updated in work tree"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-status.php:59
+#: ../inc/class-gitium-submenu-status.php:60
+msgid "added to work tree"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-status.php:73
+#, php-format
+msgid "renamed from `%s`"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-status.php:88
+#: ../inc/class-gitium-submenu-settings.php:110
+msgid "The file `.gitignore` is saved!"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-status.php:90
+#: ../inc/class-gitium-submenu-settings.php:112
+msgid "The file `.gitignore` could not be saved!"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-status.php:100
+msgid "Could not enable the maintenance mode!"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-status.php:102
+#: ../inc/class-gitium-submenu-status.php:196
+#, php-format
+msgid "Merged changes from %s on %s"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-status.php:109
+msgid "Could not commit!"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-status.php:114
+msgid "Merge failed: "
+msgstr ""
+
+#: ../inc/class-gitium-submenu-status.php:116
+#, php-format
+msgid "Pushed commit: `%s`"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-status.php:125
 #, php-format
 msgid "Following remote branch <code>%s</code>."
 msgstr ""
 
-#: ../gitium-admin.php:350
+#: ../inc/class-gitium-submenu-status.php:127
 msgid "Everything is up to date"
 msgstr ""
 
-#: ../gitium-admin.php:353
+#: ../inc/class-gitium-submenu-status.php:130
 #, php-format
 msgid "You are %s commits ahead and %s behind remote."
 msgstr ""
 
-#: ../gitium-admin.php:355
+#: ../inc/class-gitium-submenu-status.php:132
 #, php-format
 msgid "You are %s commits ahead remote."
 msgstr ""
 
-#: ../gitium-admin.php:357
+#: ../inc/class-gitium-submenu-status.php:134
 #, php-format
 msgid "You are %s commits behind remote."
 msgstr ""
 
-#: ../gitium-admin.php:367 ../gitium-admin.php:368
-msgid "Path"
+#: ../inc/class-gitium-submenu-status.php:160
+msgid "Add this file to the `.gitignore` list."
 msgstr ""
 
-#: ../gitium-admin.php:367 ../gitium-admin.php:368
-msgid "Change"
-msgstr ""
-
-#: ../gitium-admin.php:371
-msgid "Nothing to commit, working directory clean."
-msgstr ""
-
-#: ../gitium-admin.php:381
+#: ../inc/class-gitium-submenu-status.php:163
 msgid "Submodules are not supported in this version."
 msgstr ""
 
-#: ../gitium-admin.php:400
-msgid "connected to"
+#: ../inc/class-gitium-submenu-status.php:175
+#: ../inc/class-gitium-submenu-status.php:176
+msgid "Path"
 msgstr ""
 
-#: ../gitium-admin.php:412
+#: ../inc/class-gitium-submenu-status.php:175
+#: ../inc/class-gitium-submenu-status.php:176
+msgid "Change"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-status.php:181
+msgid "Nothing to commit, working directory clean."
+msgstr ""
+
+#: ../inc/class-gitium-submenu-status.php:195
 msgid "Commit message"
 msgstr ""
 
-#: ../gitium-admin.php:416
+#: ../inc/class-gitium-submenu-status.php:199
 msgid "Save changes"
 msgstr ""
 
-#: ../gitium-admin.php:422
+#: ../inc/class-gitium-submenu-status.php:209
+msgid "connected to"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-settings.php:32
+msgid "Settings"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-settings.php:46
+msgid ""
+"Webhook URL regenerates. Please make sure you update any external references."
+msgstr ""
+
+#: ../inc/class-gitium-submenu-settings.php:55
+msgid "Keypair successfully regenerated."
+msgstr ""
+
+#: ../inc/class-gitium-submenu-settings.php:61
 msgid "Webhook URL"
 msgstr ""
 
-#: ../gitium-admin.php:426
+#: ../inc/class-gitium-submenu-settings.php:65
 msgid "Regenerate Webhook"
 msgstr ""
 
-#: ../gitium-admin.php:428
+#: ../inc/class-gitium-submenu-settings.php:67
 msgid "Pinging this URL triggers an update from remote repository."
 msgstr ""
 
-#: ../gitium-admin.php:434
+#: ../inc/class-gitium-submenu-settings.php:77
 msgid "Public Key"
 msgstr ""
 
-#: ../gitium-webhook.php:32
-msgid "Git Sauce plugin require minimum `git version 1.7`!"
+#: ../inc/class-gitium-submenu-settings.php:81
+msgid ""
+"If your code use ssh keybased authentication for git you need to allow write "
+"access to your repository using this key."
 msgstr ""
 
-#: ../gitium-webhook.php:37
-msgid "Could not enable the maintenance mode!..."
+#: ../inc/class-gitium-submenu-settings.php:120
+msgid "Gitium Settings"
 msgstr ""
 
-#: ../gitium-webhook.php:39
+#: ../inc/class-gitium-submenu-settings.php:125
+msgid "Be careful when you modify this gitignore list!"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-settings.php:130
+msgid "Save"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-commits.php:28
+msgid "Git Commits"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-commits.php:29
+#: ../inc/class-gitium-submenu-commits.php:41
+msgid "Commits"
+msgstr ""
+
+#: ../inc/class-gitium-submenu-commits.php:61
 #, php-format
-msgid "Merged changes from %s on $s"
+msgid "Last %s commits"
 msgstr ""
 
-#: ../gitium-webhook.php:43
-msgid "Could not commit local changes!"
+#: ../inc/class-gitium-submenu-commits.php:70
+#, php-format
+msgid "committed %s ago"
 msgstr ""
 
-#: ../gitium-webhook.php:46
-msgid "Cound not fetch from remote repo."
-msgstr ""
-
-#: ../gitium-webhook.php:47
-msgid "Could not merge changes."
-msgstr ""
-
-#: ../gitium-webhook.php:52
-msgid "Push failed!"
-msgstr ""
-
-#: ../gitium-webhook.php:54
-msgid "Pull done!"
-msgstr ""
-
-#: ../gitium-webhook.php:56
-msgid "Cheating uh?"
+#: ../inc/class-gitium-submenu-commits.php:82
+#, php-format
+msgid "authored %s ago"
 msgstr ""
