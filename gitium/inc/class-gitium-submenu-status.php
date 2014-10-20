@@ -45,7 +45,7 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 			$this->menu_slug,
 			array( $this, 'page' )
 		);
-		new Gitium_Help( $submenu_hook, 'GITIUM_STATUS' );
+		new Gitium_Help( $submenu_hook, 'status' );
 	}
 
 	private function get_change_meanings() {

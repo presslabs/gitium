@@ -31,7 +31,7 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 			$this->submenu_slug,
 			array( $this, 'page' )
 		);
-		new Gitium_Help( $submenu_hook, 'GITIUM_COMMITS' );
+		new Gitium_Help( $submenu_hook, 'commits' );
 	}
 
 	public function table_head() {

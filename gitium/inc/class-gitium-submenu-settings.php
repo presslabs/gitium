@@ -34,7 +34,7 @@ class Gitium_Submenu_Settings extends Gitium_Menu {
 			$this->submenu_slug,
 			array( $this, 'page' )
 		);
-		new Gitium_Help( $submenu_hook, 'GITIUM_SETTINGS' );
+		new Gitium_Help( $submenu_hook, 'settings' );
 	}
 
 	public function regenerate_webhook() {
@@ -118,7 +118,7 @@ class Gitium_Submenu_Settings extends Gitium_Menu {
 		<form action="" method="POST">
 		<?php wp_nonce_field( 'gitium-settings' ) ?>
 
-		<p><?php _e( '<span style="color:red;">Be careful when you modify this list!</span>', 'gitium' ); ?></p>
+		<p><span style="color:red;"><?php _e( 'Be careful when you modify this list!', 'gitium' ); ?></span></p>
 		<textarea name="gitignore_content" rows="20" cols="140"><?php echo esc_html( $this->git->get_gitignore() ); ?></textarea>
 
 		<?php $this->show_webhook_table(); ?>
