@@ -206,7 +206,7 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		?>
 		<div class="wrap">
 		<div id="icon-options-general" class="icon32">&nbsp;</div>
-		<h2><?php _e( 'Status', 'gitium' ); ?> <code class="small"><?php _e( 'connected to', 'gitium' ); ?> <strong><?php echo esc_html( $this->git->get_remote_url() ); ?></strong></code></h2>
+		<h2><?php _e( 'Status', 'gitium' ); ?> <code class="small" style="background-color:forestgreen; color:whitesmoke;"><?php _e( 'connected to', 'gitium' ); ?> <strong><?php echo esc_html( $this->git->get_remote_url() ); ?></strong></code></h2>
 
 		<form name="form_status" id="form_status" action="" method="POST">
 		<?php
