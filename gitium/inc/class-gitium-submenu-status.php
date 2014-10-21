@@ -34,7 +34,7 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 			'manage_options',
 			$this->menu_slug,
 			array( $this, 'page' ),
-			'http://marius.trypl.com/wp-content/uploads/2014/09/gitium.png'
+			plugins_url( 'img/gitium.png', dirname( __FILE__ ) )
 		);
 
 		$submenu_hook = add_submenu_page(

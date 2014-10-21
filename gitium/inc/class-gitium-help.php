@@ -25,7 +25,7 @@ class Gitium_Help {
 		$screen = get_current_screen();
 		$screen->add_help_tab( array( 'id' => 'gitium', 'title' => __( 'Gitium', 'gitium' ), 'callback' => array( $this, 'gitium' ) ) );
 		$screen->add_help_tab( array( 'id' => 'faq', 'title' => __( 'F.A.Q.', 'gitium' ), 'callback' => array( $this, 'faq' ) ) );
-		$screen->set_help_sidebar( '<div style="width:auto; height:auto; float:right; padding-right:28px; padding-top:15px"><img src="http://cdn.presslabs.com/wp-content/themes/presslabs/img/gitium/gitium.svg" width="96"></div>' );
+		$screen->set_help_sidebar( '<div style="width:auto; height:auto; float:right; padding-right:28px; padding-top:15px"><img src="' . plugins_url( 'img/gitium.svg', dirname( __FILE__ ) ) . '" width="96"></div>' );
 	}
 
 	public function gitium() {
