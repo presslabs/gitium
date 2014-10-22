@@ -50,6 +50,30 @@ wp-includes/
 /index.php
 /license.txt
 /readme.html
+
+# de_DE
+/liesmich.html
+
+# it_IT
+/LEGGIMI.txt
+/licenza.html
+
+# da_DK
+/licens.html
+
+# es_ES, es_PE
+/licencia.txt
+
+# hu_HU
+/licenc.txt
+/olvasdel.html
+
+# sk_SK
+/licencia-sk_SK.txt
+
+# sv_SE
+/licens-sv_SE.txt
+
 /wp-activate.php
 /wp-blog-header.php
 /wp-comments-post.php
