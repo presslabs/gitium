@@ -58,8 +58,8 @@ class Gitium_UnitTestCase extends WP_UnitTestCase {
 	}
 
 	protected function gitium_init_process() {
-		$admin = new Gitium_Admin();
-		return $admin->init_process( $this->remote_repo );
+		$config = new Gitium_Submenu_Configure();
+		return $config->init_process( $this->remote_repo );
 	}
 
 	public function setup() {

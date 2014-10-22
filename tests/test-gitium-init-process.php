@@ -1,5 +1,4 @@
 <?php
-
 require_once 'gitium-unittestcase.php';
 
 class Test_Gitium_Init_Process extends Gitium_UnitTestCase {
@@ -9,8 +8,8 @@ class Test_Gitium_Init_Process extends Gitium_UnitTestCase {
 	}
 
 	function gitium_init_process() {
-		$admin = new Gitium_Admin();
-		return $admin->init_process( $this->remote_repo );
+		$config = new Gitium_Submenu_Configure();
+		return $config->init_process( $this->remote_repo );
 	}
 
 	function test_init_process() {
