@@ -122,7 +122,8 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		$behind = count( $this->git->get_behind_commits() );
 		?>
 		<p>
-		  <?php printf( __( 'Following remote branch <code>%s</code>.', 'gitium' ), $branch );
+			<?php printf( __( 'Following remote branch <code>%s</code>.', 'gitium' ), $branch );
+		?>&nbsp;<?php
 		if ( ! $ahead && ! $behind && empty( $changes ) ) {
 			_e( 'Everything is up to date', 'gitium' );
 		}
