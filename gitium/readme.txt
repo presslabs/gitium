@@ -1,11 +1,11 @@
 === Gitium ===
 
 Contributors: PressLabs
-Donate link: http://www.presslabs.com/
+Donate link: http://www.presslabs.com/gitium/
 Tags: git, version, versioning, deployment, version-control, github, bitbucket, travis, code, revision, testing, development, branch, production, staging, debug, plugin, gitium, presslabs, simple
 Requires at least: 3.9
-Tested up to: 3.9.1
-Stable tag: 0.4-beta
+Tested up to: 4.0
+Stable tag: 0.5-beta
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -19,7 +19,7 @@ Gitium is designed with sane development environments in mind, allowing staging 
 
 Gitium requires `git` command line tool with a minimum version of 1.7 installed on the server and the `proc_open` PHP function enabled.
 
-Gitium is the latest element discovered at [PressLabs](http://www.presslabs.com). Here is the [Github](https://github.com/PressLabs/gitium) repository.
+Gitium is the latest element discovered at [PressLabs](http://www.presslabs.com/gitium/).
 
 == Screenshots ==
 
@@ -68,6 +68,17 @@ Submodules are currently not supported.
 
 
 == Changelog ==
+
+= 0.5-beta =
+* Add `Last 20 Commits` menu page
+* Add WordPress Contextual Help menu
+* Add `Settings` menu page
+* Move `Webhook URL` and `Public Key` fields to `Settings` page
+* Add menu icon
+* The `.gitignore` file can be edited
+* Fix commit message on theme/plugin update event
+* Add Serbian translation (by Ogi Djuraskovic - http://firstsiteguide.com/)
+* Refactoring
 
 = 0.4-beta =
 * Add `Bitbucket` documentation link
