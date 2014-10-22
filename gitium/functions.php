@@ -16,7 +16,7 @@
 */
 
 function wp_content_is_versioned() {
-	return file_exists( ABSPATH . '/wp-content/.git' );
+	return file_exists( WP_CONTENT_DIR . '/.git' );
 }
 
 if ( ! function_exists( 'gitium_enable_maintenance_mode' ) ) :
