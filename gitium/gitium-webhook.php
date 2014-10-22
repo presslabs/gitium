@@ -29,7 +29,7 @@ function exit_with_error( $message ) {
 
 $webhook_key = get_option( 'gitium_webhook_key', '' );
 if ( ! empty ( $webhook_key ) && isset( $_GET['key'] ) && $webhook_key == $_GET['key'] ) :
-	( '1.7' <= substr( $git->get_version(), 0, 3 ) ) or wp_die( 'Git Sauce plugin require minimum `git version 1.7`!' );
+	( '1.7' <= substr( $git->get_version(), 0, 3 ) ) or wp_die( 'Gitium plugin require minimum `git version 1.7`!' );
 
 	list( $git_public_key, $git_private_key ) = gitium_get_keypair();
 	$git->set_key( $git_private_key );
