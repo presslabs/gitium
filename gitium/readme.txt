@@ -77,7 +77,6 @@ Submodules are currently not supported.
 * Add menu icon
 * The `.gitignore` file can be edited
 * Fix commit message on theme/plugin update event
-* Add Serbian translation (by Ogi Djuraskovic - http://firstsiteguide.com/)
 * Refactoring
 
 = 0.4-beta =
