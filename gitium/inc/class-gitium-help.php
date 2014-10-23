@@ -44,6 +44,12 @@ class Gitium_Help {
 	}
 
 	public function configuration() {
+		$screen = get_current_screen();
+		$screen->add_help_tab( array( 'id' => 'configuration', 'title' => __( 'Configuration', 'gitium' ), 'callback' => array( $this, 'configuration_callback' ) ) );
+		$this->general();
+	}
+
+	public function configuration_callback() {
 		echo '<p><strong>' . __( 'Configuration step 1', 'gitium' ) . '</strong><br />' . __( 'In this step you must specify the <code>Remote URL</code>. This URL represents the link between the git sistem and your site.', 'gitium' ) . '</p>';
 		echo '<p>' . __( 'You can get this URL from your Git repository and it looks like this:', 'gitium' ) . '</p>';
 		echo '<p>' . __( 'github.com -> git@github.com:user/example.git', 'gitium' ) . '</p>';

@@ -47,7 +47,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 			$this->menu_slug,
 			array( $this, 'page' )
 		);
-		new Gitium_Help( $submenu_hook, 'GITIUM_CONFIGURATION' );
+		new Gitium_Help( $submenu_hook, 'configuration' );
 	}
 
 	public function regenerate_keypair() {
