@@ -77,7 +77,7 @@ class Test_Gitium extends WP_UnitTestCase {
 		$path   = '';
 		$assert = _gitium_module_by_path( $path ) == array(
 			'base_path' => $path,
-			'type'      => 'other',
+			'type'      => 'file',
 			'name'      => basename( $path ),
 			'version'   => null,
 		);

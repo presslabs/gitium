@@ -25,10 +25,10 @@ class Gitium_Admin {
 
 		if ( current_user_can( 'manage_options' ) ) { // admin actions
 			if ( $this->has_configuration() ) {
-				new Gitium_Menu_Bubble();
 				new Gitium_Submenu_Status();
 				new Gitium_Submenu_Commits();
 				new Gitium_Submenu_Settings();
+				new Gitium_Menu_Bubble();
 			} else {
 				new Gitium_Submenu_Configure();
 			}

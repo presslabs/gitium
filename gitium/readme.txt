@@ -5,7 +5,7 @@ Donate link: http://www.presslabs.com/gitium/
 Tags: git, version, versioning, deployment, version-control, github, bitbucket, travis, code, revision, testing, development, branch, production, staging, debug, plugin, gitium, presslabs, simple
 Requires at least: 3.9
 Tested up to: 4.0
-Stable tag: 0.5-beta
+Stable tag: 0.5.1-beta
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -68,6 +68,10 @@ Submodules are currently not supported.
 
 
 == Changelog ==
+
+= 0.5.1-beta =
+* Update Serbian Translation (by [Ogi Djuraskovic](http://firstsiteguide.com/))
+* Fix Menu Bubble
 
 = 0.5-beta =
 * Add `Last 20 Commits` menu page

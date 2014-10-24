@@ -176,7 +176,7 @@ EOF;
 			$return = (int)proc_close( $proc );
 		}
 		$this->_log( "$return $cmd", join( "\n", $response ) );
-		if ( isset( $env['GIT_KEY_FILE'] ) ) {
+		if ( ! defined( 'GIT_KEY_FILE' ) && isset( $env['GIT_KEY_FILE'] ) ) {
 			unlink( $env['GIT_KEY_FILE'] );
 		}
 		if ( 0 != $return ) {
