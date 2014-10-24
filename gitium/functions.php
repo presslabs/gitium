@@ -105,7 +105,7 @@ function _gitium_module_by_path( $path ) {
 	$versions = gitium_get_versions();
 	$module   = array(
 		'base_path' => $path,
-		'type'      => 'other',
+		'type'      => 'file',
 		'name'      => basename( $path ),
 		'version'   => null,
 	);
