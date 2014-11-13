@@ -308,3 +308,13 @@ function gitium_get_webhook() {
 function gitium_has_the_minimum_version() {
 	return '1.7' <= substr( get_transient( 'gitium_git_version' ), 0, 3 );
 }
+
+function gitium_admin_init() {
+	global $git;
+
+	$git_version = get_transient( 'gitium_git_version' );
+	if ( false === $git_version ) {
+		set_transient( 'gitium_git_version', $git->get_version() );
+	}
+}
+add_action( 'admin_init', 'gitium_admin_init' );
