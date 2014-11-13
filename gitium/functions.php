@@ -38,7 +38,7 @@ if ( ! function_exists( 'gitium_disable_maintenance_mode' ) ) :
 endif;
 
 function gitium_get_versions() {
-	$versions = get_transient( 'gitium_versions', array() );
+	$versions = get_transient( 'gitium_versions' );
 	if ( empty( $versions ) ) {
 		$versions = gitium_update_versions();
 	}
@@ -217,7 +217,7 @@ function _gitium_status( $update_transient = false ) {
 		return $changes;
 	}
 
-	$git_version = get_transient( 'gitium_version', '' );
+	$git_version = get_transient( 'gitium_version' );
 	if ( empty( $git_version ) ) {
 		set_transient( 'gitium_version', $git->get_version() );
 	}
@@ -306,5 +306,5 @@ function gitium_get_webhook() {
 }
 
 function gitium_has_the_minimum_version() {
-	return '1.7' <= substr( get_transient( 'gitium_version', '' ), 0, 3 );
+	return '1.7' <= substr( get_transient( 'gitium_version' ), 0, 3 );
 }

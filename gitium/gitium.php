@@ -235,7 +235,7 @@ function gitium_require_minimum_version() {
 add_action( 'admin_notices', 'gitium_require_minimum_version' );
 
 function gitium_remote_disconnected_notice() {
-	if ( current_user_can( 'manage_options' ) && $message = get_transient( 'gitium_remote_disconnected', null ) ) : ?>
+	if ( current_user_can( 'manage_options' ) && $message = get_transient( 'gitium_remote_disconnected' ) ) : ?>
 		<div class="error-nag error">
 			<p>
 				Could not connect to remote repository.
