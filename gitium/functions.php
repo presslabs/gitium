@@ -218,7 +218,7 @@ function _gitium_status( $update_transient = false ) {
 	}
 
 	$git_version = get_transient( 'gitium_version' );
-	if ( empty( $git_version ) ) {
+	if ( false === $git_version ) {
 		set_transient( 'gitium_version', $git->get_version() );
 	}
 
