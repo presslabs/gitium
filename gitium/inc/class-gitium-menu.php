@@ -60,7 +60,7 @@ class Gitium_Menu {
 	public function show_message() {
 		if ( isset( $_GET['message'] ) && $_GET['message'] ) {
 			$type    = ( isset( $_GET['success'] ) && $_GET['success'] == 1 ? 'updated' : 'error' );
-			$message = get_transient( 'message_'. $_GET['message'], '' );
+			$message = get_transient( 'message_'. $_GET['message'] );
 			if ( ! empty( $message ) ) : ?>
 				<div class="<?php echo esc_attr( $type ); ?>"><p><?php echo esc_html( $message ); ?></p></div>
 			<?php endif;
