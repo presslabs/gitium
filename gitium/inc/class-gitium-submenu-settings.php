@@ -102,7 +102,7 @@ class Gitium_Submenu_Settings extends Gitium_Menu {
 		check_admin_referer( 'gitium-settings' );
 
 		if ( $this->git->set_gitignore( $_POST['gitignore_content'] ) ) {
-			gitium_commit_gitignore_file();
+			gitium_commit_and_push_gitignore_file();
 			$this->success_redirect( __( 'The file `.gitignore` is saved!', 'gitium' ), $this->settings_menu_slug );
 		} else {
 			$this->redirect( __( 'The file `.gitignore` could not be saved!', 'gitium' ), false, $this->settings_menu_slug );

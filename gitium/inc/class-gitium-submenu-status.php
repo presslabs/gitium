@@ -84,7 +84,7 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		check_admin_referer( 'gitium-admin' );
 
 		if ( $this->git->set_gitignore( join( "\n", array_unique( array_merge( explode( "\n", $this->git->get_gitignore() ), array( $path ) ) ) ) ) ) {
-			gitium_commit_gitignore_file( $path );
+			gitium_commit_and_push_gitignore_file( $path );
 			$this->success_redirect( __( 'The file `.gitignore` is saved!', 'gitium' ), $this->gitium_menu_slug );
 		} else {
 			$this->redirect( __( 'The file `.gitignore` could not be saved!', 'gitium' ), false, $this->gitium_menu_slug );
