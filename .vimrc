@@ -1,1 +1,0 @@
-:au BufWritePost *.php,*.js,*.css,*.json :silent !rsync -a --quiet --delete --rsync-path 'sudo rsync'  "$HOME/Documents/gitium/gitium/" bk1-z2.presslabs.net:/var/lib/presslabs/presslabs-repository/presslabs-marius/lib/gitium/
