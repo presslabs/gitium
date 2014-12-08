@@ -206,7 +206,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 					<option value="<?php echo esc_attr( $branch ); ?>"><?php echo esc_html( $branch ); ?></option>
 				<?php endforeach; ?>
 				</select>
-				<p class="description"><?php_e( 'Your code origin is set to', 'gitium' ); ?> <code><?php echo esc_html( $git->get_remote_url() ); ?></code></p>
+				<p class="description"><?php _e( 'Your code origin is set to', 'gitium' ); ?> <code><?php echo esc_html( $git->get_remote_url() ); ?></code></p>
 			</td>
 		</tr>
 		</table>
