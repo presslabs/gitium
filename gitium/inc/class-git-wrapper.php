@@ -202,7 +202,8 @@ EOF;
 	}
 
 	function get_version() {
-		list( , $version ) = $this->_call( 'version' );
+		list( $return, $version ) = $this->_call( 'version' );
+		if ( 0 != $return ) { return ''; }
 		if ( ! empty( $version[0] ) ) {
 			return substr( $version[0], 12 );
 		}

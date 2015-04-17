@@ -226,11 +226,19 @@ function gitium_options_page_check() {
 }
 
 function gitium_require_minimum_version() {
-	if ( current_user_can( 'manage_options' ) && ( ! gitium_has_the_minimum_version() ) ) : ?>
-		<div class="error-nag error">
-			<p>Gitium requires minimum git version 1.7!</p>
-		</div>
-	<?php endif;
+	if ( current_user_can( 'manage_options' ) && ( ! gitium_has_the_minimum_version() ) ) :
+		global $git;
+		$server_git_version = $git->get_version();
+		if ( empty( $server_git_version ) ) {
+			$git_message = 'There is no git installed on this server.';
+		} else {
+			$git_message = "The git version `$server_git_version` was found on the server.";
+		}
+		set_transient( 'gitium_git_version', $server_git_version );
+		?><div class="error-nag error">
+			<p>Gitium requires minimum git version `1.7`! <?php echo $git_message; ?></p>
+		</div><?php
+	endif;
 }
 add_action( 'admin_notices', 'gitium_require_minimum_version' );
 
