@@ -4,8 +4,8 @@ Contributors: PressLabs
 Donate link: http://www.presslabs.com/gitium/
 Tags: git, version, versioning, deployment, version-control, github, bitbucket, travis, code, revision, testing, development, branch, production, staging, debug, plugin, gitium, presslabs, simple
 Requires at least: 3.9
-Tested up to: 4.0
-Stable tag: 0.5.1-beta
+Tested up to: 4.1.2
+Stable tag: 0.5.2-beta
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -68,6 +68,23 @@ Submodules are currently not supported.
 
 
 == Changelog ==
+
+= 0.5.2-beta =
+* Add Contextual Help to Configuration page
+* Make the icon path relative
+* The key file is deleted properly
+* Update serbian translation
+* Make the resource type more specific
+* Fix Menu Bubble
+* Remove useless param for get_transient
+* Add Spanish Translation
+* Rename `gitium_version` transient
+* Fix git version notice
+* Delete .vimrc
+* Update .gitignore
+* Fix syntax error
+* Add better git version check
+* Fix add_query_arg vulnerability
 
 = 0.5.1-beta =
 * Update Serbian Translation (by [Ogi Djuraskovic](http://firstsiteguide.com/))
