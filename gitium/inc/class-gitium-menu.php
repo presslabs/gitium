@@ -42,13 +42,13 @@ class Gitium_Menu {
 		}
 		if ( '' === $menu_slug ) { $menu_slug = $this->menu_slug; }
 		$url = admin_url( 'admin.php?page=' . $menu_slug );
-		$url = add_query_arg(
+		$url = esc_url( add_query_arg(
 			array(
 				'message' => $message_id,
 				'success' => $success,
 			),
 			$url
-		);
+		) );
 		wp_safe_redirect( $url );
 		die();
 	}
