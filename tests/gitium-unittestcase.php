@@ -1,12 +1,12 @@
 <?php
 
 class Gitium_UnitTestCase extends WP_UnitTestCase {
-	protected $remote_repo        = null;
-	protected $local_file         = null;
-	protected $work_file          = null;
-	protected $work_fname         = 'work-file.txt';
-	protected $work_repo          = '/tmp/gitium-repo';
-	protected $delete_on_teardown = array();
+	public $remote_repo		   = null;
+	public $local_file		   = null;
+	public $work_file		   = null;
+	public $work_fname		   = 'work-file.txt';
+	public $work_repo		   = null;	// temp dir will be created by setup()
+	public $delete_on_teardown = array();
 
 	protected function _create_work_fresh_clone() {
 		if ( $this->work_repo ) {
@@ -105,7 +105,7 @@ class Gitium_UnitTestCase extends WP_UnitTestCase {
 		// remove the files of the test
 		exec( "rm -rf {$this->local_file} ; rm -rf {$this->work_repo}" );
 		foreach ( $this->delete_on_teardown as $file ) {
-			exec( "rm -rf $file" );
+			exec( "rm -rf " . escapeshellarg( $file ) );
 		}
 		$this->delete_on_teardown = array();
 	}

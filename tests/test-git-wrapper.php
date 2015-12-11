@@ -1,6 +1,7 @@
 <?php
 
 require_once 'gitium-unittestcase.php';
+require_once 'repl.php';
 
 class Test_Git_Wrapper extends Gitium_UnitTestCase {
 	/**
@@ -136,6 +137,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		$this->assertEmpty( $git->get_local_changes() );
 	}
 
+
 	function test_get_last_error() {
 		global $git;
 		$this->assertEmpty( $git->get_last_error() );
@@ -233,4 +235,29 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		$this->assertTrue( defined( 'GIT_DIR' ) );
 		$this->assertEquals( GIT_DIR, $git->repo_dir );
 	}
+
+	/**
+	 * Test paths with whitespaces get added and commited correctly
+	 */
+	function test_path_with_whitespace() {
+		global $git;
+		$dir = $git->repo_dir . "/some dir/";
+		$this->delete_on_teardown[] = $dir;
+		try {
+			mkdir( $dir, 0777, true );
+		} catch (Exception $_) { }
+		file_put_contents( $dir . "some file", "ana are mere" );
+		$git->add();
+		$changeset = $git->commit( "add path with whitespace" );
+		// chdir( $git->repo_dir );
+		$output = explode( "\n", shell_exec( "cd {$git->repo_dir} ; git show --name-status $changeset" ) );
+		$expected = array(
+			"    add path with whitespace",
+			"",
+			"A\tsome dir/some file");
+		$out = array_slice( $output, 4, -1 );
+		$this->assertEquals( $expected, $out );
+	}
+
+
 }

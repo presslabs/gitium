@@ -15,10 +15,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-class Git_Wrapper {
-
-	private $last_error = '';
-	private $gitignore  = <<<EOF
+define('GITIGNORE', <<<EOF
 *.log
 *.swp
 *.back
@@ -87,8 +84,14 @@ wp-includes/
 /wp-signup.php
 /wp-trackback.php
 /xmlrpc.php
-EOF;
+EOF
+);
 
+
+class Git_Wrapper {
+
+	private $last_error = '';
+	private $gitignore  = GITIGNORE;
 	function __construct( $repo_dir ) {
 		$this->repo_dir    = $repo_dir;
 		$this->private_key = '';
