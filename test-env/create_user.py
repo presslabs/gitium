@@ -51,6 +51,8 @@ def create_user():
 
 def exec_to_bash():
     username, groupname = create_user()
+    print("starting mysql")
+    shell("/etc/init.d/mysql start")
     print("dropping you to an interactive shell as {}".format(username))
     print("type CTRL+D to return to root shell")
     os.chdir('/code')
