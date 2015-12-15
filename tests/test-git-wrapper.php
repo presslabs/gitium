@@ -239,7 +239,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 	/**
 	 * Test paths with whitespaces get added and commited correctly
 	 */
-	function test_path_with_whitespace() {
+	function test_commit_path_with_whitespace() {
 		global $git;
 		$dir = $git->repo_dir . "/some dir/";
 		$this->delete_on_teardown[] = $dir;
@@ -257,6 +257,20 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 			"A\tsome dir/some file");
 		$out = array_slice( $output, 4, -1 );
 		$this->assertEquals( $expected, $out );
+	}
+
+	/**
+	 * Test is_dirty works for paths with whitespaces
+	 */
+	function test_is_dirty_with_whitespace() {
+		global $git;
+		$dir = $git->repo_dir . "/some dir/";
+		$this->delete_on_teardown[] = $dir;
+		try {
+			mkdir( $dir, 0777, true );
+		} catch (Exception $_) { }
+		file_put_contents( $dir . "some file", "ana are mere" );
+		$this->assertTrue( $git->is_dirty() );
 	}
 
 
