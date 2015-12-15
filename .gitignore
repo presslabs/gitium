@@ -2,3 +2,5 @@
 composer.lock
 .composer/cache
 .vimrc
+*.pyc
+*~
