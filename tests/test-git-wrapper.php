@@ -273,5 +273,24 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		$this->assertTrue( $git->is_dirty() );
 	}
 
+	/**
+	 * Test is_dirty works for paths with whitespaces
+	 */
+	function test_get_local_changes_with_whitespace() {
+		global $git;
+		$dir = $git->repo_dir . "/some dir/";
+		$this->delete_on_teardown[] = $dir;
+		try {
+			mkdir( $dir, 0777, true );
+		} catch (Exception $_) { }
+		file_put_contents( $dir . "some file", "ana are mere" );
+		$git->add();
+		// repl(get_defined_vars(), $this);
+		$this->assertEquals(
+			['some dir/some file' => 'modified'],
+			$git->get_local_changes()
+		);
+	}
+
 
 }

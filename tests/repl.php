@@ -19,6 +19,7 @@
 /* A Read-Eval-Print-Loop - Poor man's interactive debugger.
 
 usage: repl(get_defined_vars());
+       repl(get_defined_vars(), $this);
 
 You can pass in multiple expressions separated by semicolons;
 The value of the last expression will be returned.

@@ -447,6 +447,12 @@ class Git_Wrapper {
 				$y    = substr( $item, 1, 1 ); // Y shows the status of the work tree
 				$file = substr( $item, 3 );
 
+				if ( ( '"' == $file[0] ) && ('"' == $file[strlen( $file ) - 1] ) ) {
+					// git status --procelain will put quotes arround paths with whitespaces
+					// we don't want the quotes, let's get rid of them
+					$file = substr( $file, 1, strlen( $file ) - 2 );
+				}
+
 				if ( 'D' == $y ) {
 					$action = 'deleted';
 				} else {
