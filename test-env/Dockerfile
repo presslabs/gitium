@@ -1,5 +1,5 @@
 FROM ubuntu:latest
-MAINTAINER Radu Ciorba radu@devrandom.ro
+MAINTAINER Presslabs Engineering engineering@presslabs.com
 
 RUN apt-get -qq update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -yq install php5-cli php5-dev php5-curl php5-mysql git subversion wget mysql-client-5.5 mysql-server-5.5
