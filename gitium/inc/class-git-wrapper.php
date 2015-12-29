@@ -448,7 +448,7 @@ class Git_Wrapper {
 				$file = substr( $item, 3 );
 
 				if ( ( '"' == $file[0] ) && ('"' == $file[strlen( $file ) - 1] ) ) {
-					// git status --procelain will put quotes arround paths with whitespaces
+					// git status --porcelain will put quotes around paths with whitespaces
 					// we don't want the quotes, let's get rid of them
 					$file = substr( $file, 1, strlen( $file ) - 2 );
 				}

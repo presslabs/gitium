@@ -274,7 +274,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 	}
 
 	/**
-	 * Test is_dirty works for paths with whitespaces
+	 * Test get_local_changes for paths with whitespaces
 	 */
 	function test_get_local_changes_with_whitespace() {
 		global $git;
