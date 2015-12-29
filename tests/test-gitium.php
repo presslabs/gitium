@@ -1,5 +1,7 @@
 <?php
 
+require_once("repl.php");
+
 class Test_Gitium extends WP_UnitTestCase {
 	private $test_gitium_is_activated = false;
 	private $plugin = 'gitium/gitium.php';
@@ -128,13 +130,13 @@ class Test_Gitium extends WP_UnitTestCase {
 		$this->assertTrue( $assert );
 	}
 
-	function test_gitium_module_by_path_case_6() {
+	function test_gitium_module_by_path_unregistered_theme() {
 		$path   = 'wp-content/themes/mobile_pack_red/style.css.nokia.css';
 		$assert = _gitium_module_by_path( $path ) == array(
 			'base_path' => $path,
 			'type'      => 'theme',
 			'name'      => basename( $path ),
-			'version'   => null,
+			'version'   => null,  # this theme is not in the themes transient, so we can't determine version
 		);
 		$this->assertTrue( $assert );
 	}
@@ -148,6 +150,19 @@ class Test_Gitium extends WP_UnitTestCase {
 			'version'   => '3.2.1',
 		);
 		$this->assertTrue( $assert );
+	}
+
+	function test_gitium_module_by_path_with_whitespaces() {
+		$path	= 'wp-content/themes/hahaha/white space.css';
+		$module = _gitium_module_by_path( $path );
+
+		$expected = array(
+			'base_path' => 'wp-content/themes/hahaha',
+			'type'		=> 'theme',
+			'name'		=> 'Ha ha ha hi',
+			'version'	=> '0.0.1',
+		);
+		$this->assertEquals( $expected, $module );
 	}
 
 	/*	'??' => 'untracked',

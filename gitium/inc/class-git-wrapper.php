@@ -15,10 +15,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-class Git_Wrapper {
-
-	private $last_error = '';
-	private $gitignore  = <<<EOF
+define('GITIGNORE', <<<EOF
 *.log
 *.swp
 *.back
@@ -87,8 +84,14 @@ wp-includes/
 /wp-signup.php
 /wp-trackback.php
 /xmlrpc.php
-EOF;
+EOF
+);
 
+
+class Git_Wrapper {
+
+	private $last_error = '';
+	private $gitignore  = GITIGNORE;
 	function __construct( $repo_dir ) {
 		$this->repo_dir    = $repo_dir;
 		$this->private_key = '';
@@ -443,6 +446,12 @@ EOF;
 			foreach ( $response as $item ) :
 				$y    = substr( $item, 1, 1 ); // Y shows the status of the work tree
 				$file = substr( $item, 3 );
+
+				if ( ( '"' == $file[0] ) && ('"' == $file[strlen( $file ) - 1] ) ) {
+					// git status --porcelain will put quotes around paths with whitespaces
+					// we don't want the quotes, let's get rid of them
+					$file = substr( $file, 1, strlen( $file ) - 2 );
+				}
 
 				if ( 'D' == $y ) {
 					$action = 'deleted';
