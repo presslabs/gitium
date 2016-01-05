@@ -2,14 +2,14 @@
 /*
  * Plugin Name: Gitium
  * Version: 0.5.2-beta
- * Author: PressLabs
- * Author URI: http://www.presslabs.com
+ * Author: Presslabs
+ * Author URI: https://www.presslabs.com
  * License: GPL2
  * Description: Keep all your code on git version control system.
  * Text Domain: gitium
  * Domain Path: /languages/
  */
-/*  Copyright 2014-2015 PressLabs SRL <ping@presslabs.com>
+/*  Copyright 2014-2015 Presslabs SRL <ping@presslabs.com>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License, version 2, as

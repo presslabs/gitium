@@ -1,7 +1,7 @@
 === Gitium ===
 
-Contributors: PressLabs
-Donate link: http://www.presslabs.com/gitium/
+Contributors: Presslabs
+Donate link: https://www.presslabs.com/gitium/
 Tags: git, version, versioning, deployment, version-control, github, bitbucket, travis, code, revision, testing, development, branch, production, staging, debug, plugin, gitium, presslabs, simple
 Requires at least: 3.9
 Tested up to: 4.1.2
@@ -19,7 +19,7 @@ Gitium is designed with sane development environments in mind, allowing staging 
 
 Gitium requires `git` command line tool with a minimum version of 1.7 installed on the server and the `proc_open` PHP function enabled.
 
-Gitium is the latest element discovered at [PressLabs](http://www.presslabs.com/gitium/).
+Gitium is the latest element discovered at [Presslabs](https://www.presslabs.com/gitium/).
 
 == Screenshots ==
 
