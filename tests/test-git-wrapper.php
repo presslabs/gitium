@@ -120,6 +120,12 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		$this->assertEquals( $git->get_remote_url(), $this->remote_repo );
 	}
 
+	function test_remove_remote() {
+		global $git;
+		$this->assertTrue( $git->remove_remote() );
+		$this->assertEmpty( $git->get_remote_url() );
+	}
+
 	function test_get_local_changes() {
 		global $git;
 

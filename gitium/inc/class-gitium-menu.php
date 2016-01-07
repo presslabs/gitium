@@ -57,6 +57,17 @@ class Gitium_Menu {
 		$this->redirect( $message, true, $menu_slug );
 	}
 
+	public function disconnect_repository() {
+		if ( ! isset( $_POST['GitiumSubmitDisconnectRepository'] ) ) {
+			return;
+		}
+		check_admin_referer( 'gitium-admin' );
+		if ( ! $this->git->remove_remote() ) {
+			$this->redirect( 'Could not remove remote.', 'gitium' );
+		}
+		$this->success_redirect();
+	}
+
 	public function show_message() {
 		if ( isset( $_GET['message'] ) && $_GET['message'] ) {
 			$type    = ( isset( $_GET['success'] ) && $_GET['success'] == 1 ? 'updated' : 'error' );
@@ -65,5 +76,16 @@ class Gitium_Menu {
 				<div class="<?php echo esc_attr( $type ); ?>"><p><?php echo esc_html( $message ); ?></p></div>
 			<?php endif;
 		}
+	}
+
+	protected function show_disconnect_repository_button() {
+		?>
+		<form name="gitium_form_disconnect" id="gitium_form_disconnect" action="" method="POST">
+			<?php
+				wp_nonce_field( 'gitium-admin' );
+		  ?>
+			<input type="submit" name="GitiumSubmitDisconnectRepository" value='<?php _e( 'Disconnect from repo', 'gitium' ); ?>' class="button secondary" onclick="return confirm('<?php _e( 'Are you sure you want to disconnect from the remote repository?', 'gitium' ); ?>')"/>&nbsp;
+		</form>
+		<?php
 	}
 }
