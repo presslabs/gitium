@@ -26,6 +26,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 			add_action( 'admin_init', array( $this, 'gitium_warning' ) );
 			add_action( 'admin_init', array( $this, 'init_repo' ) );
 			add_action( 'admin_init', array( $this, 'choose_branch' ) );
+			add_action( 'admin_init', array( $this, 'disconnect_repository' ) );
 		}
 	}
 
@@ -215,6 +216,9 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 		<input type="submit" name="GitiumSubmitMergeAndPush" class="button-primary" value="<?php _e( 'Merge & Push', 'gitium' ); ?>" />
 		</p>
 		</form>
+		<?php
+			$this->show_disconnect_repository_button();
+		?>
 		</div>
 		<?php
 	}
@@ -226,7 +230,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 			return $this->setup_warning();
 		}
 
-		if ( ! $this->git->is_versioned() ) {
+		if ( ! $this->git->is_versioned() || ! $this->git->get_remote_url() ) {
 			return $this->setup_step_1();
 		}
 
