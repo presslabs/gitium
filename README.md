@@ -19,7 +19,7 @@ The plugin requires the `git` command line tool with a minimum version of 1.7 in
 server and the `proc_open` PHP function enabled.
 
 Gitium is the latest element discovered at
-[PressLabs](http://www.presslabs.com).
+[Presslabs](https://www.presslabs.com).
 
 ## Installation
 
