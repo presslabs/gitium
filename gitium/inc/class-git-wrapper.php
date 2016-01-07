@@ -252,7 +252,7 @@ class Git_Wrapper {
 	}
 
 	function remove_remote() {
-		list( $return, ) = $this->_call( 'remote', 'remove', 'origin');
+		list( $return, ) = $this->_call( 'remote', 'rm', 'origin');
 		return ( 0 == $return );
 	}
 
