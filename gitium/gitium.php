@@ -37,6 +37,7 @@ require_once __DIR__ . '/inc/class-gitium-submenu-configure.php';
 require_once __DIR__ . '/inc/class-gitium-submenu-status.php';
 require_once __DIR__ . '/inc/class-gitium-submenu-commits.php';
 require_once __DIR__ . '/inc/class-gitium-submenu-settings.php';
+require_once __DIR__ . '/inc/class-gitium-submenu-requirements.php';
 
 /**
  * Load plugin textdomain.
