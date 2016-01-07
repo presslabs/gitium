@@ -77,10 +77,10 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 	}
 
 	public function save_ignorelist() {
-		if ( ! isset( $_POST['path'] ) ) {
+		if ( ! isset( $_POST['GitiumIgnorePath'] ) ) {
 			return;
 		} else {
-			$path = $_POST['path'];
+			$path = $_POST['GitiumIgnorePath'];
 		}
 		check_admin_referer( 'gitium-admin' );
 
@@ -147,7 +147,7 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 			var container = document.getElementById( 'form_status' );
 			var input     = document.createElement( 'input' );
 			input.type    = 'hidden';
-			input.name    = 'path';
+			input.name    = 'GitiumIgnorePath';
 			input.value   = elem;
 			container.appendChild( input );
 			container.submit();
