@@ -251,6 +251,11 @@ class Git_Wrapper {
 		return '';
 	}
 
+	function remove_remote() {
+		list( $return, ) = $this->_call( 'remote', 'remove', 'origin');
+		return ( 0 == $return );
+	}
+
 	function get_remote_tracking_branch() {
 		list( $return, $response ) = $this->_call( 'rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}' );
 		if ( 0 == $return ) {

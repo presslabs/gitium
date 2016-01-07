@@ -24,6 +24,7 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 			add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 			add_action( 'admin_init', array( $this, 'save_changes' ) );
 			add_action( 'admin_init', array( $this, 'save_ignorelist' ) );
+			add_action( 'admin_init', array( $this, 'disconnect_repository' ) );
 		}
 	}
 
@@ -217,6 +218,9 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 			$this->show_git_changes_table_submit_buttons( $changes );
 		?>
 		</form>
+		<?php
+			$this->show_disconnect_repository_button();
+		?>
 		</div>
 		<?php
 	}
