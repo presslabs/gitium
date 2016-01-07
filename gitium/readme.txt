@@ -69,6 +69,9 @@ Submodules are currently not supported.
 
 == Changelog ==
 
+= 0.5.3-beta-unreleased =
+* Add a Disconnect from repo button
+
 = 0.5.2-beta =
 * Add Contextual Help to Configuration page
 * Make the icon path relative
