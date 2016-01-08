@@ -17,9 +17,10 @@
 
 class Gitium_Menu {
 
-	public $gitium_menu_slug   = 'gitium/gitium.php';
-	public $commits_menu_slug  = 'gitium/gitium-commits.php';
-	public $settings_menu_slug = 'gitium/gitium-settings.php';
+	public $gitium_menu_slug       = 'gitium/gitium.php';
+	public $commits_menu_slug      = 'gitium/gitium-commits.php';
+	public $settings_menu_slug     = 'gitium/gitium-settings.php';
+	public $requirements_menu_slug = 'gitium/gitium-requirements.php';
 	public $git = null;
 
 	public $menu_slug;

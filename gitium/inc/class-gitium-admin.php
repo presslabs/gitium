@@ -33,6 +33,8 @@ class Gitium_Admin {
 			} else {
 				new Gitium_Submenu_Configure();
 			}
+
+			new Gitium_Submenu_Requirements();
 		}
 	}
 
