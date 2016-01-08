@@ -228,8 +228,6 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 	public function page() {
 		$this->show_message();
 		_gitium_status( true );
-		if ( gitium_has_the_minimum_version() ) {
-			$this->changes_page();
-		}
+		$this->changes_page();
 	}
 }

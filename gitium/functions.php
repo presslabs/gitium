@@ -306,10 +306,6 @@ function gitium_get_webhook() {
 	return apply_filters( 'gitium_webhook_url', $url, $key );
 }
 
-function gitium_has_the_minimum_version() {
-	return '1.7' <= substr( get_transient( 'gitium_git_version' ), 0, 3 );
-}
-
 function gitium_admin_init() {
 	global $git;
 
