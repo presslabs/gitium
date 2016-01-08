@@ -29,6 +29,7 @@ define( 'GITIUM_LAST_COMMITS', 20 );
 
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/inc/class-git-wrapper.php';
+require_once __DIR__ . '/inc/class-gitium-requirements.php';
 require_once __DIR__ . '/inc/class-gitium-admin.php';
 require_once __DIR__ . '/inc/class-gitium-help.php';
 require_once __DIR__ . '/inc/class-gitium-menu.php';
