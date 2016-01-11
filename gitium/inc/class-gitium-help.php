@@ -102,18 +102,4 @@ class Gitium_Help {
 		echo '<p>' . __( 'When deciding whether to ignore a path, Git normally checks gitignore patterns from multiple sources, with the following order of precedence, from highest to lowest (within one level of precedence, the last matching pattern decides the outcome)', 'gitium' ) . '</p>';
 		echo '<p>' . sprintf( __( 'Read more on %s', 'gitium' ), '<a href="http://git-scm.com/docs/gitignore" target="_blank">git documentation</a>' ) . '</p>';
 	}
-
-	public function requirements() {
-		$screen = get_current_screen();
-		$screen->add_help_tab( array( 'id' => 'requirements', 'title' => __( 'Requirements', 'gitium' ), 'callback' => array( $this, 'requirements_callback' ) ) );
-		$this->general();
-	}
-
-	public function requirements_callback() {
-		echo '<p>' . __( 'Gitium requires:', 'gitium' ) . '</p>';
-		echo '<p>' . __( 'git version >= 1.7', 'gitium' ) . '</p>';
-		echo '<p>' . __( 'the function proc_open available', 'gitium' ) . '</p>';
-		echo '<p>' . __( 'PHP version >= 5.3', 'gitium' ) . '</p>';
-		echo '<p>' . __( 'can exec the file inc/ssh-git', 'gitium' ) . '</p>';
-	}
 }
