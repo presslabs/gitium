@@ -67,10 +67,6 @@ class Test_Gitium extends WP_UnitTestCase {
 		$this->assertGreaterThan( 0, has_action( 'admin_enqueue_scripts','gitium_hook_plugin_and_theme_editor_page' ) );
 	}
 
-	function test_has_action_gitium_require_minimum_version() {
-		$this->assertGreaterThan( 0, has_action( 'admin_notices','gitium_require_minimum_version' ) );
-	}
-
 	function test_has_action_gitium_remote_disconnected_notice() {
 		$this->assertGreaterThan( 0, has_action( 'admin_notices','gitium_remote_disconnected_notice' ) );
 	}
