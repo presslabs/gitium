@@ -92,7 +92,7 @@ class Gitium_Requirements {
 			if ( '5.3' <= substr( $php_version, 0, 3 ) ) {
 				return array( true, "The PHP version is `$php_version`." );
 			} else {
-				return array( false, "The PHP version is `$php_version` and is not greater/equal than/with 5.3!" );
+				return array( false, "The PHP version is `$php_version` and is not greater or equal to 5.3" );
 			}
 		}
 	}
