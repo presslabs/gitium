@@ -130,7 +130,7 @@ function _gitium_module_by_path( $path ) {
 			} else {
 				$plugin_base_path = 'wp-content/plugins/' . dirname( $plugin );
 			}
-			if ( 0 === strpos( $path, $plugin_base_path ) ) {
+			if ( ( dirname( $path ) === $plugin_base_path ) || ( $path === $plugin_base_path ) ) {
 				$module['base_path'] = $plugin_base_path;
 				$module['name']      = $data['name'];
 				$module['version']   = $data['version'];
