@@ -77,7 +77,7 @@ class Test_Gitium extends WP_UnitTestCase {
 		$this->assertGreaterThan( 0, has_action( 'admin_notices','gitium_remote_disconnected_notice' ) );
 	}
 
-	function test_gitium_module_by_path_case_1() {
+	function test_gitium_module_by_path_for_void_path() {
 		$path   = '';
 		$assert = _gitium_module_by_path( $path ) == array(
 			'base_path' => $path,
@@ -88,7 +88,7 @@ class Test_Gitium extends WP_UnitTestCase {
 		$this->assertTrue( $assert );
 	}
 
-	function test_gitium_module_by_path_case_2() {
+	function test_gitium_module_by_path_for_normal_plugin() {
 		$path   = 'wp-content/plugins/autover/autover.php';
 		$assert = _gitium_module_by_path( $path ) == array(
 			'base_path' => 'wp-content/plugins/autover',
@@ -99,7 +99,7 @@ class Test_Gitium extends WP_UnitTestCase {
 		$this->assertTrue( $assert );
 	}
 
-	function test_gitium_module_by_path_case_3() {
+	function test_gitium_module_by_path_for_one_file_plugin() {
 		$path   = 'wp-content/plugins/simple.php';
 		$assert = _gitium_module_by_path( $path ) == array(
 			'base_path' => 'wp-content/plugins/simple.php',
@@ -110,7 +110,7 @@ class Test_Gitium extends WP_UnitTestCase {
 		$this->assertTrue( $assert );
 	}
 
-	function test_gitium_module_by_path_case_4() {
+	function test_gitium_module_by_path_for_normal_theme() {
 		$path   = 'wp-content/themes/hahaha/style.css';
 		$assert = _gitium_module_by_path( $path ) == array(
 			'base_path' => 'wp-content/themes/hahaha',
@@ -121,7 +121,7 @@ class Test_Gitium extends WP_UnitTestCase {
 		$this->assertTrue( $assert );
 	}
 
-	function test_gitium_module_by_path_case_5() {
+	function test_gitium_module_by_path_for_image_file_theme() {
 		$path   = 'wp-content/themes/hahaha/img/logo.png';
 		$assert = _gitium_module_by_path( $path ) == array(
 			'base_path' => 'wp-content/themes/hahaha',
@@ -132,7 +132,7 @@ class Test_Gitium extends WP_UnitTestCase {
 		$this->assertTrue( $assert );
 	}
 
-	function test_gitium_module_by_path_unregistered_theme() {
+	function test_gitium_module_by_path_for_unregistered_theme() {
 		$path   = 'wp-content/themes/mobile_pack_red/style.css.nokia.css';
 		$assert = _gitium_module_by_path( $path ) == array(
 			'base_path' => $path,
@@ -143,26 +143,29 @@ class Test_Gitium extends WP_UnitTestCase {
 		$this->assertTrue( $assert );
 	}
 
-	function test_gitium_module_by_path_case_7() {
-		$path   = 'wp-content/plugins/struto-camila/camila.php';
+	/**
+	 * The struto-camila plugin represents in fact two plugins stored into the same directory
+	 */
+	function test_gitium_module_by_path_for_struto_camila_plugin() {
+		$path   = 'wp-content/plugins/struto-camila/readme.txt';
 		$assert = _gitium_module_by_path( $path ) == array(
 			'base_path' => 'wp-content/plugins/struto-camila',
 			'type'      => 'plugin',
-			'name'      => 'Strutul',
-			'version'   => '3.2.1',
+			'name'      => 'Camila',
+			'version'   => '1.0.1',
 		);
 		$this->assertTrue( $assert );
 	}
 
-	function test_gitium_module_by_path_with_whitespaces() {
-		$path	= 'wp-content/themes/hahaha/white space.css';
+	function test_gitium_module_by_path_with_whitespaces_in_theme() {
+		$path   = 'wp-content/themes/hahaha/white space.css';
 		$module = _gitium_module_by_path( $path );
 
 		$expected = array(
 			'base_path' => 'wp-content/themes/hahaha',
-			'type'		=> 'theme',
-			'name'		=> 'Ha ha ha hi',
-			'version'	=> '0.0.1',
+			'type'      => 'theme',
+			'name'      => 'Ha ha ha hi',
+			'version'   => '0.0.1',
 		);
 		$this->assertEquals( $expected, $module );
 	}
@@ -194,77 +197,77 @@ class Test_Gitium extends WP_UnitTestCase {
 		'AM' => 'added to work tree',
 		'R'  => 'deleted from work tree',
 	 */
-	function test_gitium_humanized_change_case_1() {
+	function test_gitium_humanized_change_default_case() {
 		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'test', $admin->humanized_change( 'test' ) );
 	}
 
-	function test_gitium_humanized_change_case_2() {
+	function test_gitium_humanized_change_void_case() {
 		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( '', $admin->humanized_change( '' ) );
 	}
 
-	function test_gitium_humanized_change_case_3() {
+	function test_gitium_humanized_change_null_case() {
 		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( null, $admin->humanized_change( null ) );
 	}
 
-	function test_gitium_humanized_change_case_4() {
+	function test_gitium_humanized_change_wonder_case() {
 		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'untracked', $admin->humanized_change( '??' ) );
 	}
 
-	function test_gitium_humanized_change_case_5() {
+	function test_gitium_humanized_change_rM_case() {
 		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'modified on remote', $admin->humanized_change( 'rM' ) );
 	}
 
-	function test_gitium_humanized_change_case_6() {
+	function test_gitium_humanized_change_rA_case() {
 		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'added to remote', $admin->humanized_change( 'rA' ) );
 	}
 
-	function test_gitium_humanized_change_case_7() {
+	function test_gitium_humanized_change_rD_case() {
 		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'deleted from remote', $admin->humanized_change( 'rD' ) );
 	}
 
-	function test_gitium_humanized_change_case_8() {
+	function test_gitium_humanized_change_D_case() {
 		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'deleted from work tree', $admin->humanized_change( 'D' ) );
 	}
 
-	function test_gitium_humanized_change_case_9() {
+	function test_gitium_humanized_change_M_case() {
 		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'updated in work tree', $admin->humanized_change( 'M' ) );
 	}
 
-	function test_gitium_humanized_change_case_10() {
+	function test_gitium_humanized_change_A_case() {
 		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'added to work tree', $admin->humanized_change( 'A' ) );
 	}
 
-	function test_gitium_humanized_change_case_11() {
+	function test_gitium_humanized_change_AM_case() {
 		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'added to work tree', $admin->humanized_change( 'AM' ) );
 	}
 
-	function test_gitium_humanized_change_case_12() {
+	function test_gitium_humanized_change_deleted_case() {
 		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'deleted from work tree', $admin->humanized_change( 'R' ) );
 	}
 
-	function test_gitium_humanized_change_case_13() {
+	function test_gitium_humanized_change_renamed_case() {
 		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 'renamed from `myfile.txt`', $admin->humanized_change( 'R myfile.txt' ) );
 	}
 
-	function test_gitium_humanized_change_case_14() {
+	function test_gitium_humanized_change_number_case() {
 		$admin = new Gitium_Submenu_Status();
 		$this->assertEquals( 100, $admin->humanized_change( 100 ) );
 	}
 
-	function test_gitium_humanized_change_case_15() {
+	function test_gitium_humanized_change_admin_role() {
 		$this->user_id = $this->factory->user->create( array( 'role' => 'administrator' ) );
 		wp_set_current_user( $this->user_id );
 		$this->assertTrue( current_user_can( 'manage_options' ) );
