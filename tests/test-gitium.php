@@ -16,11 +16,11 @@ class Test_Gitium extends WP_UnitTestCase {
 			'gitium_versions',
 			array(
 				'plugins' => array(
+					'autover/autover.php'             => array( 'name' => 'AutoVer', 'version' => '1.2.3' ),
 					'gitium/gitium.php'               => array( 'name' => 'Gitium', 'version' => '1.0' ),
 					'gitium-pltest/gitium-pltest.php' => array( 'name' => 'Gitium PL Test', 'version' => '2.1' ),
-					'struto-camila/strutul.php'       => array( 'name' => 'Strutul', 'version' => '3.2.1' ),
 					'struto-camila/camila.php'        => array( 'name' => 'Camila', 'version' => '1.0.1' ),
-					'autover/autover.php'             => array( 'name' => 'AutoVer', 'version' => '1.2.3' ),
+					'struto-camila/strutul.php'       => array( 'name' => 'Strutul', 'version' => '3.2.1' ),
 					'simple.php'                      => array( 'name' => 'Simple', 'version' => '9.0' )
 				),
 				'themes' => array(
