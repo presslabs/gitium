@@ -23,15 +23,15 @@ class Gitium_Requirements {
 
 	/**
 	 * Gitium requires:
-	 * git version >= 1.7
+	 * git min version
 	 * the function proc_open available
-	 * PHP version >= 5.3
+	 * PHP min version
 	 * can exec the file inc/ssh-git
 	 */
 	public function __construct() {
-		list( $this->req['is_git_version_gt_1_7'], $this->msg['is_git_version_gt_1_7'] ) = $this->is_git_version_gt_1_7();
+		list( $this->req['is_git_version'],        $this->msg['is_git_version'] )        = $this->is_git_version();
 		list( $this->req['is_proc_open'],          $this->msg['is_proc_open']          ) = $this->is_proc_open();
-		list( $this->req['is_php_verion_gt_5_3'],  $this->msg['is_php_verion_gt_5_3']  ) = $this->is_php_version_gt_5_3();
+		list( $this->req['is_php_verion'],         $this->msg['is_php_verion']  )        = $this->is_php_version();
 		list( $this->req['can_exec_ssh_git_file'], $this->msg['can_exec_ssh_git_file'] ) = $this->can_exec_ssh_git_file();
 
 		if ( false === $this->status ) {
@@ -59,17 +59,17 @@ class Gitium_Requirements {
 		return true;
 	}
 
-	private function is_git_version_gt_1_7() {
+	private function is_git_version() {
 		$git_version = get_transient( 'gitium_git_version' );
 
-		if ( '1.7' > substr( $git_version, 0, 3 ) ) {
+		if ( GITIUM_MIN_GIT_VER > substr( $git_version, 0, 3 ) ) {
 			global $git;
 			$git_version = $git->get_version();
 			set_transient( 'gitium_git_version', $git_version );
 			if ( empty( $git_version ) ) {
 				return array( false, 'There is no git installed on this server.' );
-			} else if ( '1.7' > substr( $git_version, 0, 3 ) ) {
-				return array( false, "The git version is `$git_version` and must be greater than `1.7`!" );
+			} else if ( GITIUM_MIN_GIT_VER > substr( $git_version, 0, 3 ) ) {
+				return array( false, "The git version is `$git_version` and must be greater than `" . GITIUM_MIN_GIT_VER . "`!" );
 			}
 		}
 
@@ -84,15 +84,15 @@ class Gitium_Requirements {
 		}
 	}
 
-	private function is_php_version_gt_5_3() {
+	private function is_php_version() {
 		if ( ! function_exists( 'phpversion' ) ) {
 			return array( false, 'The function `phpversion` is disabled!' );
 		} else {
 			$php_version = phpversion();
-			if ( '5.3' <= substr( $php_version, 0, 3 ) ) {
+			if ( GITIUM_MIN_PHP_VER <= substr( $php_version, 0, 3 ) ) {
 				return array( true, "The PHP version is `$php_version`." );
 			} else {
-				return array( false, "The PHP version is `$php_version` and is not greater or equal to 5.3" );
+				return array( false, "The PHP version is `$php_version` and is not greater or equal to " . GITIUM_MIN_PHP_VER );
 			}
 		}
 	}

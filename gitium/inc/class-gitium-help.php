@@ -46,10 +46,11 @@ class Gitium_Help {
 
 	public function requirements_callback() {
 		echo '<p>' . __( 'Gitium requires:', 'gitium' ) . '</p>';
-		echo '<p>' . __( 'git version >= 1.7', 'gitium' ) . '</p>';
 		echo '<p>' . __( 'the function proc_open available', 'gitium' ) . '</p>';
-		echo '<p>' . __( 'PHP version >= 5.3', 'gitium' ) . '</p>';
 		echo '<p>' . __( 'can exec the file inc/ssh-git', 'gitium' ) . '</p>';
+
+		printf( '<p>' . __( 'git version >= %s', 'gitium' ) . '</p>', GITIUM_MIN_GIT_VER );
+		printf( '<p>' . __( 'PHP version >= %s', 'gitium' ) . '</p>', GITIUM_MIN_PHP_VER );
 	}
 
 	public function configuration() {

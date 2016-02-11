@@ -26,6 +26,8 @@
 */
 
 define( 'GITIUM_LAST_COMMITS', 20 );
+define( 'GITIUM_MIN_GIT_VER', '1.7' );
+define( 'GITIUM_MIN_PHP_VER', '5.3' );
 
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/inc/class-git-wrapper.php';
