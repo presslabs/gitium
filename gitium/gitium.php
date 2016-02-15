@@ -1,7 +1,7 @@
 <?php
 /*
  * Plugin Name: Gitium
- * Version: 0.5.3-beta
+ * Version: 0.5.4-beta
  * Author: Presslabs
  * Author URI: https://www.presslabs.com
  * License: GPL2
@@ -9,7 +9,7 @@
  * Text Domain: gitium
  * Domain Path: /languages/
  */
-/*  Copyright 2014-2015 Presslabs SRL <ping@presslabs.com>
+/*  Copyright 2014-2016 Presslabs SRL <ping@presslabs.com>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License, version 2, as
@@ -26,9 +26,12 @@
 */
 
 define( 'GITIUM_LAST_COMMITS', 20 );
+define( 'GITIUM_MIN_GIT_VER', '1.7' );
+define( 'GITIUM_MIN_PHP_VER', '5.3' );
 
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/inc/class-git-wrapper.php';
+require_once __DIR__ . '/inc/class-gitium-requirements.php';
 require_once __DIR__ . '/inc/class-gitium-admin.php';
 require_once __DIR__ . '/inc/class-gitium-help.php';
 require_once __DIR__ . '/inc/class-gitium-menu.php';
@@ -38,9 +41,6 @@ require_once __DIR__ . '/inc/class-gitium-submenu-status.php';
 require_once __DIR__ . '/inc/class-gitium-submenu-commits.php';
 require_once __DIR__ . '/inc/class-gitium-submenu-settings.php';
 
-/**
- * Load plugin textdomain.
- */
 function gitium_load_textdomain() {
 	load_plugin_textdomain( 'gitium', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 }
@@ -224,23 +224,6 @@ function gitium_options_page_check() {
 	if ( ! $git->can_exec_git() ) { wp_die( 'Cannot exec git' ); }
 	return true;
 }
-
-function gitium_require_minimum_version() {
-	if ( current_user_can( 'manage_options' ) && ( ! gitium_has_the_minimum_version() ) ) :
-		global $git;
-		$server_git_version = $git->get_version();
-		if ( empty( $server_git_version ) ) {
-			$git_message = 'There is no git installed on this server.';
-		} else {
-			$git_message = "The git version `$server_git_version` was found on the server.";
-		}
-		set_transient( 'gitium_git_version', $server_git_version );
-		?><div class="error-nag error">
-			<p>Gitium requires minimum git version `1.7`! <?php echo $git_message; ?></p>
-		</div><?php
-	endif;
-}
-add_action( 'admin_notices', 'gitium_require_minimum_version' );
 
 function gitium_remote_disconnected_notice() {
 	if ( current_user_can( 'manage_options' ) && $message = get_transient( 'gitium_remote_disconnected' ) ) : ?>

@@ -1,5 +1,5 @@
 <?php
-/*  Copyright 2014-2015 Presslabs SRL <ping@presslabs.com>
+/*  Copyright 2014-2016 Presslabs SRL <ping@presslabs.com>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License, version 2, as
@@ -24,6 +24,7 @@ class Gitium_Admin {
 		$git->set_key( $git_private_key );
 
 		if ( current_user_can( 'manage_options' ) ) { // admin actions
+			new Gitium_Requirements();
 			if ( $this->has_configuration() ) {
 				new Gitium_Submenu_Status();
 				new Gitium_Submenu_Commits();

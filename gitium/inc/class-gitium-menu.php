@@ -1,5 +1,5 @@
 <?php
-/*  Copyright 2014-2015 Presslabs SRL <ping@presslabs.com>
+/*  Copyright 2014-2016 Presslabs SRL <ping@presslabs.com>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License, version 2, as
@@ -17,9 +17,10 @@
 
 class Gitium_Menu {
 
-	public $gitium_menu_slug   = 'gitium/gitium.php';
-	public $commits_menu_slug  = 'gitium/gitium-commits.php';
-	public $settings_menu_slug = 'gitium/gitium-settings.php';
+	public $gitium_menu_slug       = 'gitium/gitium.php';
+	public $commits_menu_slug      = 'gitium/gitium-commits.php';
+	public $settings_menu_slug     = 'gitium/gitium-settings.php';
+	public $requirements_menu_slug = 'gitium/gitium-requirements.php';
 	public $git = null;
 
 	public $menu_slug;

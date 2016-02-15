@@ -1,5 +1,5 @@
 <?php
-/*  Copyright 2014-2015 Presslabs SRL <ping@presslabs.com>
+/*  Copyright 2014-2016 Presslabs SRL <ping@presslabs.com>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License, version 2, as
@@ -228,8 +228,6 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 	public function page() {
 		$this->show_message();
 		_gitium_status( true );
-		if ( gitium_has_the_minimum_version() ) {
-			$this->changes_page();
-		}
+		$this->changes_page();
 	}
 }

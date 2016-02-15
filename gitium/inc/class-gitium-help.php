@@ -1,5 +1,5 @@
 <?php
-/*  Copyright 2014-2015 Presslabs SRL <ping@presslabs.com>
+/*  Copyright 2014-2016 Presslabs SRL <ping@presslabs.com>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License, version 2, as
@@ -25,6 +25,7 @@ class Gitium_Help {
 		$screen = get_current_screen();
 		$screen->add_help_tab( array( 'id' => 'gitium', 'title' => __( 'Gitium', 'gitium' ), 'callback' => array( $this, 'gitium' ) ) );
 		$screen->add_help_tab( array( 'id' => 'faq', 'title' => __( 'F.A.Q.', 'gitium' ), 'callback' => array( $this, 'faq' ) ) );
+		$screen->add_help_tab( array( 'id' => 'requirements', 'title' => __( 'Requirements', 'gitium' ), 'callback' => array( $this, 'requirements_callback' ) ) );
 		$screen->set_help_sidebar( '<div style="width:auto; height:auto; float:right; padding-right:28px; padding-top:15px"><img src="' . plugins_url( 'img/gitium.svg', dirname( __FILE__ ) ) . '" width="96"></div>' );
 	}
 
@@ -41,6 +42,15 @@ class Gitium_Help {
 		echo '<p><strong>' . __( 'How to deploy automatically after a push?', 'gitium' ) . '</strong><br />'. __( 'You can ping the webhook url after a push to automatically deploy the new code. The webhook url can be found under Code menu. This url plays well with Github or Bitbucket webhooks.', 'gitium' ) . '</p>';
 		echo '<p><strong>' . __( 'Does it works on multi site setups?', 'gitium' ) . '</strong><br />'. __( 'Gitium is not supporting multisite setups at the moment.', 'gitium' ) . '</p>';
 		echo '<p><strong>' . __( 'How does gitium handle submodules?', 'gitium' ) . '</strong><br />'. __( 'Currently submodules are not supported.', 'gitium' ) . '</p>';
+	}
+
+	public function requirements_callback() {
+		echo '<p>' . __( 'Gitium requires:', 'gitium' ) . '</p>';
+		echo '<p>' . __( 'the function proc_open available', 'gitium' ) . '</p>';
+		echo '<p>' . __( 'can exec the file inc/ssh-git', 'gitium' ) . '</p>';
+
+		printf( '<p>' . __( 'git version >= %s', 'gitium' ) . '</p>', GITIUM_MIN_GIT_VER );
+		printf( '<p>' . __( 'PHP version >= %s', 'gitium' ) . '</p>', GITIUM_MIN_PHP_VER );
 	}
 
 	public function configuration() {
