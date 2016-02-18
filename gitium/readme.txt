@@ -69,7 +69,7 @@ Submodules are currently not supported.
 
 == Changelog ==
 
-= 0.5.4-beta-unreleased =
+= 0.5.4-beta =
 * Fix bug missing changes on similarly named plugins
 * Add requirements notices
 * Add requirements help section
