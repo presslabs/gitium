@@ -3,7 +3,7 @@
 Contributors: Presslabs
 Donate link: https://www.presslabs.com/gitium/
 Tags: git, version, versioning, deployment, version-control, github, bitbucket, travis, code, revision, testing, development, branch, production, staging, debug, plugin, gitium, presslabs, simple
-Requires at least: 4.4.2
+Requires at least: 3.9
 Tested up to: 4.4.2
 Stable tag: 0.5.5-beta
 License: GPLv2
