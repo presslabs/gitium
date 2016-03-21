@@ -1,7 +1,7 @@
 <?php
 /*
  * Plugin Name: Gitium
- * Version: 0.5.4-beta
+ * Version: 0.5.5-beta
  * Author: Presslabs
  * Author URI: https://www.presslabs.com
  * License: GPL2

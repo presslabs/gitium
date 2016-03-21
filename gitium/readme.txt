@@ -4,8 +4,8 @@ Contributors: Presslabs
 Donate link: https://www.presslabs.com/gitium/
 Tags: git, version, versioning, deployment, version-control, github, bitbucket, travis, code, revision, testing, development, branch, production, staging, debug, plugin, gitium, presslabs, simple
 Requires at least: 3.9
-Tested up to: 4.4.1
-Stable tag: 0.5.4-beta
+Tested up to: 4.4.2
+Stable tag: 0.5.5-beta
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -68,6 +68,9 @@ Submodules are currently not supported.
 
 
 == Changelog ==
+
+= 0.5.5-beta =
+* Fix bug plugin deletion from plugins page did not trigger commit
 
 = 0.5.4-beta =
 * Fix bug missing changes on similarly named plugins
