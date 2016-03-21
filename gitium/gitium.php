@@ -194,7 +194,7 @@ function gitium_check_for_plugin_deletions() { // Handle plugin deletion
     // $_GET['deleted'] used to resemble if a plugin has been deleted (true)
     // ...meanwhile commit b28dd45f3dad19f0e06c546fdc89ed5b24bacd72 in github.com/WordPress/WordPress...
     // Now it resembles the number of deleted plugins (a number). Thanks WP
-	if ( isset( $_GET['deleted'] ) && (1 <= (int) $_GET['deleted'] || 'true' == $_GET['deleted'] ) ) {
+	if ( isset( $_GET['deleted'] ) && ( 1 <= (int) $_GET['deleted'] || 'true' == $_GET['deleted'] ) ) {
 		gitium_auto_push();
 	}
 }
