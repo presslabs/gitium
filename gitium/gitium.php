@@ -191,7 +191,7 @@ function gitium_check_after_deactivate_modifications( $plugin ) {
 add_action( 'deactivated_plugin', 'gitium_check_after_deactivate_modifications', 999 );
 
 function gitium_check_for_plugin_deletions() { // Handle plugin deletion
-	if ( isset( $_GET['deleted'] ) && 'true' == $_GET['deleted'] ) {
+	if ( isset( $_GET['deleted'] ) && '1' == $_GET['deleted'] ) {
 		gitium_auto_push();
 	}
 }
