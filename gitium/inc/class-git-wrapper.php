@@ -613,4 +613,8 @@ class Git_Wrapper {
 if ( ! defined( 'GIT_DIR' ) ) {
 	define( 'GIT_DIR', dirname( WP_CONTENT_DIR ) );
 }
+
+# global is needed here for wp-cli as it includes/exec files inside a function scope
+# this forces the context to really be global :\.
+global $git;
 $git = new Git_Wrapper( GIT_DIR );
