@@ -40,7 +40,7 @@ if ( ! empty ( $webhook_key ) && isset( $_GET['key'] ) && $webhook_key == $_GET[
 	$commits   = array();
 
 	if ( $git->is_dirty() && $git->add() > 0 ) {
-		$commits[] = $git->commit( $commitmsg ) or wp_die( 'Could not commit local changes!' );
+		$commits[] = $git->commit( $commitmsg ) or exit_with_error( 'Could not commit local changes!' );
 	}
 
 	$git->fetch_ref() or exit_with_error( 'Cound not fetch from remote repo.' );
