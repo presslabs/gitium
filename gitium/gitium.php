@@ -126,7 +126,7 @@ add_action( 'load-plugins.php', 'gitium_update_versions', 999 );
 function gitium_upgrader_post_install( $res, $hook_extra, $result ) {
 	_gitium_make_ssh_git_file_exe();
 
-	$type    = isset( $hook_extra['theme']) ? 'theme' : 'plugin';
+	$type    = isset( $hook_extra['type']) ? 'theme' : 'plugin';
 	$action  = isset( $hook_extra['action']) ? $hook_extra['action'] : 'updated';
 	$action  = ( 'install' === $action ) ? 'installed' : $action ;
 	$git_dir = $result['destination'];
