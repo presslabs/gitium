@@ -77,6 +77,8 @@ register_activation_hook( __FILE__, '_gitium_make_ssh_git_file_exe' );
 
 ) */
 function gitium_update_versions() {
+	$new_versions = '';
+
 	// get all themes from WP
 	$all_themes = wp_get_themes( array( 'allowed' => true ) );
 	foreach ( $all_themes as $theme_name => $theme ) :
@@ -117,6 +119,7 @@ function gitium_update_versions() {
 	if ( ! empty( $plugin_versions ) ) {
 		$new_versions['plugins'] = $plugin_versions;
 	}
+
 	set_transient( 'gitium_versions', $new_versions );
 
 	return $new_versions;
