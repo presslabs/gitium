@@ -110,7 +110,7 @@ function _gitium_module_by_path( $path ) {
 		'version'   => null,
 	);
 
-	if ( 0 === strpos( $path, 'wp-content/themes/' ) ) {
+	if ( array_key_exists( 'themes', $versions ) && 0 === strpos( $path, 'wp-content/themes/' ) ) {
 		$module['type'] = 'theme';
 		foreach ( $versions['themes'] as $theme => $data ) {
 			if ( 0 === strpos( $path, 'wp-content/themes/' . $theme ) ) {
@@ -122,7 +122,7 @@ function _gitium_module_by_path( $path ) {
 		}
 	}
 
-	if ( 0 === strpos( $path, 'wp-content/plugins/' ) ) {
+	if ( array_key_exists( 'plugins', $versions ) && 0 === strpos( $path, 'wp-content/plugins/' ) ) {
 		$module['type'] = 'plugin';
 		foreach ( $versions['plugins'] as $plugin => $data ) {
 			if ( basename( $plugin ) == $plugin ) {
