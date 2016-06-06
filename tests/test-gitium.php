@@ -183,6 +183,60 @@ class Test_Gitium extends WP_UnitTestCase {
 		$this->assertTrue( $assert );
 	}
 
+	function test_gitium_module_by_path_with_no_plugins() {
+		set_transient(
+			'gitium_versions',
+			array(
+				'themes'  => array(
+					'hahaha' => array( 'name' => 'Ha ha ha hi', 'version' => '0.0.1' )
+				)
+			)
+		);
+
+		$path   = 'wp-content/plugins/simple-file-no-plugin.php';
+		$assert = _gitium_module_by_path( $path ) == array(
+			'base_path' => 'wp-content/plugins/simple-file-no-plugin.php',
+			'type'      => 'file',
+			'name'      => 'simple-file-no-plugin.php',
+			'version'   => null,
+		);
+		$this->assertTrue( $assert, "$path is not valid!" );
+	}
+
+	function test_gitium_module_by_path_with_no_themes() {
+		set_transient(
+			'gitium_versions',
+			array(
+				'plugins' => array(
+					'autover/autover.php' => array( 'name' => 'AutoVer', 'version' => '1.2.3' ),
+					'gitium/gitium.php'   => array( 'name' => 'Gitium', 'version' => '1.0' )
+				)
+			)
+		);
+
+		$path   = 'wp-content/themes/simple-file-no-theme.php';
+		$assert = _gitium_module_by_path( $path ) == array(
+			'base_path' => 'wp-content/themes/simple-file-no-theme.php',
+			'type'      => 'file',
+			'name'      => 'simple-file-no-theme.php',
+			'version'   => null,
+		);
+		$this->assertTrue( $assert, "$path is not valid!" );
+	}
+
+	function test_gitium_module_by_path_with_no_themes_and_no_plugins() {
+		set_transient( 'gitium_versions', array() );
+
+		$path   = 'wp-content/simple-file-no-theme-and-no-plugin.php';
+		$assert = _gitium_module_by_path( $path ) == array(
+			'base_path' => 'wp-content/simple-file-no-theme-and-no-plugin.php',
+			'type'      => 'file',
+			'name'      => 'simple-file-no-theme-and-no-plugin.php',
+			'version'   => null,
+		);
+		$this->assertTrue( $assert, "$path is not valid!" );
+	}
+
 	/*	'??' => 'untracked',
 		'rM' => 'modified to remote',
 		'rA' => 'added to remote',
