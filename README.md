@@ -44,67 +44,101 @@ your `/wp-content/uploads` folder.
 ## Test
 
 ##### Build the docker image
+```
 cd test-env
 docker build -t gitiumtest .
+```
 
 ##### Run the docker image and associate the code with /code dir
+```
 cd gitium
 docker run -it -v `pwd`:/code gitiumtest
+```
 
 ##### Start the env for tests
+```
 make clean ; make env_latest
+```
 
 ##### Run the tests
+```
 reset ; ./vendor/bin/phpunit --tap
+```
 
 ##### Run only one suite (clean run)
+```
 make clean ; make env_latest ; reset ; ./vendor/bin/phpunit --tap tests/test-git-wrapper.php
+```
 
 
 ## Useful Docker commands
 
 ##### Test if Docker is installed
+```
 sudo docker ps
+```
 
 ##### List the Docker images
+```
 sudo docker images
+```
 
 ##### Biuld a Docker image
+```
 cd gitium/test-env
 sudo docker build -t gitium-test-tag .
+```
 
 ##### Start a Docker image*
+```
 cd gitium
 sudo docker run -it -v `pwd`:/code gitium-dev-tag
+```
 
 ##### View all containers
+```
 docker ps -a
+```
 
 ##### Kill containers and remove them
+```
 docker rm $(docker kill $(docker ps -aq))
+```
 
 ##### Remove all existing containers
+```
 docker rm $(docker ps -aq)
+```
 
 ##### Remove an image/tag
+```
 docker rmi <node>
 docker rmi docker-phpunit:1.0.0
+```
 
 ##### Remove all images
+```
 docker rmi $(docker images -qf "dangling=true")
+```
 
 ##### Remove all images except my-image and ubuntu
+```
 docker rmi $(docker images | grep -v 'ubuntu\|my-image' | awk {'print $3'})
+```
 
 ##### Rename/retag an image
+```
 docker tag server:latest myname/server:latest
 docker tag 1cf76 myUserName/imageName:0.1.0
+```
 
 
 ## Inside Docker commands
 
 ##### Start the env for tests
+```
 make clean ; make env_latest
+```
 
 ##### Ctrl+D
 exit to root console
@@ -113,10 +147,14 @@ exit to root console
 su - developer
 
 ##### Run only the methods with test_is_dirty
+```
 reset ; ./vendor/bin/phpunit --tap tests/test-git-wrapper.php --filter '/test_is_dirty/'
+```
 
 ##### Run only one suite
+```
 ./vendor/bin/phpunit --tap tests/test-git-wrapper.php
+```
 
 
 ## Frequently Asked Questions
