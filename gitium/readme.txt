@@ -68,6 +68,15 @@ Submodules are currently not supported.
 
 == Changelog ==
 
+= 0.5.7-beta =
+* Fix bug deleting plugins/themes causes wrong commit message
+* Fix bug wrong commit message
+* Fix bug updated function to stop maintenance mode hang
+* Fix bug undefined variable 'new_versions'
+* Add 'Merge changes' button for gitium webhook
+* Add gitium documentation for docker
+* Add more tests
+
 = 0.5.6-beta =
 * Fix compatibility issues with wp-cli
 
