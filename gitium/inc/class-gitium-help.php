@@ -37,6 +37,7 @@ class Gitium_Help {
 	}
 
 	public function faq() {
+		echo '<p><strong>' . __( 'Could not connect to remote repository?', 'gitium' ) . '</strong><br />'. __( 'If you encounter this kind of error you can try to fix it by setting the properly username of the .git directory.', 'gitium' ) . '<br />' . __( 'Example', 'gitium' ) .': <code>chown -R www-data:www-data .git</code></p>';
 		echo '<p><strong>' . __( 'Is this plugin considered stable?', 'gitium' ) . '</strong><br />'. __( 'Right now this plugin is considered alpha quality and should be used in production environments only by adventurous kinds.', 'gitium' ) . '</p>';
 		echo '<p><strong>' . __( 'What happens in case of conflicts?', 'gitium' ) . '</strong><br />'. __( 'The behavior in case of conflicts is to overwrite the changes on the origin repository with the local changes (ie. local modifications take precedence over remote ones).', 'gitium' ) . '</p>';
 		echo '<p><strong>' . __( 'How to deploy automatically after a push?', 'gitium' ) . '</strong><br />'. __( 'You can ping the webhook url after a push to automatically deploy the new code. The webhook url can be found under Code menu. This url plays well with Github or Bitbucket webhooks.', 'gitium' ) . '</p>';

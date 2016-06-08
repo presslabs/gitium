@@ -45,6 +45,12 @@ _IMPORTANT_: Gitium does its best not to version your WordPress core, neither yo
 
 == Frequently Asked Questions ==
 
+= Could not connect to remote repository? =
+
+If you encounter this kind of error you can try to fix it by setting the properly username of the .git directory.
+
+Example: chown -R www-data:www-data .git
+
 = Is this plugin considered stable? =
 
 Right now this plugin is considered alpha quality and should be used in production environments only by adventurous kinds.
