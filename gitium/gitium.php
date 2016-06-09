@@ -129,9 +129,43 @@ add_action( 'load-plugins.php', 'gitium_update_versions', 999 );
 function gitium_upgrader_post_install( $res, $hook_extra, $result ) {
 	_gitium_make_ssh_git_file_exe();
 
-	$type    = isset( $hook_extra['type']) ? 'theme' : 'plugin';
-	$action  = isset( $hook_extra['action']) ? $hook_extra['action'] : 'updated';
-	$action  = ( 'install' === $action ) ? 'installed' : $action ;
+	$action = null;
+	$type   = null;
+
+	// install logic
+	if ( isset( $hook_extra['type'] ) && ( 'plugin' === $hook_extra['type'] ) ) {
+		$action = 'installed';
+		$type   = 'plugin';
+	} else if ( isset( $hook_extra['type'] ) && ( 'theme' === $hook_extra['type'] ) ) {
+		$action = 'installed';
+		$type   = 'theme';
+        }
+
+	// update/upgrade logic
+	if ( isset( $hook_extra['plugin'] ) ) {
+		$action = 'updated';
+		$type   = 'plugin';
+	} else if ( isset( $hook_extra['theme'] ) ) {
+		$action = 'updated';
+		$type   = 'theme';
+	}
+
+	// get action if missed above
+	if ( isset( $hook_extra['action'] ) ) {
+		$action = $hook_extra['action'];
+		if ( 'install' === $action ) {
+			$action = 'installed';
+		}
+		if ( 'update' === $action ) {
+			$action = 'updated';
+		}
+	}
+
+	if ( WP_DEBUG ) {
+		error_log( __FUNCTION__ . ':hook_extra:' . serialize( $hook_extra ) );
+		error_log( __FUNCTION__ . ':action:type:' . $action . ':' . $type );
+	}
+
 	$git_dir = $result['destination'];
 	$version = '';
 
