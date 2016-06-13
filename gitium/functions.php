@@ -68,41 +68,60 @@ function _gitium_format_message( $name, $version = false, $prefix = '' ) {
 	return $commit_message;
 }
 
-function _gitium_module_by_path( $path ) {
-	/*
-  wp-content/themes/twentyten/style.css => array(
-    'base_path' => wp-content/themes/twentyten
-    'type' => 'theme'
-    'name' => 'TwentyTen'
-    'varsion' => 1.12
-  )
-  wp-content/themes/twentyten/img/foo.png => array(
-    'base_path' => wp-content/themes/twentyten
-    'type' => 'theme'
-    'name' => 'TwentyTen'
-    'varsion' => 1.12
-  )
-  wp-content/plugins/foo.php => array(
-    'base_path' => wp-content/plugins/foo.php
-    'type' => 'plugin'
-    'name' => 'Foo'
-    'varsion' => 2.0
+/**
+ * This function return the basic info about a path.
+ *
+ * base_path - means the path after wp-content dir (themes/plugins)
+ * type      - can be file/theme/plugin
+ * name      - the file name of the path, if it is a file, or the theme/plugin name
+ * version   - the theme/plugin version, othewise null
+ */
+/* Some examples:
+
+  with 'wp-content/themes/twentyten/style.css' will return:
+  array(
+    'base_path' => 'wp-content/themes/twentyten'
+    'type'      => 'theme'
+    'name'      => 'TwentyTen'
+    'version'   => '1.12'
   )
 
-  wp-content/plugins/autover/autover.php => array(
-    'base_path' => wp-content/plugins/autover
-    'type' => 'plugin'
-    'name' => 'autover'
-    'varsion' => 3.12
+  with 'wp-content/themes/twentyten/img/foo.png' will return:
+  array(
+    'base_path' => 'wp-content/themes/twentyten'
+    'type'      => 'theme'
+    'name'      => 'TwentyTen'
+    'version'   => '1.12'
   )
-  wp-content/plugins/autover/ => array(
-    'base_path' => wp-content/plugins/autover
-    'type' => 'plugin'
-    'name' => 'autover'
-    'varsion' => 3.12
+
+  with 'wp-content/plugins/foo.php' will return:
+  array(
+    'base_path' => 'wp-content/plugins/foo.php'
+    'type'      => 'plugin'
+    'name'      => 'Foo'
+    'varsion'   => '2.0'
   )
-	*/
+
+  with 'wp-content/plugins/autover/autover.php' will return:
+  array(
+    'base_path' => 'wp-content/plugins/autover'
+    'type'      => 'plugin'
+    'name'      => 'autover'
+    'version'   => '3.12'
+  )
+
+  with 'wp-content/plugins/autover/' will return:
+  array(
+    'base_path' => 'wp-content/plugins/autover'
+    'type'      => 'plugin'
+    'name'      => 'autover'
+    'version'   => '3.12'
+  )
+*/
+function _gitium_module_by_path( $path ) {
 	$versions = gitium_get_versions();
+
+	// default values
 	$module   = array(
 		'base_path' => $path,
 		'type'      => 'file',
@@ -110,34 +129,43 @@ function _gitium_module_by_path( $path ) {
 		'version'   => null,
 	);
 
+	// find the base_path
+	$split_path = explode( '/', $path );
+	if ( 2 < count( $split_path ) ) {
+		$module['base_path'] = "{$split_path[0]}/{$split_path[1]}/{$split_path[2]}";
+	}
+
+	// find other data for theme
 	if ( array_key_exists( 'themes', $versions ) && 0 === strpos( $path, 'wp-content/themes/' ) ) {
 		$module['type'] = 'theme';
 		foreach ( $versions['themes'] as $theme => $data ) {
-			if ( 0 === strpos( $path, 'wp-content/themes/' . $theme ) ) {
-				$module['base_path'] = 'wp-content/themes/' . $theme;
-				$module['name']      = $data['name'];
-				$module['version']   = $data['version'];
+			if ( 0 === strpos( $path, "wp-content/themes/$theme" ) ) {
+				$module['name']    = $data['name'];
+				$module['version'] = $data['version'];
 				break;
 			}
 		}
 	}
 
+	// find other data for plugin
 	if ( array_key_exists( 'plugins', $versions ) && 0 === strpos( $path, 'wp-content/plugins/' ) ) {
 		$module['type'] = 'plugin';
 		foreach ( $versions['plugins'] as $plugin => $data ) {
-			if ( basename( $plugin ) == $plugin ) {
-				$plugin_base_path = 'wp-content/plugins/' . $plugin;
-			} else {
-				$plugin_base_path = 'wp-content/plugins/' . dirname( $plugin );
-			}
-			if ( ( dirname( $path ) === $plugin_base_path ) || ( $path === $plugin_base_path ) ) {
-				$module['base_path'] = $plugin_base_path;
-				$module['name']      = $data['name'];
-				$module['version']   = $data['version'];
+			if ( '.' === dirname( $plugin ) ) { // single file plugin
+				if ( "wp-content/plugins/$plugin" === $path ) {
+					$module['base_path'] = $path;
+					$module['name']      = $data['name'];
+					$module['version']   = $data['version'];
+					break;
+				}
+			} else if ( 'wp-content/plugins/' . dirname( $plugin ) === $module['base_path'] ) {
+				$module['name']    = $data['name'];
+				$module['version'] = $data['version'];
 				break;
 			}
 		}
 	}
+
 	return $module;
 }
 
