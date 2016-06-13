@@ -74,96 +74,136 @@ class Test_Gitium extends WP_UnitTestCase {
 	}
 
 	function test_gitium_module_by_path_for_void_path() {
-		$path   = '';
-		$assert = _gitium_module_by_path( $path ) == array(
-			'base_path' => $path,
+		$path     = '';
+		$result   = _gitium_module_by_path( $path );
+		$expected = array(
+			'base_path' => '',
 			'type'      => 'file',
 			'name'      => basename( $path ),
 			'version'   => null,
 		);
-		$this->assertTrue( $assert );
+		$assert = $expected == $result;
+		$this->assertTrue( $assert, print_r( compact( 'path', 'expected', 'result' ), true ) );
 	}
 
 	function test_gitium_module_by_path_for_normal_plugin() {
-		$path   = 'wp-content/plugins/autover/autover.php';
-		$assert = _gitium_module_by_path( $path ) == array(
+		$path     = 'wp-content/plugins/autover/autover.php';
+		$result   = _gitium_module_by_path( $path );
+		$expected = array(
 			'base_path' => 'wp-content/plugins/autover',
 			'type'      => 'plugin',
 			'name'      => 'AutoVer',
 			'version'   => '1.2.3',
 		);
-		$this->assertTrue( $assert );
+		$assert = $expected == $result;
+		$this->assertTrue( $assert, print_r( compact( 'path', 'expected', 'result' ), true ) );
 	}
 
 	function test_gitium_module_by_path_for_one_file_plugin() {
-		$path   = 'wp-content/plugins/simple.php';
-		$assert = _gitium_module_by_path( $path ) == array(
+		$path     = 'wp-content/plugins/simple.php';
+		$result   = _gitium_module_by_path( $path );
+		$expected = array(
 			'base_path' => 'wp-content/plugins/simple.php',
 			'type'      => 'plugin',
 			'name'      => 'Simple',
 			'version'   => '9.0',
 		);
-		$this->assertTrue( $assert );
+		$assert = $expected == $result;
+		$this->assertTrue( $assert, print_r( compact( 'path', 'expected', 'result' ), true ) );
 	}
 
 	function test_gitium_module_by_path_for_normal_theme() {
-		$path   = 'wp-content/themes/hahaha/style.css';
-		$assert = _gitium_module_by_path( $path ) == array(
-			'base_path' => 'wp-content/themes/hahaha',
-			'type'      => 'theme',
-			'name'      => 'Ha ha ha hi',
-			'version'   => '0.0.1',
-		);
-		$this->assertTrue( $assert );
-	}
-
-	function test_gitium_module_by_path_for_image_file_theme() {
-		$path   = 'wp-content/themes/hahaha/img/logo.png';
-		$assert = _gitium_module_by_path( $path ) == array(
-			'base_path' => 'wp-content/themes/hahaha',
-			'type'      => 'theme',
-			'name'      => 'Ha ha ha hi',
-			'version'   => '0.0.1',
-		);
-		$this->assertTrue( $assert );
-	}
-
-	function test_gitium_module_by_path_for_unregistered_theme() {
-		$path   = 'wp-content/themes/mobile_pack_red/style.css.nokia.css';
-		$assert = _gitium_module_by_path( $path ) == array(
-			'base_path' => $path,
-			'type'      => 'theme',
-			'name'      => basename( $path ),
-			'version'   => null,  # this theme is not in the themes transient, so we can't determine version
-		);
-		$this->assertTrue( $assert );
-	}
-
-	/**
-	 * The struto-camila plugin represents in fact two plugins stored into the same directory
-	 */
-	function test_gitium_module_by_path_for_struto_camila_plugin() {
-		$path   = 'wp-content/plugins/struto-camila/readme.txt';
-		$assert = _gitium_module_by_path( $path ) == array(
-			'base_path' => 'wp-content/plugins/struto-camila',
-			'type'      => 'plugin',
-			'name'      => 'Camila',
-			'version'   => '1.0.1',
-		);
-		$this->assertTrue( $assert );
-	}
-
-	function test_gitium_module_by_path_with_whitespaces_in_theme() {
-		$path   = 'wp-content/themes/hahaha/white space.css';
-		$module = _gitium_module_by_path( $path );
-
+		$path     = 'wp-content/themes/hahaha/style.css';
+		$result   = _gitium_module_by_path( $path );
 		$expected = array(
 			'base_path' => 'wp-content/themes/hahaha',
 			'type'      => 'theme',
 			'name'      => 'Ha ha ha hi',
 			'version'   => '0.0.1',
 		);
-		$this->assertEquals( $expected, $module );
+		$assert = $expected == $result;
+		$this->assertTrue( $assert, print_r( compact( 'path', 'expected', 'result' ), true ) );
+	}
+
+	function test_gitium_module_by_path_for_plugin_with_dir_inside() {
+		set_transient(
+			'gitium_versions',
+			array(
+				'themes'  => array(
+					'hahaha' => array( 'name' => 'Ha ha ha hi', 'version' => '0.0.1' )
+				),
+				'plugins' => array(
+					'theme-check/theme-check.php' => array( 'name' => 'Theme Check', 'version' => '20160523.1' ),
+					'gitium/gitium.php'   => array( 'name' => 'Gitium', 'version' => '1.0' )
+				)
+			)
+		);
+
+		$path     = 'wp-content/plugins/theme-check/assets/simple-file.txt';
+		$result   = _gitium_module_by_path( $path );
+		$expected = array(
+			'base_path' => 'wp-content/plugins/theme-check',
+			'type'      => 'plugin',
+			'name'      => 'Theme Check',
+			'version'   => '20160523.1',
+		);
+		$assert = $expected == $result;
+		$this->assertTrue( $assert, print_r( compact( 'path', 'expected', 'result' ), true ) );
+	}
+
+	function test_gitium_module_by_path_for_image_file_theme() {
+		$path     = 'wp-content/themes/hahaha/img/logo.png';
+		$result   = _gitium_module_by_path( $path );
+		$expected = array(
+			'base_path' => 'wp-content/themes/hahaha',
+			'type'      => 'theme',
+			'name'      => 'Ha ha ha hi',
+			'version'   => '0.0.1',
+		);
+		$assert = $expected == $result;
+		$this->assertTrue( $assert, print_r( compact( 'path', 'expected', 'result' ), true ) );
+	}
+
+	function test_gitium_module_by_path_for_broken_or_unregistered_theme() {
+		$path     = 'wp-content/themes/mobile_pack_red/style.css.nokia.css';
+		$result   = _gitium_module_by_path( $path );
+		$expected = array(
+			'base_path' => 'wp-content/themes/mobile_pack_red',
+			'type'      => 'theme',
+			'name'      => basename( $path ),
+			'version'   => null,  # this theme is not in the themes transient, so we can't determine version
+		);
+		$assert = $expected == $result;
+		$this->assertTrue( $assert, print_r( compact( 'path', 'expected', 'result' ), true ) );
+	}
+
+	/**
+	 * The struto-camila plugin represents in fact two plugins stored into the same directory
+	 */
+	function test_gitium_module_by_path_for_struto_camila_plugin() {
+		$path     = 'wp-content/plugins/struto-camila/readme.txt';
+		$result   = _gitium_module_by_path( $path );
+		$expected = array(
+			'base_path' => 'wp-content/plugins/struto-camila',
+			'type'      => 'plugin',
+			'name'      => 'Camila',
+			'version'   => '1.0.1',
+		);
+		$assert = $expected == $result;
+		$this->assertTrue( $assert, print_r( compact( 'path', 'expected', 'result' ), true ) );
+	}
+
+	function test_gitium_module_by_path_with_whitespaces_in_theme() {
+		$path     = 'wp-content/themes/hahaha/white space.css';
+		$result   = _gitium_module_by_path( $path );
+		$expected = array(
+			'base_path' => 'wp-content/themes/hahaha',
+			'type'      => 'theme',
+			'name'      => 'Ha ha ha hi',
+			'version'   => '0.0.1',
+		);
+		$assert = $expected == $result;
+		$this->assertTrue( $assert, print_r( compact( 'path', 'expected', 'result' ), true ) );
 	}
 
 	/**
@@ -173,14 +213,16 @@ class Test_Gitium extends WP_UnitTestCase {
 	 * This test is to assure that we catch the changes from the second plugin 'gitium-pltest'
 	 */
 	function test_gitium_module_by_path_for_similarly_named_plugins() {
-		$path   = 'wp-content/plugins/gitium-pltest/readme.txt';
-		$assert = _gitium_module_by_path( $path ) == array(
+		$path     = 'wp-content/plugins/gitium-pltest/readme.txt';
+		$result   = _gitium_module_by_path( $path );
+		$expected = array(
 			'base_path' => 'wp-content/plugins/gitium-pltest',
 			'type'      => 'plugin',
 			'name'      => 'Gitium PL Test',
 			'version'   => '2.1',
 		);
-		$this->assertTrue( $assert );
+		$assert = $expected == $result;
+		$this->assertTrue( $assert, print_r( compact( 'path', 'expected', 'result' ), true ) );
 	}
 
 	function test_gitium_module_by_path_with_no_plugins() {
@@ -193,14 +235,16 @@ class Test_Gitium extends WP_UnitTestCase {
 			)
 		);
 
-		$path   = 'wp-content/plugins/simple-file-no-plugin.php';
-		$assert = _gitium_module_by_path( $path ) == array(
+		$path     = 'wp-content/plugins/simple-file-no-plugin.php';
+		$result   = _gitium_module_by_path( $path );
+		$expected = array(
 			'base_path' => 'wp-content/plugins/simple-file-no-plugin.php',
 			'type'      => 'file',
 			'name'      => 'simple-file-no-plugin.php',
 			'version'   => null,
 		);
-		$this->assertTrue( $assert, "$path is not valid!" );
+		$assert = $expected == $result;
+		$this->assertTrue( $assert, print_r( compact( 'path', 'expected', 'result' ), true ) );
 	}
 
 	function test_gitium_module_by_path_with_no_themes() {
@@ -214,27 +258,31 @@ class Test_Gitium extends WP_UnitTestCase {
 			)
 		);
 
-		$path   = 'wp-content/themes/simple-file-no-theme.php';
-		$assert = _gitium_module_by_path( $path ) == array(
+		$path     = 'wp-content/themes/simple-file-no-theme.php';
+		$result   = _gitium_module_by_path( $path );
+		$expected = array(
 			'base_path' => 'wp-content/themes/simple-file-no-theme.php',
 			'type'      => 'file',
 			'name'      => 'simple-file-no-theme.php',
 			'version'   => null,
 		);
-		$this->assertTrue( $assert, "$path is not valid!" );
+		$assert = $expected == $result;
+		$this->assertTrue( $assert, print_r( compact( 'path', 'expected', 'result' ), true ) );
 	}
 
 	function test_gitium_module_by_path_with_no_themes_and_no_plugins() {
 		set_transient( 'gitium_versions', array() );
 
-		$path   = 'wp-content/simple-file-no-theme-and-no-plugin.php';
-		$assert = _gitium_module_by_path( $path ) == array(
+		$path     = 'wp-content/simple-file-no-theme-and-no-plugin.php';
+		$result   = _gitium_module_by_path( $path );
+		$expected = array(
 			'base_path' => 'wp-content/simple-file-no-theme-and-no-plugin.php',
 			'type'      => 'file',
 			'name'      => 'simple-file-no-theme-and-no-plugin.php',
 			'version'   => null,
 		);
-		$this->assertTrue( $assert, "$path is not valid!" );
+		$assert = $expected == $result;
+		$this->assertTrue( $assert, print_r( compact( 'path', 'expected', 'result' ), true ) );
 	}
 
 	/*	'??' => 'untracked',
