@@ -74,6 +74,13 @@ Submodules are currently not supported.
 
 == Changelog ==
 
+= 0.5.8-beta =
+* Add documentation for 'Could not connect to remote repository?'
+* Fix the update theme from Dashboard commit message & the install plugin commit message
+* Fix install/delete plugin/theme commit message
+* Add a test and rewrite the tests
+* Tested up to 4.5.2
+
 = 0.5.7-beta =
 * Fix bug deleting plugins/themes causes wrong commit message
 * Fix bug wrong commit message
