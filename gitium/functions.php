@@ -206,9 +206,49 @@ function gitium_commit_and_push_gitignore_file( $path = '' ) {
 	gitium_merge_and_push( $commit );
 }
 
+if ( ! function_exists( 'gitium_before_merge_and_push' ) ) :
+	function gitium_before_merge_and_push() {
+		global $gitium_lock_path, $gitium_lock_handle;
+
+		$gitium_lock_path   = apply_filters( 'gitium_lock_path', ABSPATH . 'wp-content/.gitium-lock' );
+		$gitium_lock_handle = fopen( $gitium_lock_path, 'w+' );
+
+		if ( flock( $gitium_lock_handle, LOCK_EX | LOCK_NB ) ) {
+			error_log( 'if-lock' );
+			return;
+		} else {
+			error_log( 'wait' );
+			$lock_timeout    = intval( ini_get( 'max_execution_time' ) ) > 0 ? intval( ini_get( 'max_execution_time' ) ) / 2 : 15;
+			$lock_timeout_ms = 10;
+			$lock_retries    = 0;
+			while ( $lock_retries * $lock_timeout_ms < $lock_timeout * 1000 ) {
+				if ( flock( $gitium_lock_handle, LOCK_EX | LOCK_NB ) ) {
+					error_log( 'while-lock' );
+					break;
+				}
+				usleep( $lock_timeout_ms * 1000 );
+				$lock_retries++;
+			}
+		}
+	}
+endif;
+
+if ( ! function_exists( 'gitium_after_merge_and_push' ) ) :
+	function gitium_after_merge_and_push() {
+		global $gitium_lock_path, $gitium_lock_handle;
+
+		error_log( 'unlock' );
+		flock( $gitium_lock_handle, LOCK_UN );
+		fclose( $gitium_lock_handle );
+		unlink( $gitium_lock_path );
+	}
+endif;
+
 // Merges the commits with remote and pushes them back
 function gitium_merge_and_push( $commits ) {
 	global $git;
+
+	gitium_before_merge_and_push(); // lock
 
 	if ( ! $git->fetch_ref() ) {
 		return false;
@@ -219,6 +259,9 @@ function gitium_merge_and_push( $commits ) {
 	if ( ! $git->push() ) {
 		return false;
 	}
+
+	gitium_after_merge_and_push(); // unlock
+
 	return true;
 }
 
