@@ -206,38 +206,32 @@ function gitium_commit_and_push_gitignore_file( $path = '' ) {
 	gitium_merge_and_push( $commit );
 }
 
-if ( ! function_exists( 'gitium_before_merge_and_push' ) ) :
-	function gitium_before_merge_and_push() {
-		global $gitium_lock_path, $gitium_lock_handle;
-
+if ( ! function_exists( 'gitium_acquire_merge_lock' ) ) :
+	function gitium_acquire_merge_lock() {
 		$gitium_lock_path   = apply_filters( 'gitium_lock_path', ABSPATH . 'wp-content/.gitium-lock' );
 		$gitium_lock_handle = fopen( $gitium_lock_path, 'w+' );
 
 		if ( flock( $gitium_lock_handle, LOCK_EX | LOCK_NB ) ) {
-			error_log( 'if-lock' );
-			return;
+			return array( $gitium_lock_path, $gitium_lock_handle );
 		} else {
-			error_log( 'wait' );
 			$lock_timeout    = intval( ini_get( 'max_execution_time' ) ) > 0 ? intval( ini_get( 'max_execution_time' ) ) / 2 : 15;
 			$lock_timeout_ms = 10;
 			$lock_retries    = 0;
 			while ( $lock_retries * $lock_timeout_ms < $lock_timeout * 1000 ) {
 				if ( flock( $gitium_lock_handle, LOCK_EX | LOCK_NB ) ) {
-					error_log( 'while-lock' );
-					break;
+					return array( $gitium_lock_path, $gitium_lock_handle );
 				}
 				usleep( $lock_timeout_ms * 1000 );
 				$lock_retries++;
 			}
+			return false; // timeout
 		}
 	}
 endif;
 
-if ( ! function_exists( 'gitium_after_merge_and_push' ) ) :
-	function gitium_after_merge_and_push() {
-		global $gitium_lock_path, $gitium_lock_handle;
-
-		error_log( 'unlock' );
+if ( ! function_exists( 'gitium_release_merge_lock' ) ) :
+	function gitium_release_merge_lock( $lock ) {
+		list( $gitium_lock_path, $gitium_lock_handle ) = $lock;
 		flock( $gitium_lock_handle, LOCK_UN );
 		fclose( $gitium_lock_handle );
 		unlink( $gitium_lock_path );
@@ -248,7 +242,8 @@ endif;
 function gitium_merge_and_push( $commits ) {
 	global $git;
 
-	gitium_before_merge_and_push(); // lock
+	$lock = gitium_acquire_merge_lock()
+		or trigger_error( 'Error when gitium lock was acquired because of a timeout', E_USER_ERROR );
 
 	if ( ! $git->fetch_ref() ) {
 		return false;
@@ -260,7 +255,7 @@ function gitium_merge_and_push( $commits ) {
 		return false;
 	}
 
-	gitium_after_merge_and_push(); // unlock
+	gitium_release_merge_lock( $lock );
 
 	return true;
 }
