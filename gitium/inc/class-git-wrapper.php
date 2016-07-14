@@ -118,7 +118,7 @@ class Git_Wrapper {
 			foreach ( $args as $arg ) {
 				var_dump( $arg );
 			}
-			ob_get_clean();
+			error_log( ob_get_clean() );
 		}
 	}
 
@@ -329,7 +329,11 @@ class Git_Wrapper {
 
 		$this->_call( 'branch', '-m', 'merge_local' );
 		$this->_call( 'branch', $local_branch, $remote_branch );
-		$this->_call( 'checkout', $local_branch );
+		list( $return, ) = $this->_call( 'checkout', $local_branch );
+		if ( $return != 0 ) {
+			$this->_call( 'branch', '-M', $local_branch );
+			return false;
+                }
 		$this->cherry_pick( $commits );
 
 		if ( $this->successfully_merged() ) { // git status without states: AA, DD, UA, AU ...
@@ -337,9 +341,8 @@ class Git_Wrapper {
 			return true;
 		} else {
 			$this->_call( 'cherry-pick', '--abort' );
-			$this->create_branch( 'merge_local' );
-			$this->_call( 'branch', '-D', $local_branch );
-			$this->_call( 'branch', '-m', $local_branch );
+			$this->_call( 'checkout', '-b', 'merge_local' );
+			$this->_call( 'branch', '-M', $local_branch );
 			return false;
 		}
 	}
@@ -379,11 +382,6 @@ class Git_Wrapper {
 		$response = array_map( 'trim', $response );
 		$response = array_map( create_function( '$b', 'return str_replace("origin/","",$b);' ), $response );
 		return $response;
-	}
-
-	function create_branch( $branch ) {
-		list( $return, ) = $this->_call( 'checkout', '-b', $branch );
-		return ( $return == 0 );
 	}
 
 	function add() {

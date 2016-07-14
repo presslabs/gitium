@@ -149,11 +149,6 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		$this->assertEmpty( $git->get_last_error() );
 	}
 
-	function test_create_branch() {
-		global $git;
-		$this->assertTrue( $git->create_branch( 'develop' ) );
-	}
-
 	function test_commit_with_dif_user_and_email() {
 		global $git;
 

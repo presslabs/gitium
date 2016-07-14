@@ -206,20 +206,50 @@ function gitium_commit_and_push_gitignore_file( $path = '' ) {
 	gitium_merge_and_push( $commit );
 }
 
+if ( ! function_exists( 'gitium_acquire_merge_lock' ) ) :
+	function gitium_acquire_merge_lock() {
+		$gitium_lock_path   = apply_filters( 'gitium_lock_path', ABSPATH . 'wp-content/.gitium-lock' );
+		$gitium_lock_handle = fopen( $gitium_lock_path, 'w+' );
+
+		$lock_timeout    = intval( ini_get( 'max_execution_time' ) ) > 10 ? intval( ini_get( 'max_execution_time' ) ) - 5 : 10;
+		$lock_timeout_ms = 10;
+		$lock_retries    = 0;
+		while ( ! flock( $gitium_lock_handle, LOCK_EX | LOCK_NB ) ) {
+			usleep( $lock_timeout_ms * 1000 );
+			$lock_retries++;
+			if ( $lock_retries * $lock_timeout_ms > $lock_timeout * 1000 ) {
+				return false; // timeout
+			}
+		}
+		return array( $gitium_lock_path, $gitium_lock_handle );
+	}
+endif;
+
+if ( ! function_exists( 'gitium_release_merge_lock' ) ) :
+	function gitium_release_merge_lock( $lock ) {
+		list( $gitium_lock_path, $gitium_lock_handle ) = $lock;
+		flock( $gitium_lock_handle, LOCK_UN );
+		fclose( $gitium_lock_handle );
+		unlink( $gitium_lock_path );
+	}
+endif;
+
 // Merges the commits with remote and pushes them back
 function gitium_merge_and_push( $commits ) {
 	global $git;
 
+	$lock = gitium_acquire_merge_lock()
+		or trigger_error( 'Timeout when gitium lock was acquired', E_USER_WARNING );
+
 	if ( ! $git->fetch_ref() ) {
 		return false;
 	}
-	if ( ! $git->merge_with_accept_mine( $commits ) ) {
-		return false;
-	}
-	if ( ! $git->push() ) {
-		return false;
-	}
-	return true;
+
+	$merge_status = $git->merge_with_accept_mine( $commits );
+
+	gitium_release_merge_lock( $lock );
+
+	return $git->push() && $merge_status;
 }
 
 function gitium_check_after_event( $plugin, $event = 'activation' ) {
