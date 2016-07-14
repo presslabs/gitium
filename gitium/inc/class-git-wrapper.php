@@ -36,6 +36,7 @@ wp-content/upgrade/
 wp-content/backup-db/
 wp-content/cache/
 wp-content/backups/
+wp-content/.gitium-lock
 
 wp-content/advanced-cache.php
 wp-content/object-cache.php
