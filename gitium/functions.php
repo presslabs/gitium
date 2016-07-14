@@ -211,21 +211,17 @@ if ( ! function_exists( 'gitium_acquire_merge_lock' ) ) :
 		$gitium_lock_path   = apply_filters( 'gitium_lock_path', ABSPATH . 'wp-content/.gitium-lock' );
 		$gitium_lock_handle = fopen( $gitium_lock_path, 'w+' );
 
-		if ( flock( $gitium_lock_handle, LOCK_EX | LOCK_NB ) ) {
-			return array( $gitium_lock_path, $gitium_lock_handle );
-		} else {
-			$lock_timeout    = intval( ini_get( 'max_execution_time' ) ) > 0 ? intval( ini_get( 'max_execution_time' ) ) / 2 : 15;
-			$lock_timeout_ms = 10;
-			$lock_retries    = 0;
-			while ( $lock_retries * $lock_timeout_ms < $lock_timeout * 1000 ) {
-				if ( flock( $gitium_lock_handle, LOCK_EX | LOCK_NB ) ) {
-					return array( $gitium_lock_path, $gitium_lock_handle );
-				}
-				usleep( $lock_timeout_ms * 1000 );
-				$lock_retries++;
+		$lock_timeout    = intval( ini_get( 'max_execution_time' ) ) > 10 ? intval( ini_get( 'max_execution_time' ) ) - 5 : 10;
+		$lock_timeout_ms = 10;
+		$lock_retries    = 0;
+		while ( ! flock( $gitium_lock_handle, LOCK_EX | LOCK_NB ) ) {
+			usleep( $lock_timeout_ms * 1000 );
+			$lock_retries++;
+			if ( $lock_retries * $lock_timeout_ms > $lock_timeout * 1000 ) {
+				return false; // timeout
 			}
-			return false; // timeout
 		}
+		return array( $gitium_lock_path, $gitium_lock_handle );
 	}
 endif;
 
@@ -248,16 +244,12 @@ function gitium_merge_and_push( $commits ) {
 	if ( ! $git->fetch_ref() ) {
 		return false;
 	}
-	if ( ! $git->merge_with_accept_mine( $commits ) ) {
-		return false;
-	}
-	if ( ! $git->push() ) {
-		return false;
-	}
+
+	$merge_status = $git->merge_with_accept_mine( $commits );
 
 	gitium_release_merge_lock( $lock );
 
-	return true;
+	return $git->push() && $merge_status;
 }
 
 function gitium_check_after_event( $plugin, $event = 'activation' ) {

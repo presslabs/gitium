@@ -29,6 +29,12 @@ if ( ! empty ( $webhook_key ) && isset( $_GET['key'] ) && $webhook_key == $_GET[
 	list( $git_public_key, $git_private_key ) = gitium_get_keypair();
 	$git->set_key( $git_private_key );
 
+	$commits   = array();
+	$commitmsg = 'Merged changes from ' . PL_PUBLIC_URL . ' on ' . date( 'm.d.Y' );
+	
+	if ( $git->is_dirty() && $git->add() > 0 ) {
+		$commits[] = $git->commit( $commitmsg ) or trigger_error( 'Could not commit local changes!', E_USER_ERROR );
+	}
 	gitium_merge_and_push( $commits ) or trigger_error( 'Failed merge & push: ' . serialize( $git->get_last_error() ), E_USER_ERROR );
 
 	$commitmsg = sprintf( 'Merged changes from %s on %s', $_SERVER['SERVER_NAME'], date( 'm.d.Y' ) );
