@@ -78,7 +78,7 @@ Submodules are currently not supported.
 * Update the logic of merge and push
 * Add lock mechanism for fetch and merge
 * Fix repo stuck on merge_local branch
-* Tested up to 4.5.2
+* Tested up to 4.5.3
 
 = 0.5.8-beta =
 * Add documentation for 'Could not connect to remote repository?'
