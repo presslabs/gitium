@@ -243,7 +243,7 @@ function gitium_merge_and_push( $commits ) {
 	global $git;
 
 	$lock = gitium_acquire_merge_lock()
-		or trigger_error( 'Error when gitium lock was acquired because of a timeout', E_USER_ERROR );
+		or trigger_error( 'Timeout when gitium lock was acquired', E_USER_WARNING );
 
 	if ( ! $git->fetch_ref() ) {
 		return false;
