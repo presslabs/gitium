@@ -4,7 +4,7 @@ Contributors: PressLabs
 Donate link: https://www.presslabs.com/gitium/
 Tags: git, version, versioning, deployment, version-control, github, bitbucket, travis, code, revision, testing, development, branch, production, staging, debug, plugin, gitium, presslabs, simple
 Requires at least: 3.9
-Tested up to: 4.5.2
+Tested up to: 4.5.3
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -53,7 +53,7 @@ Example: chown -R www-data:www-data .git
 
 = Is this plugin considered stable? =
 
-Right now this plugin is considered alpha quality and should be used in production environments only by adventurous kinds.
+Yes, we consider the plugin stable after extensive usage in production environments at Presslabs, with hundreds of users and powering sites with hundreds of millions of pageviews per month.
 
 = What will happen in case of conflicts? =
 
@@ -73,6 +73,12 @@ Submodules are currently not supported.
 
 
 == Changelog ==
+
+= 1.0-rc1 =
+* Update the logic of merge and push
+* Add lock mechanism for fetch and merge
+* Fix repo stuck on merge_local branch
+* Tested up to 4.5.2
 
 = 0.5.8-beta =
 * Add documentation for 'Could not connect to remote repository?'
