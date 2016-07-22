@@ -20,7 +20,8 @@ define( 'SHORTINIT', true );
 $wordpress_loader = $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php';
 
 require_once $wordpress_loader;
-require_once __DIR__ . '/gitium.php';
+require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/inc/class-git-wrapper.php';
 
 $webhook_key = get_option( 'gitium_webhook_key', '' );
 if ( ! empty ( $webhook_key ) && isset( $_GET['key'] ) && $webhook_key == $_GET['key'] ) :
