@@ -208,7 +208,7 @@ function gitium_commit_and_push_gitignore_file( $path = '' ) {
 
 if ( ! function_exists( 'gitium_acquire_merge_lock' ) ) :
 	function gitium_acquire_merge_lock() {
-		$gitium_lock_path   = apply_filters( 'gitium_lock_path', ABSPATH . 'wp-content/.gitium-lock' );
+		$gitium_lock_path   = apply_filters( 'gitium_lock_path', '/tmp/.gitium-lock' );
 		$gitium_lock_handle = fopen( $gitium_lock_path, 'w+' );
 
 		$lock_timeout    = intval( ini_get( 'max_execution_time' ) ) > 10 ? intval( ini_get( 'max_execution_time' ) ) - 5 : 10;
