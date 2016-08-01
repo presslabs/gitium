@@ -10,6 +10,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 Automatic git version control and deployment for your plugins and themes integrated into wp-admin.
 
+
 == Description ==
 
 Gitium enables continuous deployment for WordPress, integrating with tools such as Github, Bitbucket or Travis-CI. Theme or plugin updates, installs and removals are all automatically versioned. Ninja code edits from the WordPress editor are also tracked by the version control system.
@@ -20,6 +21,7 @@ Gitium requires `git` command line tool with a minimum version of 1.7 installed 
 
 Gitium is the latest element discovered at [Presslabs](https://www.presslabs.com/gitium/).
 
+
 == Screenshots ==
 
 1. Setup step 1: Get SSH Key
@@ -27,6 +29,7 @@ Gitium is the latest element discovered at [Presslabs](https://www.presslabs.com
 3. Setup step 3: Add remote repository
 4. Setup step 4: Choose following branch
 5. Commit local changes
+
 
 == Installation ==
 
@@ -36,6 +39,7 @@ Gitium is the latest element discovered at [Presslabs](https://www.presslabs.com
 3. Activate the plugin through the 'Plugins' menu in WordPress.
 
 Alternatively, go into your WordPress dashboard and click on Plugins -> Add Plugin and search for `Gitium`. Then, click on Install and, after that, on Activate Now.
+
 
 = Usage =
 
@@ -73,6 +77,10 @@ Submodules are currently not supported.
 
 
 == Changelog ==
+
+= 1.0-rc2 =
+* Change the default lockfile location
+* Fix a PHP Warning
 
 = 1.0-rc1 =
 * Update the logic of merge and push
