@@ -19,7 +19,7 @@ class Gitium_Menu_Bubble extends Gitium_Menu {
 
 	public function __construct() {
 		parent::__construct( $this->gitium_menu_slug, $this->gitium_menu_slug );
-		add_action( 'admin_menu', array( $this, 'add_menu_bubble' ) );
+		add_action( GITIUM_ADMIN_MENU_ACTION, array( $this, 'add_menu_bubble' ) );
 	}
 
 	public function add_menu_bubble() {

@@ -29,6 +29,16 @@ define( 'GITIUM_LAST_COMMITS', 20 );
 define( 'GITIUM_MIN_GIT_VER', '1.7' );
 define( 'GITIUM_MIN_PHP_VER', '5.3' );
 
+if ( is_multisite() ) {
+	define( 'GITIUM_ADMIN_MENU_ACTION', 'network_admin_menu' );
+	define( 'GITIUM_ADMIN_NOTICES_ACTION', 'network_admin_notices' );
+	define( 'GITIUM_MANAGE_OPTIONS_CAPABILITY', 'manage_network_options' );
+} else {
+	define( 'GITIUM_ADMIN_MENU_ACTION', 'admin_menu' );
+	define( 'GITIUM_ADMIN_NOTICES_ACTION', 'admin_notices' );
+	define( 'GITIUM_MANAGE_OPTIONS_CAPABILITY', 'manage_options' );
+}
+
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/inc/class-git-wrapper.php';
 require_once __DIR__ . '/inc/class-gitium-requirements.php';
@@ -266,7 +276,7 @@ function gitium_options_page_check() {
 }
 
 function gitium_remote_disconnected_notice() {
-	if ( current_user_can( 'manage_options' ) && $message = get_transient( 'gitium_remote_disconnected' ) ) : ?>
+	if ( current_user_can( GITIUM_MANAGE_OPTIONS_CAPABILITY ) && $message = get_transient( 'gitium_remote_disconnected' ) ) : ?>
 		<div class="error-nag error">
 			<p>
 				Could not connect to remote repository.

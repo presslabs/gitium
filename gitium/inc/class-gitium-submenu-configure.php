@@ -20,8 +20,8 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 	public function __construct() {
 		parent::__construct( $this->gitium_menu_slug, $this->gitium_menu_slug );
 
-		if ( current_user_can( 'manage_options' ) ) {
-			add_action( 'admin_menu', array( $this, 'admin_menu' ) );
+		if ( current_user_can( GITIUM_MANAGE_OPTIONS_CAPABILITY ) ) {
+			add_action( GITIUM_ADMIN_MENU_ACTION, array( $this, 'admin_menu' ) );
 			add_action( 'admin_init', array( $this, 'regenerate_keypair' ) );
 			add_action( 'admin_init', array( $this, 'gitium_warning' ) );
 			add_action( 'admin_init', array( $this, 'init_repo' ) );
@@ -34,7 +34,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 		add_menu_page(
 			__( 'Git Configuration', 'gitium' ),
 			'Gitium',
-			'manage_options',
+			GITIUM_MANAGE_OPTIONS_CAPABILITY,
 			$this->menu_slug,
 			array( $this, 'page' ),
 			plugins_url( 'img/gitium.png', dirname( __FILE__ ) )
@@ -44,7 +44,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 			$this->menu_slug,
 			__( 'Git Configuration', 'gitium' ),
 			__( 'Configuration', 'gitium' ),
-			'manage_options',
+			GITIUM_MANAGE_OPTIONS_CAPABILITY,
 			$this->menu_slug,
 			array( $this, 'page' )
 		);

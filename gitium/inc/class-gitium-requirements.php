@@ -19,7 +19,6 @@ class Gitium_Requirements {
 
 	private $req = array();
 	private $msg = array();
-	private $status = false;
 
 	/**
 	 * Gitium requires:
@@ -29,20 +28,19 @@ class Gitium_Requirements {
 	 * can exec the file inc/ssh-git
 	 */
 	public function __construct() {
-		list( $this->req['is_git_version'],        $this->msg['is_git_version'] )        = $this->is_git_version();
-		list( $this->req['is_proc_open'],          $this->msg['is_proc_open']          ) = $this->is_proc_open();
-		list( $this->req['is_php_verion'],         $this->msg['is_php_verion']  )        = $this->is_php_version();
-		list( $this->req['can_exec_ssh_git_file'], $this->msg['can_exec_ssh_git_file'] ) = $this->can_exec_ssh_git_file();
-
-		if ( false === $this->status ) {
-			add_action( 'admin_notices', array( $this, 'admin_notices' ) );
-		}
+		add_action( GITIUM_ADMIN_NOTICES_ACTION, array( $this, 'admin_notices' ) );
 	}
 
 	public function admin_notices() {
-		foreach ( $this->req as $key => $value ) {
-			if ( false === $value ) {
-				echo "<div class='error-nag error'><p>Gitium Requirement: {$this->msg[$key]}</p></div>";
+		if ( current_user_can( GITIUM_MANAGE_OPTIONS_CAPABILITY ) ) {
+			list( $this->req['is_git_version'],        $this->msg['is_git_version'] )        = $this->is_git_version();
+			list( $this->req['is_proc_open'],          $this->msg['is_proc_open']          ) = $this->is_proc_open();
+			list( $this->req['is_php_verion'],         $this->msg['is_php_verion']  )        = $this->is_php_version();
+			list( $this->req['can_exec_ssh_git_file'], $this->msg['can_exec_ssh_git_file'] ) = $this->can_exec_ssh_git_file();
+			foreach ( $this->req as $key => $value ) {
+				if ( false === $value ) {
+					echo "<div class='error-nag error'><p>Gitium Requirement: {$this->msg[$key]}</p></div>";
+				}
 			}
 		}
 	}
