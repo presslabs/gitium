@@ -23,7 +23,7 @@ class Gitium_Admin {
 		list( , $git_private_key ) = gitium_get_keypair();
 		$git->set_key( $git_private_key );
 
-		if ( current_user_can( 'manage_options' ) ) { // admin actions
+		if ( current_user_can( GITIUM_MANAGE_OPTIONS_CAPABILITY ) ) {
 			new Gitium_Requirements();
 			if ( $this->has_configuration() ) {
 				new Gitium_Submenu_Status();
@@ -42,7 +42,7 @@ class Gitium_Admin {
 	}
 }
 
-if ( is_admin() ) {
+if ( ( is_admin() && ! is_multisite() ) || ( is_network_admin() && is_multisite() ) ) {
 	add_action( 'init', 'gitium_admin_page' );
 	function gitium_admin_page() {
 		new Gitium_Admin();

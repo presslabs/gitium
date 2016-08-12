@@ -19,7 +19,7 @@ class Gitium_Submenu_Settings extends Gitium_Menu {
 
 	public function __construct() {
 		parent::__construct( $this->gitium_menu_slug, $this->settings_menu_slug );
-		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
+		add_action( GITIUM_ADMIN_MENU_ACTION, array( $this, 'admin_menu' ) );
 		add_action( 'admin_init', array( $this, 'save' ) );
 		add_action( 'admin_init', array( $this, 'regenerate_webhook' ) );
 		add_action( 'admin_init', array( $this, 'regenerate_public_key' ) );
@@ -30,7 +30,7 @@ class Gitium_Submenu_Settings extends Gitium_Menu {
 			$this->menu_slug,
 			'Settings',
 			__( 'Settings' ),
-			'manage_options',
+			GITIUM_MANAGE_OPTIONS_CAPABILITY,
 			$this->submenu_slug,
 			array( $this, 'page' )
 		);
