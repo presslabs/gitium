@@ -4,7 +4,7 @@ Contributors: PressLabs
 Donate link: https://www.presslabs.com/gitium/
 Tags: git, version, versioning, deployment, version-control, github, bitbucket, travis, code, revision, testing, development, branch, production, staging, debug, plugin, gitium, presslabs, simple
 Requires at least: 3.9
-Tested up to: 4.5.3
+Tested up to: 4.6
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -77,6 +77,10 @@ Submodules are currently not supported.
 
 
 == Changelog ==
+
+= 1.0-rc3 =
+* Add support for multisite
+* Fix PHP error on merge & push
 
 = 1.0-rc2 =
 * Change the default lockfile location
