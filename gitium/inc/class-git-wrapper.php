@@ -324,7 +324,7 @@ class Git_Wrapper {
 		$commits = array_unique( array_merge( array_reverse( $commits ), $ahead_commits ) );
 		$commits = array_reverse( $commits );
 
-		// get behind changes
+		// merge behind changes
 		$remote_branch = $this->get_remote_tracking_branch();
 		$local_branch  = $this->get_local_branch();
 		$this->_call( 'branch', '-m', 'merge_local' );
