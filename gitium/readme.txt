@@ -78,6 +78,9 @@ Submodules are currently not supported.
 
 == Changelog ==
 
+= 1.0-rc4 =
+* Fix merge with accept mine behind commits bug
+
 = 1.0-rc3 =
 * Add support for multisite
 * Fix PHP error on merge & push
