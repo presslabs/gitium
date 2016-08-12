@@ -324,21 +324,21 @@ class Git_Wrapper {
 		$commits = array_unique( array_merge( array_reverse( $commits ), $ahead_commits ) );
 		$commits = array_reverse( $commits );
 
-		if ( 0 === count( $commits ) ) {
-			return true;
-		}
-		
+		// merge behind changes
 		$remote_branch = $this->get_remote_tracking_branch();
 		$local_branch  = $this->get_local_branch();
-
 		$this->_call( 'branch', '-m', 'merge_local' );
 		$this->_call( 'branch', $local_branch, $remote_branch );
 		list( $return, ) = $this->_call( 'checkout', $local_branch );
 		if ( $return != 0 ) {
 			$this->_call( 'branch', '-M', $local_branch );
 			return false;
-                }
-		$this->cherry_pick( $commits );
+		}
+
+		// don't cherry pick if there are no commits
+		if ( count( $commits ) > 0 ) {
+			$this->cherry_pick( $commits );
+		}
 
 		if ( $this->successfully_merged() ) { // git status without states: AA, DD, UA, AU ...
 			$this->_call( 'branch', '-D', 'merge_local' );
