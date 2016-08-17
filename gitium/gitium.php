@@ -247,6 +247,35 @@ function gitium_check_for_plugin_deletions() { // Handle plugin deletion
 }
 add_action( 'load-plugins.php', 'gitium_check_for_plugin_deletions' );
 
+add_action( 'wp_ajax_wp-plugin-delete-success', 'gitium_auto_push' );
+add_action( 'wp_ajax_wp-theme-delete-success', 'gitium_auto_push' );
+
+function gitium_wp_plugin_delete_success() {
+?>
+	<script type='text/javascript'>
+			jQuery(document).ready(function() {
+					jQuery(document).on( 'wp-plugin-delete-success', function() {
+							jQuery.post(ajaxurl, data={'action': 'wp-plugin-delete-success'});
+					});
+			});
+	</script>
+<?php
+}
+add_action( 'admin_head', 'gitium_wp_plugin_delete_success' );
+
+function gitium_wp_theme_delete_success() {
+?>
+	<script type='text/javascript'>
+			jQuery(document).ready(function() {
+					jQuery(document).on( 'wp-theme-delete-success', function() {
+							jQuery.post(ajaxurl, data={'action': 'wp-theme-delete-success'});
+					});
+			});
+	</script>
+<?php
+}
+add_action( 'admin_head', 'gitium_wp_theme_delete_success' );
+
 function gitium_check_for_themes_deletions() { // Handle theme deletion
 	if ( isset( $_GET['deleted'] ) && 'true' == $_GET['deleted'] ) {
 		gitium_auto_push();
