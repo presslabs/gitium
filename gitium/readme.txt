@@ -19,7 +19,7 @@ Gitium is designed with sane development environments in mind, allowing staging 
 
 Gitium requires `git` command line tool with a minimum version of 1.7 installed on the server and the `proc_open` PHP function enabled.
 
-Gitium is the latest element discovered at [Presslabs](https://www.presslabs.com/gitium/).
+You can find more documentation on [Presslabs](https://www.presslabs.com/help/gitium/general).
 
 
 == Screenshots ==
@@ -77,6 +77,10 @@ Submodules are currently not supported.
 
 
 == Changelog ==
+
+= 1.0-rc5 =
+* Fix delete plugin/theme bug on 4.6
+* Update the readme file
 
 = 1.0-rc4 =
 * Fix merge with accept mine behind commits bug
