@@ -16,13 +16,12 @@ printf "\n---  start the new containers (MySQL and WordPress) ---\n"
 docker run --name mysqldocker -e MYSQL_ROOT_PASSWORD=my-secret-pw -d mysql:latest
 mywordpressdocker_id=$(docker run -e WORDPRESS_DB_PASSWORD=my-secret-pw -d --name mywordpressdocker --link mysqldocker:mysql  wordpress)
 
-printf "\n---  find out the IP address of the WordPress container ---\n"
-ip_address=$(docker inspect mywordpressdocker | grep '"IPAddress":' | head -1 | cut -d'"' -f4)
-echo 'Go to: http://'$ip_address'/ in order to install a new WordPress site.'
-
 printf "\n---  add the custom changes to the WordPress container ---\n"
 docker exec -it $mywordpressdocker_id apt-get update
 docker exec -it $mywordpressdocker_id apt-get -y install vim
 docker exec -it $mywordpressdocker_id apt-get -y install git
 docker exec -it $mywordpressdocker_id sed -i '$ a\php_flag opcache.enable Off' /var/www/html/.htaccess
-docker exec -it $mywordpressdocker_id bash
+
+printf "\n---  find out the IP address of the WordPress container ---\n"
+ip_address=$(docker inspect mywordpressdocker | grep '"IPAddress":' | head -1 | cut -d'"' -f4)
+echo 'Go to: http://'$ip_address'/ in order to install a new WordPress site.'
