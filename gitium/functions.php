@@ -230,7 +230,9 @@ if ( ! function_exists( 'gitium_release_merge_lock' ) ) :
 		list( $gitium_lock_path, $gitium_lock_handle ) = $lock;
 		flock( $gitium_lock_handle, LOCK_UN );
 		fclose( $gitium_lock_handle );
-		unlink( $gitium_lock_path );
+		if ( file_exists( $gitium_lock_path ) ) {
+			unlink( $gitium_lock_path );
+		}
 	}
 endif;
 
