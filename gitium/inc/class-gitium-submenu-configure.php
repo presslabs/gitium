@@ -97,7 +97,8 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 		if ( $this->init_process( $_POST['remote_url'] ) ) {
 			$this->success_redirect();
 		} else {
-			$this->redirect( __( 'Could not push to remote', 'gitium' ) . ' ' . $_POST['remote_url'] );
+			$this->redirect( __( 'Could not push to remote: ', gitium ) . $_POST['remote_url'] . ' ERROR: ' . serialize( $git->get_la
+st_error() ) );
 		}
 	}
 
