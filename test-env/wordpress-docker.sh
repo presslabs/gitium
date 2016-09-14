@@ -4,7 +4,7 @@ printf "\n--- bring the official MySQL & WordPress docker images ---\n"
 docker pull mysql
 docker pull wordpress
 
-printf "\n---  stop previous containers and remove it, if there are any ---\n"
+printf "\n---  stop previous containers and remove them, if there are any ---\n"
 mysqldocker_id=$(docker ps | grep mysqldocker | cut -d' ' -f1)
 docker stop $mysqldocker_id
 docker rm $mysqldocker_id
