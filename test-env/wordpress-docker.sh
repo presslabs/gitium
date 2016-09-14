@@ -17,7 +17,7 @@ docker run --name mysqldocker -e MYSQL_ROOT_PASSWORD=my-secret-pw -d mysql:lates
 mywordpressdocker_id=$(docker run -e WORDPRESS_DB_PASSWORD=my-secret-pw -d --name mywordpressdocker --link mysqldocker:mysql  wordpress)
 
 printf "\n---  find out the IP address of the WordPress container ---\n"
-docker inspect mywordpressdocker | grep IPAddress
+docker inspect mywordpressdocker | grep '"IPAddress":' | head -1 | cut -d'"' -f4
 
 printf "\n---  add the custom changes to the WordPress container ---\n"
 docker exec -it $mywordpressdocker_id apt-get update
