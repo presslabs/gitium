@@ -5,10 +5,10 @@ docker pull mysql
 docker pull wordpress
 
 printf "\n---  stop previous containers and remove them, if there are any ---\n"
-mysqldocker_id=$(docker ps | grep mysqldocker | cut -d' ' -f1)
+mysqldocker_id=$(docker ps -a | grep mysqldocker | cut -d' ' -f1)
 docker stop $mysqldocker_id
 docker rm $mysqldocker_id
-mywordpressdocker_id=$(docker ps | grep mywordpressdocker | cut -d' ' -f1)
+mywordpressdocker_id=$(docker ps -a | grep mywordpressdocker | cut -d' ' -f1)
 docker stop $mywordpressdocker_id
 docker rm $mywordpressdocker_id
 
