@@ -38,7 +38,7 @@ def create_user():
     except KeyError:
         shell('groupadd developer --gid {}'.format(gid))
     out = shell('id -un {}'.format(uid), die=False)
-    if out == 'id: \'{}\': no such user\n'.format(uid):
+    if out == 'id: {}: no such user\n'.format(uid):
         print('creating user "developer"')
         shell("useradd developer --home /code --uid {} --gid {} --shell=/bin/bash".format(
             uid, gid
