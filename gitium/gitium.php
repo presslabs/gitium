@@ -73,6 +73,11 @@ function _gitium_make_ssh_git_file_exe() {
 }
 register_activation_hook( __FILE__, '_gitium_make_ssh_git_file_exe' );
 
+function gitium_deactivation() {
+	delete_transient( 'gitium_git_version' );
+}
+register_deactivation_hook( __FILE__, 'gitium_deactivation' );
+
 /* Array
 (
     [themes] => Array
