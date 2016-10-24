@@ -1,6 +1,7 @@
 /vendor/
 composer.lock
 .composer/cache
+.composer/.htaccess
 .vimrc
 *.pyc
 *~
