@@ -63,6 +63,7 @@ class Gitium_Menu {
 			return;
 		}
 		check_admin_referer( 'gitium-admin' );
+		gitium_uninstall_hook();
 		if ( ! $this->git->remove_remote() ) {
 			$this->redirect( 'Could not remove remote.' );
 		}
