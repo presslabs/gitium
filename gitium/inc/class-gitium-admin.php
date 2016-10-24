@@ -41,8 +41,7 @@ class Gitium_Admin {
 	}
 
 	public function has_configuration() {
-		global $git;
-		return $git->is_versioned() && $git->get_remote_tracking_branch();
+		return _gitium_is_versioned() && _gitium_get_remote_tracking_branch();
 	}
 }
 

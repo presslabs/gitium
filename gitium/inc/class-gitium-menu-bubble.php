@@ -23,10 +23,9 @@ class Gitium_Menu_Bubble extends Gitium_Menu {
 	}
 
 	public function add_menu_bubble() {
-		global $git;
 		global $menu;
 
-		if ( ! $git->is_versioned()  ) {
+		if ( ! _gitium_is_versioned()  ) {
 			foreach ( $menu as $key => $value  ) {
 				if ( $this->menu_slug == $menu[ $key ][2] ) {
 					$menu_bubble = get_transient( 'gitium_menu_bubble' );
