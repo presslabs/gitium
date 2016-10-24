@@ -78,6 +78,16 @@ Submodules are currently not supported.
 
 == Changelog ==
 
+= 1.0-rc6 =
+* Delete all transients and options on uninstall hook
+* Add transients to is_versions and get_remote_tracking_branch functions
+* Update the composer
+* Check requirements before show the admin menu
+* Put the logs off by default(on test env)
+* Fix redirect issue and display errors
+* Create wordpress docker env command
+* PHP Warning: unlink #114
+
 = 1.0-rc5 =
 * Fix delete plugin/theme bug on 4.6
 * Update the readme file
