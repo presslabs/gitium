@@ -316,19 +316,32 @@ class Git_Wrapper {
 	function merge_with_accept_mine() {
 		do_action( 'gitium_before_merge_with_accept_mine' );
 
+		// get all commits given by arguments
 		$commits = func_get_args();
 		if ( 1 == func_num_args() && is_array( $commits[0] ) ) {
 			$commits = $commits[0];
 		}
+
+		// get ahead commits
 		$ahead_commits = $this->get_ahead_commits();
+
+		// combine all commits with the ahead commits
 		$commits = array_unique( array_merge( array_reverse( $commits ), $ahead_commits ) );
 		$commits = array_reverse( $commits );
 
-		// merge behind changes
+		// get the remote branch
 		$remote_branch = $this->get_remote_tracking_branch();
+
+		// get the local branch
 		$local_branch  = $this->get_local_branch();
+
+		// rename the local branch to 'merge_local'
 		$this->_call( 'branch', '-m', 'merge_local' );
+
+		// local branch set up to track remote branch
 		$this->_call( 'branch', $local_branch, $remote_branch );
+
+		// checkout to the $local_branch
 		list( $return, ) = $this->_call( 'checkout', $local_branch );
 		if ( $return != 0 ) {
 			$this->_call( 'branch', '-M', $local_branch );
@@ -341,6 +354,7 @@ class Git_Wrapper {
 		}
 
 		if ( $this->successfully_merged() ) { // git status without states: AA, DD, UA, AU ...
+			// delete the 'merge_local' branch
 			$this->_call( 'branch', '-D', 'merge_local' );
 			return true;
 		} else {
