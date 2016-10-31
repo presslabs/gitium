@@ -226,6 +226,7 @@ if ( ! function_exists( 'gitium_acquire_merge_lock' ) ) :
 				return false; // timeout
 			}
 		}
+		gitium_error_log( __FUNCTION__ );
 		return array( $gitium_lock_path, $gitium_lock_handle );
 	}
 endif;
@@ -233,6 +234,7 @@ endif;
 if ( ! function_exists( 'gitium_release_merge_lock' ) ) :
 	function gitium_release_merge_lock( $lock ) {
 		list( $gitium_lock_path, $gitium_lock_handle ) = $lock;
+		gitium_error_log( __FUNCTION__ );
 		flock( $gitium_lock_handle, LOCK_UN );
 		fclose( $gitium_lock_handle );
 		if ( file_exists( $gitium_lock_path ) ) {
