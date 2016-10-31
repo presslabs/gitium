@@ -301,11 +301,26 @@ class Git_Wrapper {
 		return ( $return !== 0 ? false : join( "\n", $response ) );
 	}
 
+	private function strpos_haystack_array( $haystack, $needle, $offset=0 ) {
+		if ( ! is_array( $haystack ) ) { $haystack = array( $haystack ); }
+
+		foreach ( $haystack as $query ) {
+			if ( strpos( $query, $needle, $offset) !== false ) { return true; }
+		}
+		return false;
+	}
+
 	private function cherry_pick( $commits ) {
 		foreach ( $commits as $commit ) {
 			if ( empty( $commit ) ) { return false; }
 
-			list( $return, ) = $this->_call( 'cherry-pick', $commit );
+			list( $return, $response ) = $this->_call( 'cherry-pick', $commit );
+
+			// abort the cherry-pick if the changes are already pushed
+			if ( false !== $this->strpos_haystack_array( $response, 'previous cherry-pick is now empty' ) ) {
+				$this->_call( 'cherry-pick', '--abort' );
+				continue;
+			}
 
 			if ( $return != 0 ) {
 				$this->_resolve_merge_conflicts( $this->get_commit_message( $commit ) );
