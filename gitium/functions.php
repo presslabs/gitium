@@ -284,10 +284,6 @@ function gitium_update_remote_tracking_branch() {
 }
 
 function _gitium_get_remote_tracking_branch( $update_transient = false ) {
-	if ( $update_transient ) {
-		return gitium_update_remote_tracking_branch();
-	}
-
 	if ( ! $update_transient && ( false !== ( $remote_tracking_branch = get_transient( 'gitium_remote_tracking_branch' ) ) ) ) {
 		return $remote_tracking_branch;
 	} else {
@@ -304,10 +300,6 @@ function gitium_update_is_versioned() {
 }
 
 function _gitium_is_versioned( $update_transient = false ) {
-	if ( $update_transient ) {
-		return gitium_update_is_versioned();
-	}
-
 	if ( ! $update_transient && ( false !== ( $is_versioned = get_transient( 'gitium_is_versioned' ) ) ) ) {
 		return $is_versioned;
 	} else {
