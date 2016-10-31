@@ -15,6 +15,11 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+function gitium_error_log( $message ) {
+	if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) { return; }
+	error_log( "gitium_error_log: $message" );
+}
+
 function wp_content_is_versioned() {
 	return file_exists( WP_CONTENT_DIR . '/.git' );
 }
