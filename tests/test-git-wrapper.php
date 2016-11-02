@@ -216,6 +216,31 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		$this->assertEquals( $changes['work-file.txt'], 'M' );
 	}
 
+	function test_local_status_path_renamed_in_index() {
+		/*
+			Path renamed with git mv:
+
+			echo 'some content' > some-file.txt
+			git add --all
+			git commit -m 'Add some file'
+			git mv some-file.txt another-file.txt
+			git status -s -b -u
+		*/
+		global $git;
+		$filename     = 'some-file.txt';
+		$new_filename = 'another-file.txt';
+		file_put_contents( $git->repo_dir . '/' . $filename, 'some content' . PHP_EOL );
+		$git->add();
+		$git->commit('Add some file');
+		$response = explode( "\n", shell_exec( "cd {$git->repo_dir} ; git mv {$filename} {$new_filename}" ) );
+		$this->delete_on_teardown[] = $git->repo_dir . '/' . $new_filename;
+
+		list( $branch_status, $changes ) = $git->local_status();
+
+		$this->assertStringEndsWith( '[ahead 1]', $branch_status );
+		$this->assertEquals( $changes[ $new_filename ], 'R  ' . $filename );
+	}
+
 	function test_status() {
 		global $git;
 
