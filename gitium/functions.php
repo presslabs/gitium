@@ -277,15 +277,15 @@ function gitium_check_after_event( $plugin, $event = 'activation' ) {
 
 function gitium_update_remote_tracking_branch() {
 	global $git;
-	$remote_tracking_branch = $git->get_remote_tracking_branch();
-	set_transient( 'gitium_remote_tracking_branch', $remote_tracking_branch );
+	$remote_branch = $git->get_remote_tracking_branch();
+	set_transient( 'gitium_remote_tracking_branch', $remote_branch );
 
-	return $remote_tracking_branch;
+	return $remote_branch;
 }
 
 function _gitium_get_remote_tracking_branch( $update_transient = false ) {
-	if ( ! $update_transient && ( false !== ( $remote_tracking_branch = get_transient( 'gitium_remote_tracking_branch' ) ) ) ) {
-		return $remote_tracking_branch;
+	if ( ! $update_transient && ( false !== ( $remote_branch = get_transient( 'gitium_remote_tracking_branch' ) ) ) ) {
+		return $remote_branch;
 	} else {
 		return gitium_update_remote_tracking_branch();
 	}
