@@ -479,22 +479,22 @@ class Git_Wrapper {
 		}
 		$new_response = array();
 		if ( ! empty( $response ) ) {
-			foreach ( $response as $item ) :
-				$y    = substr( $item, 1, 1 ); // Y shows the status of the work tree
-				$file = substr( $item, 3 );
+			foreach ( $response as $line ) :
+				$work_tree_status = substr( $line, 1, 1 );
+				$path = substr( $line, 3 );
 
-				if ( ( '"' == $file[0] ) && ('"' == $file[strlen( $file ) - 1] ) ) {
+				if ( ( '"' == $path[0] ) && ('"' == $path[strlen( $path ) - 1] ) ) {
 					// git status --porcelain will put quotes around paths with whitespaces
 					// we don't want the quotes, let's get rid of them
-					$file = substr( $file, 1, strlen( $file ) - 2 );
+					$path = substr( $path, 1, strlen( $path ) - 2 );
 				}
 
-				if ( 'D' == $y ) {
+				if ( 'D' == $work_tree_status ) {
 					$action = 'deleted';
 				} else {
 					$action = 'modified';
 				}
-				$new_response[ $file ] = $action;
+				$new_response[ $path ] = $action;
 			endforeach;
 		}
 		return $new_response;
@@ -510,27 +510,28 @@ class Git_Wrapper {
 		if ( 0 !== $return ) {
 			return array( '', array() );
 		}
-		$new_response = array();
 
+		$new_response = array();
 		if ( ! empty( $response ) ) {
 			$branch_status = array_shift( $response );
-			foreach ( $response as $idx => $item ) :
-				if ( ! empty( $from ) ) {
-					unset( $from );
+			foreach ( $response as $idx => $line ) :
+				if ( ! empty( $old_path ) ) {
+					unset( $old_path );
 					continue;
 				}
-				unset($x, $y, $to, $from);
-				if ( empty( $item ) ) { continue; } // ignore empty elements like the last item
-				if ( '#' == $item[0] ) { continue; } // ignore branch status
+				unset( $index_status, $work_tree_status, $path, $old_path );
+				if ( empty( $line ) ) { continue; } // ignore empty lines like the last item
+				if ( '#' == $line[0] ) { continue; } // ignore branch status
 
-				$x    = substr( $item, 0, 1 ); // X shows the status of the index
-				$y    = substr( $item, 1, 1 ); // Y shows the status of the work tree
-				$to   = substr( $item, 3 );
-				$from = '';
-				if ( 'R' == $x ) {
-					$from = $response[ $idx + 1 ];
+				$index_status     = substr( $line, 0, 1 );
+				$work_tree_status = substr( $line, 1, 1 );
+				$path             = substr( $line, 3 );
+
+				$old_path = '';
+				if ( 'R' == $index_status ) { // if the path is renamed
+					$old_path = $response[ $idx + 1 ];
 				}
-				$new_response[ $to ] = trim( "$x$y $from" );
+				$new_response[ $path ] = trim( $index_status . $work_tree_status . ' ' . $old_path );
 			endforeach;
 		}
 
