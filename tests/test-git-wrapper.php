@@ -4,6 +4,14 @@ require_once 'gitium-unittestcase.php';
 require_once 'repl.php';
 
 class Test_Git_Wrapper extends Gitium_UnitTestCase {
+
+	/**
+	 * Test if there are unused methods
+	 */
+	function test_unused_methods() {
+		global $git;
+		$this->assertEquals( array(), $git->get_unused_methods() );
+	}
 	/**
 	 * Test is_dirty()
 	 *

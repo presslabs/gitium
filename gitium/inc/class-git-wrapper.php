@@ -92,9 +92,27 @@ class Git_Wrapper {
 
 	private $last_error = '';
 	private $gitignore  = GITIGNORE;
+
 	function __construct( $repo_dir ) {
 		$this->repo_dir    = $repo_dir;
 		$this->private_key = '';
+	}
+
+	function get_unused_methods() {
+		$unused_methods = array();
+
+		$gitium_dir = WP_PLUGIN_DIR . '/gitium/';
+		$git_wrapper_methods = get_class_methods( $this );
+		foreach ( $git_wrapper_methods as $key => $method ) {
+			// skip counting this method and the constructor
+			if ( in_array( $method, array( __FUNCTION__, '__construct' ) ) ) { continue; }
+			$count = trim( shell_exec( "cd {$gitium_dir} ; grep -r '{$method}' | wc -l" ) );
+			if ( $count < 2 ) {
+				$unused_methods[ $method ] = 'Remove this method because is no longer used';
+			}
+		}
+
+		return $unused_methods;
 	}
 
 	function _git_rrmdir( $dir ) {
