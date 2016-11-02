@@ -516,11 +516,8 @@ class Git_Wrapper {
 		if ( ! empty( $response ) ) {
 			$branch_status = array_shift( $response );
 			foreach ( $response as $idx => $line ) :
-				if ( ! empty( $old_path ) ) {
-					unset( $old_path );
-					continue;
-				}
-				unset( $index_status, $work_tree_status, $path, $old_path );
+				unset( $index_status, $work_tree_status, $path, $new_path, $old_path );
+
 				if ( empty( $line ) ) { continue; } // ignore empty lines like the last item
 				if ( '#' == $line[0] ) { continue; } // ignore branch status
 
@@ -529,8 +526,10 @@ class Git_Wrapper {
 				$path             = substr( $line, 3 );
 
 				$old_path = '';
-				if ( 'R' == $index_status ) { // if the path is renamed
-					$old_path = $response[ $idx + 1 ];
+				$new_path = explode( '->', $path );
+				if ( ( 'R' === $index_status ) && ( ! empty( $new_path[1] ) ) ) {
+					$old_path = trim( $new_path[0] );
+					$path     = trim( $new_path[1] );
 				}
 				$new_response[ $path ] = trim( $index_status . $work_tree_status . ' ' . $old_path );
 			endforeach;
