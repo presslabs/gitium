@@ -291,19 +291,18 @@ function _gitium_get_remote_tracking_branch( $update_transient = false ) {
 	}
 }
 
-function gitium_update_is_versioned() {
+function gitium_update_is_status_working() {
 	global $git;
-	$is_versioned = $git->is_versioned();
-	set_transient( 'gitium_is_versioned', $git->get_version() );
-
-	return $is_versioned;
+	$is_status_working = $git->is_status_working();
+	set_transient( 'gitium_is_status_working', $is_status_working );
+	return $is_status_working;
 }
 
-function _gitium_is_versioned( $update_transient = false ) {
-	if ( ! $update_transient && ( false !== ( $is_versioned = get_transient( 'gitium_is_versioned' ) ) ) ) {
-		return $is_versioned;
+function _gitium_is_status_working( $update_transient = false ) {
+	if ( ! $update_transient && ( false !== ( $is_status_working = get_transient( 'gitium_is_status_working' ) ) ) ) {
+		return $is_status_working;
 	} else {
-		return gitium_update_is_versioned();
+		return gitium_update_is_status_working();
 	}
 }
 
@@ -319,7 +318,7 @@ function _gitium_status( $update_transient = false ) {
 		set_transient( 'gitium_git_version', $git->get_version() );
 	}
 
-	if ( $git->is_versioned() && $git->get_remote_tracking_branch() ) {
+	if ( $git->is_status_working() && $git->get_remote_tracking_branch() ) {
 		if ( ! $git->fetch_ref() ) {
 			set_transient( 'gitium_remote_disconnected', $git->get_last_error() );
 		} else {

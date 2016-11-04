@@ -232,7 +232,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 			return $this->setup_warning();
 		}
 
-		if ( ! $this->git->is_versioned() || ! $this->git->get_remote_url() ) {
+		if ( ! $this->git->is_status_working() || ! $this->git->get_remote_url() ) {
 			return $this->setup_step_1();
 		}
 

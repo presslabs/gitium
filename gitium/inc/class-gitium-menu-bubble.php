@@ -25,7 +25,7 @@ class Gitium_Menu_Bubble extends Gitium_Menu {
 	public function add_menu_bubble() {
 		global $menu;
 
-		if ( ! _gitium_is_versioned()  ) {
+		if ( ! _gitium_is_status_working()  ) {
 			foreach ( $menu as $key => $value  ) {
 				if ( $this->menu_slug == $menu[ $key ][2] ) {
 					$menu_bubble = get_transient( 'gitium_menu_bubble' );

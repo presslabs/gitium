@@ -200,7 +200,7 @@ class Git_Wrapper {
 		return ( 0 == $return );
 	}
 
-	function is_versioned() {
+	function is_status_working() {
 		list( $return, ) = $this->_call( 'status', '-s' );
 		return ( 0 == $return );
 	}

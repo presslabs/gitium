@@ -79,14 +79,13 @@ function gitium_deactivation() {
 register_deactivation_hook( __FILE__, 'gitium_deactivation' );
 
 function gitium_uninstall_hook() {
-	delete_transient( 'gitium_is_versioned' );
 	delete_transient( 'gitium_remote_tracking_branch' );
-	delete_transient( 'gitium_is_versioned' );
 	delete_transient( 'gitium_remote_disconnected' );
 	delete_transient( 'gitium_uncommited_changes' );
 	delete_transient( 'gitium_git_version' );
 	delete_transient( 'gitium_versions' );
 	delete_transient( 'gitium_menu_bubble' );
+	delete_transient( 'gitium_is_status_working' );
 
 	delete_option( 'gitium_keypair' );
 	delete_option( 'gitium_webhook_key' );

@@ -100,9 +100,9 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		$this->assertTrue( $git->can_exec_git() );
 	}
 
-	function test_is_versioned() {
+	function test_is_status_working() {
 		global $git;
-		$this->assertTrue( $git->is_versioned() );
+		$this->assertTrue( $git->is_status_working() );
 	}
 
 	function test_get_version() {
@@ -113,7 +113,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 	function test_cleanup() {
 		global $git;
 		$git->cleanup();
-		$this->assertFalse( $git->is_versioned() );
+		$this->assertFalse( $git->is_status_working() );
 	}
 
 	function test_get_remote_url() {
