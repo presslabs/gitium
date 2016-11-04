@@ -127,6 +127,18 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		$this->assertEmpty( $git->get_remote_url() );
 	}
 
+	function test_remote_url() {
+		global $git;
+
+		if ( ! empty( $git->get_remote_url() ) ) {
+			$git->remove_remote();
+		}
+
+		$remote_url = 'http://my.server/username:password/repository.git';
+		$git->add_remote_url( $remote_url );
+
+		$this->assertEquals( $remote_url, $git->get_remote_url() );
+	}
 	function test_get_local_changes() {
 		global $git;
 
@@ -318,6 +330,5 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 			$git->get_local_changes()
 		);
 	}
-
 
 }
