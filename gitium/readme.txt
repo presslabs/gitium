@@ -78,6 +78,16 @@ Submodules are currently not supported.
 
 == Changelog ==
 
+= 1.0-rc7 =
+* Test remote url from git wrapper
+* Remove the phpmd package from test environment
+* Set WP_DEBUG to false on tests
+* Refactoring
+* Abort the cherry-pick - changes are already there
+* Fix the race condition
+* Add acquire and release logs for gitium lock
+* Add explanations to merge with accept mine logic
+
 = 1.0-rc6 =
 * Delete all transients and options on uninstall hook
 * Add transients to is_versions and get_remote_tracking_branch functions
