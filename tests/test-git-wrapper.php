@@ -130,7 +130,8 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 	function test_remote_url() {
 		global $git;
 
-		if ( ! empty( $git->get_remote_url() ) ) {
+		$remote_url = $git->get_remote_url();
+		if ( ! empty( $remote_url ) ) {
 			$git->remove_remote();
 		}
 
