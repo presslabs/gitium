@@ -241,5 +241,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 		}
 
 		_gitium_status( true );
+		gitium_update_is_status_working()
+		gitium_update_remote_tracking_branch();
 	}
 }
