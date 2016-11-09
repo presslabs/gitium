@@ -28,9 +28,56 @@ class Test_Gitium extends WP_UnitTestCase {
 				)
 			)
 		);
+
+		set_transient( 'gitium_git_version', '1.7.9');
 	}
 
 	function teardown() {
+	}
+
+	function test_gitium_deactivation() {
+		$this->assertTrue( True, get_transient( 'gitium_git_version' ) );
+		gitium_deactivation();
+		$this->assertFalse( get_transient( 'gitium_git_version' ) );
+	}
+
+	function test_gitium_uninstall_hook() {
+		$deleted_options = array(
+			'gitium_keypair',
+			'gitium_webhook_key'
+		);
+		foreach ( $deleted_options as $option ) {
+			add_option( $option, True );
+		}
+
+		$deleted_transients = array(
+			'gitium_remote_tracking_branch',
+			'gitium_remote_disconnected',
+			'gitium_uncommited_changes',
+			'gitium_git_version',
+			'gitium_versions',
+			'gitium_menu_bubble',
+			'gitium_is_status_working',
+		);
+		foreach ( $deleted_transients as $transient ) {
+			set_transient( $transient, True );
+		}
+
+		foreach ( $deleted_options as $option ) {
+			$this->assertTrue( get_option( $option ) );
+		}
+		foreach ( $deleted_transients as $transient ) {
+			$this->assertTrue( get_transient( $transient ) );
+		}
+
+		gitium_uninstall_hook();
+
+		foreach ( $deleted_options as $option ) {
+			$this->assertFalse( get_option( $option ) );
+		}
+		foreach ( $deleted_transients as $transient ) {
+			$this->assertFalse( get_transient( $transient ) );
+		}
 	}
 
 	function test_gitium_is_activated() {
