@@ -28,15 +28,13 @@ class Test_Gitium extends WP_UnitTestCase {
 				)
 			)
 		);
-
-		set_transient( 'gitium_git_version', '1.7.9');
 	}
 
 	function teardown() {
 	}
 
 	function test_gitium_deactivation() {
-		$this->assertTrue( True, get_transient( 'gitium_git_version' ) );
+		set_transient( 'gitium_git_version', '1.7.9');
 		gitium_deactivation();
 		$this->assertFalse( get_transient( 'gitium_git_version' ) );
 	}
@@ -61,13 +59,6 @@ class Test_Gitium extends WP_UnitTestCase {
 		);
 		foreach ( $deleted_transients as $transient ) {
 			set_transient( $transient, True );
-		}
-
-		foreach ( $deleted_options as $option ) {
-			$this->assertTrue( get_option( $option ) );
-		}
-		foreach ( $deleted_transients as $transient ) {
-			$this->assertTrue( get_transient( $transient ) );
 		}
 
 		gitium_uninstall_hook();
