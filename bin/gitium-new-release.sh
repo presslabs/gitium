@@ -36,7 +36,7 @@ cd gitium/trunk ; rm -rf ./*
 cp -r ../../../gitium-${gitium_tag_release}/gitium/* ./
 cp -r ../../../gitium-${gitium_tag_release}/gitium/* ../tags/${gitium_tag_release}/
 cd ../ ; svn add tags/${gitium_tag_release} ; svn status
-svn commit --username ${wordpress_username} --password ${wordpress_password} -m "Add the ${gitium_tag_release} version"
+svn commit --username ${wordpress_username} --password "${wordpress_password}" -m "Add the ${gitium_tag_release} version"
 cd ../../../ ; rm -rf new_gitium_${gitium_tag_release}
 
 if [[ `wget -S --spider ${wordpress_svn_tag_url} 2>&1 | grep 'HTTP/1.1 200 OK'` ]]; then
