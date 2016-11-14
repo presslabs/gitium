@@ -78,6 +78,11 @@ Submodules are currently not supported.
 
 == Changelog ==
 
+= 1.0-rc8 =
+* Fix some indents
+* Add some more tests
+* Fix the submenu configure logic
+
 = 1.0-rc7 =
 * Test remote url from git wrapper
 * Remove the phpmd package from test environment
