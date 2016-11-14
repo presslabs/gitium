@@ -33,20 +33,22 @@ class Gitium_Requirements {
 	}
 
 	private function _check_req() {
-			list( $this->req['is_git_version'],        $this->msg['is_git_version'] )        = $this->is_git_version();
-			list( $this->req['is_proc_open'],          $this->msg['is_proc_open']          ) = $this->is_proc_open();
-			list( $this->req['is_php_verion'],         $this->msg['is_php_verion']  )        = $this->is_php_version();
-			list( $this->req['can_exec_ssh_git_file'], $this->msg['can_exec_ssh_git_file'] ) = $this->can_exec_ssh_git_file();
+		list($this->req['is_git_version'],       $this->msg['is_git_version']       ) = $this->is_git_version();
+		list($this->req['is_proc_open'],         $this->msg['is_proc_open']         ) = $this->is_proc_open();
+		list($this->req['is_php_verion'],        $this->msg['is_php_verion']        ) = $this->is_php_version();
+		list($this->req['can_exec_ssh_git_file'],$this->msg['can_exec_ssh_git_file']) = $this->can_exec_ssh_git_file();
 
-			return $this->req;
+		return $this->req;
 	}
 
 	public function admin_notices() {
-		if ( current_user_can( GITIUM_MANAGE_OPTIONS_CAPABILITY ) ) {
-			foreach ( $this->req as $key => $value ) {
-				if ( false === $value ) {
-					echo "<div class='error-nag error'><p>Gitium Requirement: {$this->msg[$key]}</p></div>";
-				}
+		if ( ! current_user_can( GITIUM_MANAGE_OPTIONS_CAPABILITY ) ) {
+			return;
+		}
+
+		foreach ( $this->req as $key => $value ) {
+			if ( false === $value ) {
+				echo "<div class='error-nag error'><p>Gitium Requirement: {$this->msg[$key]}</p></div>";
 			}
 		}
 	}
