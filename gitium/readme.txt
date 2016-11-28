@@ -43,7 +43,7 @@ Alternatively, go into your WordPress dashboard and click on Plugins -> Add Plug
 
 = Usage =
 
-Activate the plugin and follow the on-screen instructions under the `Code` menu.
+Activate the plugin and follow the on-screen instructions under the `Gitium` menu.
 
 _IMPORTANT_: Gitium does its best not to version your WordPress core, neither your `/wp-content/uploads` folder.
 
@@ -65,7 +65,7 @@ The behavior in case of conflicts is to overwrite the changes on the `origin` re
 
 = How to deploy automatically after a push? =
 
-You can ping the webhook url after a push to automatically deploy the new code. The webhook url can be found under `Code` menu. This url also plays well with Github or Bitbucket webhooks.
+You can ping the webhook url after a push to automatically deploy the new code. The webhook url can be found under `Gitium` menu, `Settings` section. This url also plays well with Github or Bitbucket webhooks.
 
 = Does it works on multi site setups? =
 
