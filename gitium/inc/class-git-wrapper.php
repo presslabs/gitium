@@ -99,13 +99,16 @@ class Git_Wrapper {
 	}
 
 	function _git_rrmdir( $dir ) {
-		if ( ! empty( $dir ) && is_dir( $dir ) ) {
-			$files = array_diff( scandir( $dir ), array( '.', '..' ) );
-			foreach ( $files as $file ) {
-				( is_dir( "$dir/$file" ) ) ? $this->_git_rrmdir( "$dir/$file" ) : unlink( "$dir/$file" );
-			}
-			return rmdir( $dir );
+		if ( empty( $dir ) || ! is_dir( $dir ) ) {
+			return false;
 		}
+
+		$files = array_diff( scandir( $dir ), array( '.', '..' ) );
+		foreach ( $files as $file ) {
+			$filepath = realpath("$dir/$file");
+			( is_dir( $filepath ) ) ? $this->_git_rrmdir( $filepath ) : unlink( $filepath );
+		}
+		return rmdir( $dir );
 	}
 
 	function _log() {
@@ -235,8 +238,24 @@ class Git_Wrapper {
 		return ( 0 == $return );
 	}
 
+	function is_dot_git_dir( $dir ) {
+		$realpath   = realpath( $dir );
+		$git_config = realpath( $realpath . '/config' );
+		$git_index  = realpath( $realpath . '/index' );
+		if ( ! empty( $realpath ) && is_dir( $realpath ) && file_exists( $git_config ) && file_exists( $git_index ) ) {
+			return True;
+		}
+		return False;
+	}
+
 	function cleanup() {
-		$this->_git_rrmdir( $this->repo_dir . '/.git' );
+		$dot_git_dir = realpath( $this->repo_dir . '/.git' );
+		if ( $this->is_dot_git_dir( $dot_git_dir ) ) {
+			$this->_git_rrmdir( $dot_git_dir );
+			error_log( "Gitium cleanup success! The .git dir was '$dot_git_dir'" );
+		} else {
+			error_log( "Gitium cleanup bypassed! The wrong .git dir is '$dot_git_dir'" );
+		}
 	}
 
 	function add_remote_url( $url ) {
