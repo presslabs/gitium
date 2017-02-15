@@ -250,12 +250,12 @@ class Git_Wrapper {
 
 	function cleanup() {
 		$dot_git_dir = realpath( $this->repo_dir . '/.git' );
-		if ( $this->is_dot_git_dir( $dot_git_dir ) ) {
-			$this->_rrmdir( $dot_git_dir );
-			error_log( "Gitium cleanup success! The .git dir was '$dot_git_dir'" );
-		} else {
-			error_log( "Gitium cleanup bypassed! The wrong .git dir is '$dot_git_dir'" );
+		if ( $this->is_dot_git_dir( $dot_git_dir ) && $this->_rrmdir( $dot_git_dir ) ) {
+			error_log( "The Gitium cleanup process succeed because the '$dot_git_dir' dir was removed." );
+			return True;
 		}
+		error_log( "the Gitium cleanup process bypassed because of the wrong '$dot_git_dir' dir." );
+		return False;
 	}
 
 	function add_remote_url( $url ) {
