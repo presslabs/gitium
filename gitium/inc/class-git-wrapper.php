@@ -251,10 +251,10 @@ class Git_Wrapper {
 	function cleanup() {
 		$dot_git_dir = realpath( $this->repo_dir . '/.git' );
 		if ( $this->is_dot_git_dir( $dot_git_dir ) && $this->_rrmdir( $dot_git_dir ) ) {
-			error_log( "The Gitium cleanup process succeed because the '$dot_git_dir' dir was removed." );
+			error_log( "Gitium cleanup successfull. Removed '$dot_git_dir'." );
 			return True;
 		}
-		error_log( "the Gitium cleanup process bypassed because of the wrong '$dot_git_dir' dir." );
+		error_log( "Gitium cleanup failed. '$dot_git_dir' is not a .git dir." );
 		return False;
 	}
 
