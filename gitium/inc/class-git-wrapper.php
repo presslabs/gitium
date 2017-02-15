@@ -98,7 +98,7 @@ class Git_Wrapper {
 		$this->private_key = '';
 	}
 
-	function _git_rrmdir( $dir ) {
+	function _rrmdir( $dir ) {
 		if ( empty( $dir ) || ! is_dir( $dir ) ) {
 			return false;
 		}
@@ -106,7 +106,7 @@ class Git_Wrapper {
 		$files = array_diff( scandir( $dir ), array( '.', '..' ) );
 		foreach ( $files as $file ) {
 			$filepath = realpath("$dir/$file");
-			( is_dir( $filepath ) ) ? $this->_git_rrmdir( $filepath ) : unlink( $filepath );
+			( is_dir( $filepath ) ) ? $this->_rrmdir( $filepath ) : unlink( $filepath );
 		}
 		return rmdir( $dir );
 	}
@@ -251,7 +251,7 @@ class Git_Wrapper {
 	function cleanup() {
 		$dot_git_dir = realpath( $this->repo_dir . '/.git' );
 		if ( $this->is_dot_git_dir( $dot_git_dir ) ) {
-			$this->_git_rrmdir( $dot_git_dir );
+			$this->_rrmdir( $dot_git_dir );
 			error_log( "Gitium cleanup success! The .git dir was '$dot_git_dir'" );
 		} else {
 			error_log( "Gitium cleanup bypassed! The wrong .git dir is '$dot_git_dir'" );
