@@ -112,14 +112,26 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 
 	function test_cleanup_with_dot_git() {
 		global $git;
-		$this->assertTrue( $git->cleanup() ); // .git dir is already initialized
+		$dot_git_dir = $git->repo_dir . '/.git';
+
+		// make sure that .git dir is already initialized and it is a true .git dir
+		$this->assertFileExists( $dot_git_dir );
+		$this->assertFileExists( $dot_git_dir . '/config' );
+		$this->assertFileExists( $dot_git_dir . '/index' );
+
+		$this->assertTrue( $git->cleanup() );
+		$this->assertFileNotExists( $dot_git_dir );
+		$this->assertFileNotExists( $dot_git_dir . '/config' );
+		$this->assertFileNotExists( $dot_git_dir . '/index' );
 	}
 
 	function test_cleanup_with_wrong_dot_git() {
 		global $git;
+		$wrong_dot_git_dir = $git->repo_dir . '/.git';
 		$git->cleanup(); // remove the already initialized .git dir
-		mkdir( $this->remote_repo . '/.git' ); // create a fake .git dir
+		mkdir( $wrong_dot_git_dir ); // create a fake .git dir
 		$this->assertFalse( $git->cleanup() );
+		$this->assertFileExists( $wrong_dot_git_dir );
 	}
 
 	function test_get_remote_url() {
