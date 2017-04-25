@@ -52,7 +52,8 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 	}
 
 	public function regenerate_keypair() {
-		if ( ! isset( $_POST['GitiumSubmitRegenerateKeypair'] ) ) {
+	    $submit_keypair = filter_input(INPUT_POST, 'GitiumSubmitRegenerateKeypair', FILTER_SANITIZE_STRING);
+		if ( ! isset( $submit_keypair ) ) {
 			return;
 		}
 		check_admin_referer( 'gitium-admin' );
@@ -61,7 +62,8 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 	}
 
 	public function gitium_warning() {
-		if ( ! isset( $_POST['GitiumSubmitWarning'] ) ) {
+		$submit_warning = filter_input(INPUT_POST, 'GitiumSubmitWarning', FILTER_SANITIZE_STRING);
+		if ( ! isset( $submit_warning ) ) {
 			return;
 		}
 		check_admin_referer( 'gitium-admin' );
@@ -86,30 +88,34 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 	}
 
 	public function init_repo() {
-		if ( ! isset( $_POST['GitiumSubmitFetch'] ) || ! isset( $_POST['remote_url'] ) ) {
+		$remote_url = filter_input(INPUT_POST, 'remote_url', FILTER_SANITIZE_STRING);
+	    $gitium_submit_fetch = filter_input(INPUT_POST, 'GitiumSubmitFetch', FILTER_SANITIZE_STRING);
+		if ( ! isset( $gitium_submit_fetch ) || ! isset( $remote_url ) ) {
 			return;
 		}
 		check_admin_referer( 'gitium-admin' );
 
-		if ( empty( $_POST['remote_url'] ) ) {
+		if ( empty( $remote_url ) ) {
 			$this->redirect( __( 'Please specify a valid repo.', 'gitium' ) );
 		}
-		if ( $this->init_process( $_POST['remote_url'] ) ) {
+		if ( $this->init_process( $remote_url ) ) {
 			$this->success_redirect();
 		} else {
 			global $git;
-			$this->redirect( __( 'Could not push to remote: ', 'gitium' ) . $_POST['remote_url'] . ' ERROR: ' . serialize( $git->get_last_error() ) );
+			$this->redirect( __( 'Could not push to remote: ', 'gitium' ) . $remote_url . ' ERROR: ' . serialize( $git->get_last_error() ) );
 		}
 	}
 
 	public function choose_branch() {
-		if ( ! isset( $_POST['GitiumSubmitMergeAndPush'] ) || ! isset( $_POST['tracking_branch'] ) ) {
+	    $gitium_submit_merge_push = filter_input(INPUT_POST, 'GitiumSubmitMergeAndPush', FILTER_SANITIZE_STRING);
+        $tracking_branch = filter_input(INPUT_POST, 'tracking_branch', FILTER_SANITIZE_STRING);
+		if ( ! isset( $gitium_submit_merge_push ) || ! isset( $tracking_branch ) ) {
 			return;
 		}
 		check_admin_referer( 'gitium-admin' );
 		$this->git->add();
 
-		$branch = $_POST['tracking_branch'];
+		$branch = $tracking_branch;
 		set_transient( 'gitium_remote_tracking_branch', $branch );
 		$current_user = wp_get_current_user();
 

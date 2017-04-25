@@ -117,12 +117,11 @@ class Git_Wrapper {
 		if ( func_num_args() == 1 && is_string( func_get_arg( 0 ) ) ) {
 			error_log( func_get_arg( 0 ) );
 		} else {
-			ob_start();
 			$args = func_get_args();
+			$output = '';
 			foreach ( $args as $arg ) {
-				var_dump( $arg );
+				$output .= var_export($arg, true).'/n/n';
 			}
-			error_log( ob_get_clean() );
 		}
 	}
 
