@@ -51,7 +51,7 @@ class Gitium_Menu {
 			$url
 		) );
 		wp_safe_redirect( $url );
-		die();
+		wp_die();
 	}
 
 	public function success_redirect( $message = '', $menu_slug = '' ) {
@@ -59,7 +59,9 @@ class Gitium_Menu {
 	}
 
 	public function disconnect_repository() {
-		if ( ! isset( $_POST['GitiumSubmitDisconnectRepository'] ) ) {
+        $gitium_disconnect_repo = filter_input(INPUT_POST, 'GitiumSubmitDisconnectRepository', FILTER_SANITIZE_STRING);
+
+		if ( ! isset( $gitium_disconnect_repo ) ) {
 			return;
 		}
 		check_admin_referer( 'gitium-admin' );
@@ -71,9 +73,11 @@ class Gitium_Menu {
 	}
 
 	public function show_message() {
-		if ( isset( $_GET['message'] ) && $_GET['message'] ) {
-			$type    = ( isset( $_GET['success'] ) && $_GET['success'] == 1 ? 'updated' : 'error' );
-			$message = get_transient( 'message_'. $_GET['message'] );
+	    $get_message = filter_input(INPUT_GET, 'message', FILTER_SANITIZE_STRING);
+	    $get_success = filter_input(INPUT_GET, 'success', FILTER_SANITIZE_STRING);
+		if ( isset( $get_message ) && $get_message ) {
+			$type    = ( isset( $get_success ) && $get_success == 1 ? 'updated' : 'error' );
+			$message = get_transient( 'message_'. $get_message );
 			if ( ! empty( $message ) ) : ?>
 				<div class="<?php echo esc_attr( $type ); ?>"><p><?php echo esc_html( $message ); ?></p></div>
 			<?php endif;

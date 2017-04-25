@@ -77,10 +77,11 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 	}
 
 	public function save_ignorelist() {
-		if ( ! isset( $_POST['GitiumIgnorePath'] ) ) {
+	    $gitium_ignore_path = filter_input(INPUT_POST, 'GitiumIgnorePath', FILTER_SANITIZE_STRING);
+		if ( ! isset( $gitium_ignore_path ) ) {
 			return;
 		} else {
-			$path = $_POST['GitiumIgnorePath'];
+			$path = $gitium_ignore_path;
 		}
 		check_admin_referer( 'gitium-admin' );
 
@@ -93,7 +94,9 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 	}
 
 	public function save_changes() {
-		if ( ! isset( $_POST['GitiumSubmitSaveChanges'] ) ) {
+	    $gitium_save_changes = filter_input(INPUT_POST, 'GitiumSubmitSaveChanges', FILTER_SANITIZE_STRING);
+		$gitium_commit_msg = filter_input(INPUT_POST, 'commitmsg', FILTER_SANITIZE_STRING);
+	    if ( ! isset( $gitium_save_changes ) ) {
 			return;
 		}
 		check_admin_referer( 'gitium-admin' );
@@ -101,8 +104,8 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		gitium_enable_maintenance_mode() or wp_die( __( 'Could not enable the maintenance mode!', 'gitium' ) );
 		$this->git->add();
 		$commitmsg = sprintf( __( 'Merged changes from %s on %s', 'gitium' ), get_site_url(), date( 'm.d.Y' ) );
-		if ( isset( $_POST['commitmsg'] ) && ! empty( $_POST['commitmsg'] ) ) {
-			$commitmsg = $_POST['commitmsg'];
+		if ( isset( $gitium_commit_msg ) && ! empty( $gitium_commit_msg ) ) {
+			$commitmsg = $gitium_commit_msg;
 		}
 		$current_user = wp_get_current_user();
 		$commit = $this->git->commit( $commitmsg, $current_user->display_name, $current_user->user_email );

@@ -17,14 +17,16 @@
 
 header( 'Content-Type: text/html' );
 define( 'SHORTINIT', true );
-$wordpress_loader = $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php';
+//$wordpress_loader = $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php';
+$wordpress_loader = filter_input(INPUT_SERVER, 'DOCUMENT_ROOT', FILTER_SANITIZE_STRING) . '/wp-load.php';
 
 require_once $wordpress_loader;
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/inc/class-git-wrapper.php';
 
 $webhook_key = get_option( 'gitium_webhook_key', '' );
-if ( ! empty ( $webhook_key ) && isset( $_GET['key'] ) && $webhook_key == $_GET['key'] ) :
+$get_key = filter_input(INPUT_GET, 'key', FILTER_SANITIZE_STRING);
+if ( ! empty ( $webhook_key ) && isset( $get_key ) && $webhook_key == $get_key ) :
 	( '1.7' <= substr( $git->get_version(), 0, 3 ) ) or wp_die( 'Gitium plugin require minimum `git version 1.7`!' );
 
 	list( $git_public_key, $git_private_key ) = gitium_get_keypair();

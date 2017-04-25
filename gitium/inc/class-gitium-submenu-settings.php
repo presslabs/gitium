@@ -38,7 +38,8 @@ class Gitium_Submenu_Settings extends Gitium_Menu {
 	}
 
 	public function regenerate_webhook() {
-		if ( ! isset( $_POST['GitiumSubmitRegenerateWebhook'] ) ) {
+		$gitium_regen_webhook = filter_input(INPUT_POST, 'GitiumSubmitRegenerateWebhook', FILTER_SANITIZE_STRING);
+		if ( ! isset( $gitium_regen_webhook ) ) {
 			return;
 		}
 		check_admin_referer( 'gitium-settings' );
@@ -47,7 +48,8 @@ class Gitium_Submenu_Settings extends Gitium_Menu {
 	}
 
 	public function regenerate_public_key() {
-		if ( ! isset( $_POST['GitiumSubmitRegeneratePublicKey'] ) ) {
+		$submit_regenerate_pub_key = filter_input(INPUT_POST, 'GitiumSubmitRegeneratePublicKey', FILTER_SANITIZE_STRING);
+		if ( ! isset( $submit_regenerate_pub_key ) ) {
 			return;
 		}
 		check_admin_referer( 'gitium-settings' );
@@ -97,12 +99,14 @@ class Gitium_Submenu_Settings extends Gitium_Menu {
 	}
 
 	public function save() {
-		if ( ! isset( $_POST['GitiumSubmitSave'] ) || ! isset( $_POST['gitignore_content'] ) ) {
+	    $submit_save = filter_input(INPUT_POST, 'GitiumSubmitSave', FILTER_SANITIZE_STRING);
+	    $gitignore_content = filter_input(INPUT_POST, 'gitignore_content', FILTER_SANITIZE_STRING);
+		if ( ! isset( $submit_save ) || ! isset( $gitignore_content ) ) {
 			return;
 		}
 		check_admin_referer( 'gitium-settings' );
 
-		if ( $this->git->set_gitignore( $_POST['gitignore_content'] ) ) {
+		if ( $this->git->set_gitignore( $gitignore_content ) ) {
 			gitium_commit_and_push_gitignore_file();
 			$this->success_redirect( __( 'The file `.gitignore` is saved!', 'gitium' ), $this->settings_menu_slug );
 		} else {
