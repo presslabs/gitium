@@ -6,3 +6,7 @@ composer.lock
 *.pyc
 *~
 .bash_history
+.composer
+.ssh
+.subversion
+.idea
