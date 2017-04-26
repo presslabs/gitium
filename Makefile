@@ -17,4 +17,4 @@ env_latest:
 	bash ./bin/install-wp-tests.sh wordpress_test root '' localhost latest
 
 test:
-	./vendor/bin/phpunit --tap
+	./vendor/bin/phpunit --config phpunit.xml

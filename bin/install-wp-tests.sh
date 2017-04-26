@@ -92,10 +92,10 @@ install_test_suite() {
 		sed $ioption "s|localhost|${DB_HOST}|" "$WP_TESTS_DIR"/wp-tests-config.php
 		sed $ioption "s:'WP_DEBUG', true:'WP_DEBUG', false:" "$WP_TESTS_DIR"/wp-tests-config.php
 	fi
-
 }
 
 install_db() {
+    if [ `which mysqladmin` ]; then
 	# parse DB_HOST for port or socket references
 	local PARTS=(${DB_HOST//\:/ })
 	local DB_HOSTNAME=${PARTS[0]};
@@ -114,6 +114,10 @@ install_db() {
 
 	# create database
 	mysqladmin create $DB_NAME --user="$DB_USER" --password="$DB_PASS"$EXTRA
+    else
+        echo "skipping db creation"
+    fi
+
 }
 
 install_wp
