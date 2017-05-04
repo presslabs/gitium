@@ -106,7 +106,7 @@ register_uninstall_hook( __FILE__, 'gitium_uninstall_hook' );
 
 ) */
 function gitium_update_versions() {
-	$new_versions = '';
+	$new_versions = [];
 
 	// get all themes from WP
 	$all_themes = wp_get_themes( array( 'allowed' => true ) );
