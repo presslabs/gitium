@@ -12,6 +12,6 @@ addons:
 before_script:
   - composer install --dev
   - bash bin/install-wp-tests.sh wordpress_test root '' localhost $WP_VERSION
-script: ./vendor/bin/phpunit --testdox
+script: ./vendor/bin/phpunit --testdox --verbose
 after_success:
   - vendor/bin/test-reporter
