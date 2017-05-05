@@ -1,0 +1,23 @@
+---
+engines:
+  phpcodesniffer:
+    enabled: true
+  duplication:
+    enabled: true
+    config:
+      languages:
+      - python
+      - php
+  fixme:
+    enabled: true
+  phpmd:
+    enabled: true
+ratings:
+  paths:
+  - "**.php"
+  - "**.py"
+exclude_paths:
+- tests/
+- vendor/
+- wordpress-site/
+
