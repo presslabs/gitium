@@ -10,3 +10,4 @@ composer.lock
 .ssh
 .subversion
 .idea
+*travis.log
