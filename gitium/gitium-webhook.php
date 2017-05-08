@@ -18,7 +18,7 @@
 header( 'Content-Type: text/html' );
 define( 'SHORTINIT', true );
 //$wordpress_loader = $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php';
-$wordpress_loader = filter_input(INPUT_SERVER, 'DOCUMENT_ROOT', FILTER_SANITIZE_STRING) . '/wp-load.php';
+$wordpress_loader = filter_input(INPUT_SERVER, 'DOCUMENT_ROOT') . '/wp-load.php';
 
 require_once $wordpress_loader;
 require_once __DIR__ . '/functions.php';
