@@ -34,14 +34,14 @@ def create_user():
     groupname = 'developer'
     try:
         groupname = grp.getgrgid(gid).gr_name
-        print("group with id {} already exists: {}".format(gid, groupname))
+        print("group with id '{}' already exists: {}".format(gid, groupname))
     except KeyError:
-        shell('groupadd developer --gid {}'.format(gid))
+        shell('groupadd {} --gid {}'.format(groupname, gid))
     out = shell('id -un {}'.format(uid), die=False)
-    if out == 'id: {}: no such user\n'.format(uid):
-        print('creating user "developer"')
-        shell("useradd developer --home /code --uid {} --gid {} --shell=/bin/bash".format(
-            uid, gid
+    if out == "id: '{}': no such user\n".format(uid):
+        print('creating user "{}"'.format(username))
+        shell("useradd {} --home /code --uid {} --gid {} --shell=/bin/bash".format(
+            username, uid, gid
         ))
     else:
         username = out
@@ -50,14 +50,15 @@ def create_user():
 
 
 def exec_to_bash():
+    print("\n######### STARTING TESTING ENVIRONMENT #########\n")
     username, groupname = create_user()
-    print("starting mysql")
+    print("Starting mysql!")
     shell("/etc/init.d/mysql start")
-    print("dropping you to an interactive shell as {}".format(username))
-    print("type CTRL+D to return to root shell")
+    print("Dropping you to an interactive shell as '{}'.".format(username))
+    print("Type CTRL+D to return to root shell.\n")
     os.chdir('/code')
     sys.stdout.flush()
-    cmd = ["/bin/bash", "bash", "-c", "sudo -iu {}; bash".format(username)]
+    cmd = ["/bin/bash", "bash", "-c", "su {}; bash".format(username)]
     os.execl(*cmd)
 
 if __name__ == '__main__':

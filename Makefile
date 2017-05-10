@@ -1,27 +1,28 @@
 PHPUNIT             := $(shell pwd)/vendor/bin/phpunit
-COMPOSER            := $(shell pwd)/composer.phar
 INSTALL_WP_TESTS    := $(shell pwd)/bin/install-wp-tests.sh
 
 test:
-	$(PHPUNIT) --config phpunit.xml --tap $(ARGS)
+	$(PHPUNIT) --config phpunit.xml $(ARGS)
 
-report:
+html-report:
 	$(MAKE) test ARGS="--coverage-html coverage $(ARGS)"
 
-env_39: composer-update
-	bash $(INSTALL_WP_TESTS) wordpress_test root '' localhost 3.9
+clover-report:
+	$(MAKE) test ARGS="--verbose --coverage-clover build/logs/clover.xml $(ARGS)"
 
-env_latest: composer-update
+env_latest: composer-install
 	bash $(INSTALL_WP_TESTS) wordpress_test root ''
 
-composer-update: clean
-	$(COMPOSER) self-update --stable --clean-backups
-	$(COMPOSER) install --quiet --no-plugins --no-scripts --prefer-dist --no-interaction --no-progress
+env_nightly: composer-install
+	bash $(INSTALL_WP_TESTS) wordpress_test root '' localhost nightly
+
+composer-install: clean
+	composer install --no-plugins --no-scripts --prefer-dist --no-interaction
 
 clean:
-	-rm -rf /tmp/wordpress
-	# rm /tmp/wordpress.tar.gz /tmp/wordpress-*.tar.gz
-	-rm -rf /tmp/wordpress-tests-lib
-	-mysqladmin drop  wordpress_test --user root --force
+	@-rm -rf /tmp/wordpress
+	@-rm /tmp/wordpress.tar.gz /tmp/wordpress-*.tar.gz
+	@-rm -rf /tmp/wordpress-tests-lib
+	@-mysqladmin drop  wordpress_test --user root --force
 
-.PHONY: all clean env_39 env_latest test report
+.PHONY: test html-report clover-report env_latest env_nightly composer-install clean
