@@ -1,16 +1,13 @@
 language: php
 php:
-  - 5.6
-  - 7.0
   - 7.1
 env:
   - WP_VERSION=latest WP_MULTISITE=0
-  - WP_VERSION=3.9 WP_MULTISITE=0
 addons:
   code_climate:
     repo_token: "lVjLhYrTJsomDB5p7jFsLAgPGfnTsSsEkwZJ1E9/kNWHVaNRT5w4/0SAZmPJCqz1VhEz0eF1AZEQosDI5ut6Hl4Ia5jSnsFbN3VriiUhwH75PiKJB302FxPjoRaclIdhj2XVrxLzIu0YuVS74s59LwydFFWMVC+0xSLfJ+waRZI="
 before_script:
-  - composer install --dev
+  - composer install
   - bash bin/install-wp-tests.sh wordpress_test root '' localhost $WP_VERSION
 script: ./vendor/bin/phpunit --coverage-clover build/logs/clover.xml
 after_success:

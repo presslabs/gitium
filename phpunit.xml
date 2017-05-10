@@ -12,11 +12,8 @@
         </testsuite>
     </testsuites>
     <filter>
-        <whitelist processUncoveredFilesFromWhitelist="true">
+        <whitelist>
             <directory suffix=".php">./gitium/</directory>
         </whitelist>
-        <blacklist>
-            <directory suffix=".php">/tmp/wordpress</directory>
-        </blacklist>
     </filter>
 </phpunit>
