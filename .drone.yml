@@ -3,8 +3,8 @@ build:
     image: presslabs/pl-test-containers:php-$$PHP_VERSION
     pull: true
     commands:
-      - bash bin/install-wp-tests.sh wordpress_test root root_pass 127.0.0.1 $$WP_VERSION
-      - ./composer.phar install --dev --no-progress
+      - bash bin/install-wp-tests.sh wordpress_test root root_pass 127.0.0.1 $$WP_VERSION true
+      - composer install --no-progress
       - dockerize --wait tcp://127.0.0.1:3306 -timeout 10s
       - make test
     environment:
@@ -17,15 +17,13 @@ cache:
 
 compose:
   database:
-    image: mysql:5.5
+    image: mysql
     environment:
       - MYSQL_DATABASE=wordpress_test
       - MYSQL_ROOT_PASSWORD=root_pass
 
 matrix:
   WP_VERSION:
-    - 3.9
     - 4.7.4
   PHP_VERSION:
-    - 5.6
     - 7.1
