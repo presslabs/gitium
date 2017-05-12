@@ -8,9 +8,7 @@
  * Text Domain:     gitium
  * Domain Path:     /languages
  * Version:         1.0-rc8
- * License:         GPL2
- *
- * @package         Gitium
+ * License:         GPL3
  *
  * Gitium provides automatic git version control and deployment for
  * your plugins and themes integrated into wp-admin.
@@ -29,6 +27,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Gitium. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @package         Gitium
  */
 
 define( 'GITIUM_LAST_COMMITS', 20 );

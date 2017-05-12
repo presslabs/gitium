@@ -1,7 +1,5 @@
 <?php
 /**
- * @package         Gitium
- *
  * Gitium provides automatic git version control and deployment for
  * your plugins and themes integrated into wp-admin.
  *
@@ -19,6 +17,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Gitium. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @package         Gitium
  */
 
 class Gitium_Submenu_Status extends Gitium_Menu {

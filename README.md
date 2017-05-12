@@ -33,5 +33,6 @@ sharing experience.
 
 ### License
 
-This project is licensed under the [General Public License version 2.0](http://www.gnu.org/licenses/gpl-2.0.html).
+This project is licensed under the [GNU GENERAL PUBLIC LICENSE Version 3]
+(https://www.gnu.org/licenses/gpl.html).
 
