@@ -1,17 +1,76 @@
-/vendor/
-/.composer/
+# -----------------------------------------------------------------
+#   .gitignore for WordPress Plugin Development by PressLabs
+#
+#   This file is tailored to facilitate a sane plugin development
+#   environment for Wordpress using Docker with the plugin beeing
+#   located in the main folder.
+# -----------------------------------------------------------------
+
+# Ignore drone files
+drone
+
+# Ignore phpunit coverage reports
 /coverage/
 /build/
-composer.lock
-.vimrc
-*.pyc
-*~
-.bash_history
-.ssh
-.subversion
-.idea
-*travis.log
-drone
-.wget-hsts
-.php_history
+
+# Ignore all composer files
+/vendor/
 composer.phar
+composer.lock
+
+# Ignore all files and folders starting with .
+.*
+
+# except the required ones.
+!.gitignore
+!.drone.yml
+!.travis.yml
+!.codeclimate.yml
+
+# Make sure readme is not ignored
+!readme.md
+
+# ignore all files that start with ~
+~*
+
+# ignore OS generated files
+ehthumbs.db
+Thumbs.db
+
+# ignore Editor files
+*.sublime-project
+*.sublime-workspace
+*.komodoproject
+
+# ignore log files and databases
+*.log
+*.sql
+*.sqlite
+
+# ignore compiled files
+*.com
+*.class
+*.dll
+*.exe
+*.pyc
+*.o
+*.so
+
+# ignore packaged files
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# ignore wordpress install if present in current directory
+/wp-admin/
+/wp-content/
+/wp-includes/
+/*.php
+
+# ignore node/grunt dependency directories
+/node_modules/
