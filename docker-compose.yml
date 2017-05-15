@@ -14,7 +14,7 @@ services:
       MYSQL_PASSWORD: wordpress
   wordpress:
     container_name: gitium
-    user: www-data
+#    user: www-data
 #    command: chown -R www-data:www-data /var/www/html/tests && php-fpm
     depends_on:
       - db
