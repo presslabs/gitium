@@ -11,10 +11,10 @@ clover-report:
 	$(MAKE) test ARGS="--verbose --coverage-clover build/logs/clover.xml $(ARGS)"
 
 env_latest: composer-install
-	bash $(INSTALL_WP_TESTS) wordpress_test root ''
+	bash $(INSTALL_WP_TESTS) wordpress wordpress wordpress ${WORDPRESS_DB_HOST} latest true
 
 env_nightly: composer-install
-	bash $(INSTALL_WP_TESTS) wordpress_test root '' localhost nightly
+	bash $(INSTALL_WP_TESTS) wordpress_test root '' localhost nightly true
 
 composer-install: clean
 	composer install --no-plugins --no-scripts --prefer-dist --no-interaction
@@ -24,7 +24,7 @@ start-testing: build-test-env
 
 build-test-env:
 	@echo "\nChecking for changes of docker image and rebuilding if needed.\nPlease wait ...\n"
-	@docker build -t gitiumtest ./test-env/
+	@docker build -q -t gitiumtest ./test-env/
 
 clean:
 	@-rm -rf /tmp/wordpress
@@ -35,4 +35,3 @@ clean:
 .PHONY: test html-report clover-report \
     env_latest env_nightly composer-install \
     build-test-env start-testing clean \
-

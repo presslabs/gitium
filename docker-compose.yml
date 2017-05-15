@@ -1,0 +1,45 @@
+version: '2'
+
+services:
+  db:
+    container_name: gitium-db
+    image: mysql:5.7
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+  wordpress:
+    container_name: gitium
+    user: www-data
+#    command: chown -R www-data:www-data /var/www/html/tests && php-fpm
+    depends_on:
+      - db
+    image: pl-wordpress
+
+    entrypoint: /tools/entrypoint.sh
+
+    ports:
+      - "8000:80"
+    restart: always
+    volumes:
+      - ./test-env:/tools
+      - .:/var/www/html/tests
+      - ./working-dir:/var/www/html
+      - ./gitium:/var/www/html/wp-content/plugins/gitium
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+
+      VOLUME: '/var/www/html/tests'
+      DOCKER_USER: 'www-data'
+      DOCKER_GROUP: 'www-data'
+      HOST_USER_ID: 1000
+      HOST_GROUP_ID: 1000
+
+volumes:
+  db_data:

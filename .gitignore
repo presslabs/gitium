@@ -72,5 +72,8 @@ Thumbs.db
 /wp-includes/
 /*.php
 
+# of if present via testing environment
+/working-dir/
+
 # ignore node/grunt dependency directories
 /node_modules/
