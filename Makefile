@@ -1,6 +1,11 @@
 PHPUNIT             := $(shell pwd)/vendor/bin/phpunit
 INSTALL_WP_TESTS    := $(shell pwd)/bin/install-wp-tests.sh
 
+TITLE ?= $(shell bash -c 'read -p "Site Title: " title; echo $$title')
+USR ?= $(shell bash -c 'read -p "Admin User: " user; echo $$user')
+EMAIL ?= $(shell bash -c 'read -p "Admin Email: " email; echo $$email')
+PASSWORD ?= $(shell bash -c 'read -s -p "Password: " pwd; echo $$pwd')
+
 test:
 	$(PHPUNIT) --config phpunit.xml $(ARGS)
 
@@ -8,30 +13,42 @@ html-report:
 	$(MAKE) test ARGS="--coverage-html coverage $(ARGS)"
 
 env_latest: composer-install
-	bash $(INSTALL_WP_TESTS) wordpress wordpress wordpress ${WORDPRESS_DB_HOST} latest true
+	@echo "\nInstalling "latest" WP test files ..."
+	@bash $(INSTALL_WP_TESTS) wordpress wordpress wordpress ${WORDPRESS_DB_HOST} latest true
+	@echo -ne '\n'
+	@echo "Done! Run 'make' now for latest tests!\n"
 
 env_nightly: composer-install
-	bash $(INSTALL_WP_TESTS) wordpress wordpress wordpress ${WORDPRESS_DB_HOST} nightly true
+	@echo "\nInstalling "nightly" WP test files ..."
+	@bash $(INSTALL_WP_TESTS) wordpress wordpress wordpress ${WORDPRESS_DB_HOST} nightly true
+	@echo "Done! Run 'make' now for nightly tests!\n"
 
 composer-install: clean
-	@composer install --no-plugins --no-scripts --prefer-dist --no-interaction
+	@echo "Checking and installing composer dependencies ...\nPlease wait..."
+	@composer update -q --no-suggest
 
-start-testing: build-test-env
+start-testing:
 	@echo "\nStarting up docker containers..."
 	@docker-compose up -d
-	@echo "\nDropping you to an interactive shell as 'www-data'.\nHappy Testing!\n"
+	@echo "\nDropping you to an interactive shell.\nHappy Testing!\n"
 	@docker exec -it -u www-data gitium bash
-
-build-test-env:
-	@echo "\nChecking for changes of docker image and rebuilding if needed.\nPlease wait ...\n"
-	@docker build -q -t pl-wordpress ./test-env/
 
 clean:
 	@-rm -rf /tmp/wordpress
-	@-rm /tmp/wordpress.tar.gz /tmp/wordpress-*.tar.gz
 	@-rm -rf /tmp/wordpress-tests-lib
-	@-mysqladmin drop  wordpress_test --user root --force
+
+wp-setup:
+	@echo "\n"
+	@wp core install --url="http://localhost:8000" --title="$(TITLE)" --admin_user="$(USR)" --admin_email="$(EMAIL)" --admin_password="$(PASSWORD)" --skip-email
+	@wp plugin activate --all
+
+wp-debug:
+	@sed "80s/.*/define\( \'WP_DEBUG\'\, true \)\;/" ../wp-config.php > ../temp.wp-config.php
+	@mv ../temp.wp-config.php ../wp-config.php
+
+permissions-fix:
+	@sudo chown --recursive $(shell whoami | id -u):$(shell whoami | id -) .
 
 .PHONY: test html-report \
     env_latest env_nightly composer-install \
-    build-test-env start-testing clean \
+    start-testing clean wp-setup wp-debug

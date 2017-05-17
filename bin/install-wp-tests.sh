@@ -5,6 +5,8 @@ if [ $# -lt 3 ]; then
 	exit 1
 fi
 
+echo -ne '                             (0%)\r'
+
 DB_NAME=$1
 DB_USER=$2
 DB_PASS=$3
@@ -15,6 +17,8 @@ SKIP_DB_CREATE=${6-false}
 WP_TESTS_DIR=${WP_TESTS_DIR-/tmp/wordpress-tests-lib}
 WP_CORE_DIR=${WP_CORE_DIR-/tmp/wordpress/}
 
+echo -ne '[###                           ](10%)\r'
+
 download() {
     if [ `which curl` ]; then
         curl -s "$1" > "$2";
@@ -22,6 +26,8 @@ download() {
         wget -nv -O "$2" "$1"
     fi
 }
+
+echo -ne '[######                        ](20%)\r'
 
 if [[ $WP_VERSION =~ [0-9]+\.[0-9]+(\.[0-9]+)? ]]; then
 	WP_TESTS_TAG="tags/$WP_VERSION"
@@ -39,6 +45,8 @@ else
 	WP_TESTS_TAG="tags/$LATEST_VERSION"
 fi
 
+echo -ne '[#########                     ](30%)\r'
+
 set -e
 
 install_wp() {
@@ -51,20 +59,27 @@ install_wp() {
 
 	if [[ $WP_VERSION == 'nightly' || $WP_VERSION == 'trunk' ]]; then
 		mkdir -p /tmp/wordpress-nightly
+		echo -ne '[############                  ](40%)\r'
 		download https://wordpress.org/nightly-builds/wordpress-latest.zip  /tmp/wordpress-nightly/wordpress-nightly.zip
+		echo -ne '[###############               ](50%)\r'
 		unzip -q /tmp/wordpress-nightly/wordpress-nightly.zip -d /tmp/wordpress-nightly/
 		mv /tmp/wordpress-nightly/wordpress/* $WP_CORE_DIR
+		echo -ne '[##################            ](60%)\r'
 	else
 		if [ $WP_VERSION == 'latest' ]; then
 			local ARCHIVE_NAME='latest'
 		else
 			local ARCHIVE_NAME="wordpress-$WP_VERSION"
 		fi
+		echo -ne '[############                  ](40%)\r'
 		download https://wordpress.org/${ARCHIVE_NAME}.tar.gz  /tmp/wordpress.tar.gz
+		echo -ne '[###############               ](50%)\r'
 		tar --strip-components=1 -zxmf /tmp/wordpress.tar.gz -C $WP_CORE_DIR
+		echo -ne '[##################            ](60%)\r'
 	fi
 
 	download https://raw.github.com/markoheijnen/wp-mysqli/master/db.php $WP_CORE_DIR/wp-content/db.php
+	echo -ne '[#####################         ](70%)\r'
 }
 
 install_test_suite() {
@@ -83,6 +98,8 @@ install_test_suite() {
 		svn co --quiet https://develop.svn.wordpress.org/${WP_TESTS_TAG}/tests/phpunit/data/ $WP_TESTS_DIR/data
 	fi
 
+	echo -ne '[########################      ](80%)\r'
+
 	if [ ! -f wp-tests-config.php ]; then
 		download https://develop.svn.wordpress.org/${WP_TESTS_TAG}/wp-tests-config-sample.php "$WP_TESTS_DIR"/wp-tests-config.php
 		# remove all forward slashes in the end
@@ -94,11 +111,14 @@ install_test_suite() {
 		sed $ioption "s|localhost|${DB_HOST}|" "$WP_TESTS_DIR"/wp-tests-config.php
 	fi
 
+    echo -ne '[###########################   ](90%)\r'
 }
 
 install_db() {
 
 	if [ ${SKIP_DB_CREATE} = "true" ]; then
+	    echo -ne '[##############################](100%)\r'
+		echo -ne '\n'
 		return 0
 	fi
 
@@ -120,6 +140,8 @@ install_db() {
 
 	# create database
 	mysqladmin create $DB_NAME --user="$DB_USER" --password="$DB_PASS"$EXTRA
+	echo -ne '[#############################](100%)\r'
+	echo -ne '\n'
 }
 
 install_wp

@@ -4,6 +4,9 @@ set -e
 UNUSED_USER_ID=21338
 UNUSED_GROUP_ID=21337
 
+HOST_USER_ID=`ls -ld $VOLUME | awk 'NR==1 {print $3}'`
+HOST_GROUP_ID=`ls -ld $VOLUME | awk 'NR==1 {print $4}'`
+
 echo "Fixing permissions."
 
 # Setting Group Permissions

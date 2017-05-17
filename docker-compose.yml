@@ -14,10 +14,9 @@ services:
       MYSQL_PASSWORD: wordpress
   wordpress:
     container_name: gitium
-#    user: www-data
-#    command: chown -R www-data:www-data /var/www/html/tests && php-fpm
     depends_on:
       - db
+    build: ./test-env
     image: pl-wordpress
 
     entrypoint: /tools/entrypoint.sh
@@ -38,8 +37,6 @@ services:
       VOLUME: '/var/www/html/tests'
       DOCKER_USER: 'www-data'
       DOCKER_GROUP: 'www-data'
-      HOST_USER_ID: 1000
-      HOST_GROUP_ID: 1000
 
 volumes:
   db_data:
