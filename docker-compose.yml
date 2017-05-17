@@ -19,7 +19,7 @@ services:
     build: ./test-env
     image: pl-wordpress
 
-    entrypoint: /tools/entrypoint.sh
+    entrypoint: /tools/entrypoint.sh apache2-foreground
 
     ports:
       - "8000:80"

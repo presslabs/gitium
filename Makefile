@@ -47,7 +47,7 @@ wp-debug:
 	@mv ../temp.wp-config.php ../wp-config.php
 
 permissions-fix:
-	@sudo chown --recursive $(shell whoami | id -u):$(shell whoami | id -) .
+	@sudo chown --recursive $(shell whoami):$(shell whoami) .
 
 .PHONY: test html-report \
     env_latest env_nightly composer-install \
