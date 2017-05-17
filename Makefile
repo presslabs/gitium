@@ -31,7 +31,7 @@ start-testing:
 	@echo "\nStarting up docker containers..."
 	@docker-compose up -d
 	@echo "\nDropping you to an interactive shell.\nHappy Testing!\n"
-	@docker exec -it -u www-data gitium bash
+	docker exec -it -u $(shell id -u) gitium bash
 
 clean:
 	@-rm -rf /tmp/wordpress
