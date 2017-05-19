@@ -222,4 +222,6 @@ chown -R $DOCKER_USER:$DOCKER_GROUP $VOLUME || true
 echo "www-data ALL=(ALL) ALL" >> /etc/sudoers
 echo "Done."
 
+cp /tools/php.ini /usr/local/etc/php/php.ini
+
 exec "$@"
