@@ -1,5 +1,5 @@
 PHPUNIT             := $(shell pwd)/vendor/bin/phpunit
-INSTALL_WP_TESTS    := $(shell pwd)/bin/install-wp-tests.sh
+INSTALL_WP_TESTS    := $(shell pwd)/presslabs/bin/install-wp-tests.sh
 
 TITLE ?= $(shell bash -c 'read -p "Site Title: " title; echo $$title')
 USR ?= $(shell bash -c 'read -p "Admin User: " user; echo $$user')
@@ -7,38 +7,48 @@ EMAIL ?= $(shell bash -c 'read -p "Admin Email: " email; echo $$email')
 PASSWORD ?= $(shell bash -c 'read -s -p "Password: " pwd; echo $$pwd')
 
 test:
-	$(PHPUNIT) --config phpunit.xml $(ARGS)
+	@echo "\nRunning tests ...\n"
+	@$(PHPUNIT) --config phpunit.xml $(ARGS)
 
 html-report:
-	$(MAKE) test ARGS="--coverage-html coverage $(ARGS)"
+	@echo "\nRunning tests and generateing HTML coverage report ...\n"
+	@$(MAKE) test ARGS="--coverage-html coverage $(ARGS)"
+	@echo "\nReport created in /coverage\n"
 
-env_latest: composer-install
-	@echo "\nInstalling "latest" WP test files ..."
-	@bash $(INSTALL_WP_TESTS) wordpress wordpress wordpress ${WORDPRESS_DB_HOST} latest true
+up:
+	@echo "\nStarting local development environment using docker ...\n"
+	@sudo docker-compose up -d --remove-orphans
+	@echo "\nEnvironment started. Go to http://localhost:8000/ and test it out!"
+	@echo "\nUse 'make down' to stop the environment."
+	@echo "\nUse 'make log' to listen for the output of containers."
+
+down:
+	@echo "Shutting down containers ...\n"
+	@sudo docker-compose down
+	@echo "\nDevelopment environment is down!"
+
+log:
+	@echo "\nListeing for logs ..."
+	@sudo docker-compose logs -f -t
+
+bash:
+	@echo "\nDropping you to an interactive shell.\nHappy Testing!\n"
+	@sudo docker exec gitium-php-fpm chown -R `id -u`:`id -g` /application
+	@sudo docker exec -it -u `id -u` gitium-php-fpm bash
+
+env: composer-install
+	@echo "\nInstalling "latest" WP distribution and test files ..."
+	bash $(INSTALL_WP_TESTS) wordpress wordpress wordpress gitium-mysql latest true
 	@echo -ne '\n'
-	@echo "Done! Run 'make' now for latest tests!\n"
+	@echo "Done! Use 'make' to run tests.\n"
 
-env_nightly: composer-install
-	@echo "\nInstalling "nightly" WP test files ..."
-	@bash $(INSTALL_WP_TESTS) wordpress wordpress wordpress ${WORDPRESS_DB_HOST} nightly true
-	@echo "Done! Run 'make' now for nightly tests!\n"
-
-composer-install: clean
+composer-install:
 	@echo "Checking and installing composer dependencies ...\nPlease wait..."
 	@composer update -q --no-suggest
 
-start-testing:
-	@echo "\nStarting up docker containers..."
-	@docker-compose up -d
-	@echo "\nDropping you to an interactive shell.\nHappy Testing!\n"
-	@docker exec -it -u $(shell id -u) gitium bash
-
-clean:
-	@-rm -rf /tmp/wordpress
-	@-rm -rf /tmp/wordpress-tests-lib
-
 wp-setup:
 	@echo "\n"
+	@wp core config --dbname="wordpress" --dbuser="wordpress" --dbpass="wordpress" --dbhost="gitium-mysql"
 	@wp core install --url="http://localhost:8000" --title="$(TITLE)" --admin_user="$(USR)" --admin_email="$(EMAIL)" --admin_password="$(PASSWORD)" --skip-email
 	@wp plugin activate --all
 
@@ -46,9 +56,17 @@ wp-debug:
 	@sed "80s/.*/define\( \'WP_DEBUG\'\, true \)\;/" ../wp-config.php > ../temp.wp-config.php
 	@mv ../temp.wp-config.php ../wp-config.php
 
+clean:
+	@echo "\nRemoving WP install and database volumes ...\nIgnore any errors that might show during this command.\n"
+	@-sudo docker-compose down
+	@-sudo rm -rf wp-tests/ wp-includes/ wp-content/ wp-admin/ vendor/ tmp/ public/
+	@-sudo rm -f readme.html license.txt *.php composer.lock
+	@-sudo docker volume rm gitium_db_data
+	@echo "\nDone! You can now start fresh!\n"
+
 permissions-fix:
 	@sudo chown --recursive $(shell whoami):$(shell whoami) .
 
-.PHONY: test html-report \
-    env_latest env_nightly composer-install \
-    start-testing clean wp-setup wp-debug
+.PHONY: test html-report up down log \
+    env env_nightly composer-install \
+    bash wp-setup wp-debug permissions-fix

@@ -80,6 +80,8 @@ license.txt
 /test-env/
 /workdir/
 /wordpress/
+/tmp/
+/public/
 
 # ignore node/grunt dependency directories
 /node_modules/

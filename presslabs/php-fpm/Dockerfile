@@ -1,9 +1,17 @@
 # 1 Inherit from PHPDocker
 FROM phpdockerio/php71-fpm:latest
 
-# 2 Install required packages for WordPress
+# 2 Install required packages
 RUN apt-get update \
-    && apt-get -y --no-install-recommends install \
+    && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install \
+        make \
+        mysql-client \
+        openssh-client \
+        git \
+        subversion \
+        zip \
+        unzip \
+        less \
         php-memcached \
         php7.1-mysql \
         php7.1-gd \
@@ -13,17 +21,19 @@ RUN apt-get update \
         php7.1-mbstring \
         php7.1-phpdbg \
         php-ssh2 \
+        php7.1-xml \
         php7.1-xmlrpc \
         php-xdebug \
-    && apt-get clean; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
+    && apt-get clean; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/* \
+    # Install php composer globally
+    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
+    # Add WP-CLI for WP related tasks
+    && curl -o /usr/local/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
+    # Add execution permissions for all users on composer and wp-cli
+    && chmod +x /usr/local/bin/wp /usr/bin/composer
 
-# 3 - Install php composer globally
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
-
-# 4 - Add WP-CLI for WP related tasks
-RUN curl -o /usr/bin/wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-COPY ../wordpress/wp-su.sh /usr/bin/wp
-RUN chmod +x /usr/bin/wp-cli.phar /usr/bin/wp
-
-# 5
+# 3 - Assign the working directory for our WP install
 WORKDIR "/application"
+
+# 4 - Make sure we own the working directory
+RUN chown -R `id -u www-data` /application
