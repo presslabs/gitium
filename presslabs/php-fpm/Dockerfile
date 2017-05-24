@@ -28,12 +28,16 @@ RUN apt-get update \
     # Install php composer globally
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
     # Add WP-CLI for WP related tasks
-    && curl -o /usr/local/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
-    # Add execution permissions for all users on composer and wp-cli
-    && chmod +x /usr/local/bin/wp /usr/bin/composer
+    && curl -o /usr/local/bin/wp-cli https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
 
-# 3 - Assign the working directory for our WP install
+# 3 Copy the WP wrapper for wp-cli to use our custom wp install location
+COPY ["./presslabs/php-fpm/wp-cli-wrapper.sh", "/usr/local/bin/wp"]
+
+# 4 Add execution permissions for all users on composer, wp-cli and wp wrapper
+RUN chmod +x /usr/local/bin/wp-cli /usr/local/bin/wp /usr/bin/composer
+
+# 5 - Assign the working directory for our WP install
 WORKDIR "/application"
 
-# 4 - Make sure we own the working directory
+# 6 - Make sure we own the working directory
 RUN chown -R `id -u www-data` /application
