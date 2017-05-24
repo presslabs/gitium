@@ -51,7 +51,7 @@ set -e
 
 install_wp() {
 
-	if [ -f index.php ]; then
+	if [ -d $WP_CORE_DIR ]; then
 		return;
 	fi
 
