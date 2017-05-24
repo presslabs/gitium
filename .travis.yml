@@ -3,18 +3,18 @@ php:
   - 7.0
   - 7.1
 env:
-  - WP_VERSION=latest WP_MULTISITE=0
-  - WP_VERSION=nightly WP_MULTISITE=0
+  - WP_VERSION=latest WP_TESTS_DIR=/tmp/wp-tests/ WP_CORE_DIR=/tmp/wp/
+  - WP_VERSION=nightly WP_TESTS_DIR=/tmp/wp-tests/ WP_CORE_DIR=/tmp/wp/
 matrix:
   allow_failures:
     env:
-      - WP_VERSION=nightly WP_MULTISITE=0
+      - WP_VERSION=nightly WP_MULTISITE=0 WP_TESTS_DIR=/tmp/wp-tests/ WP_CORE_DIR=/tmp/wp/
 addons:
   code_climate:
     repo_token: 819c356e2d022f98e4e2717dbd459c3801fef95241a2db7261596a0482dd6ca3
 before_script:
   - composer install
-  - bash presslabs/bin/install-wp-tests.sh wordpress wordpress wordpress localhost $WP_VERSION true
+  - bash presslabs/bin/install-wp-tests.sh wordpress root '' localhost $WP_VERSION
 script: ./vendor/bin/phpunit --coverage-clover build/logs/clover.xml
 after_success:
   - vendor/bin/test-reporter
