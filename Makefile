@@ -52,10 +52,6 @@ wp-setup:
 	@wp core install --url="http://localhost:8000" --title="$(TITLE)" --admin_user="$(USR)" --admin_email="$(EMAIL)" --admin_password="$(PASSWORD)" --skip-email
 	@wp plugin activate --all
 
-wp-debug:
-	@sed "80s/.*/define\( \'WP_DEBUG\'\, true \)\;/" ../wp-config.php > ../temp.wp-config.php
-	@mv ../temp.wp-config.php ../wp-config.php
-
 clean:
 	@echo "\nRemoving WP install and database volumes ...\nIgnore any errors that might show during this command.\n"
 	@-sudo docker-compose down
@@ -69,4 +65,4 @@ permissions-fix:
 
 .PHONY: test coverage up down log \
     env env_nightly composer-install \
-    bash cleanwp-setup wp-debug permissions-fix
+    bash cleanwp-setup permissions-fix
