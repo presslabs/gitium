@@ -2,8 +2,8 @@
 # PressLabs Universal Docker Development Environment for WP Plugins
 # =================================================================
 #
-# Run `docker exec -it -u $(id -u):$(id -g) gitium-php-fpm bash`
-# to get inside the container and run tests.
+# Run `docker exec -it -u $(id -u) gitium-php-fpm bash`
+# to get inside the container, finish env setup and run tests.
 ##
 
 version: "3.1"
@@ -32,7 +32,8 @@ services:
       working_dir: /application
       volumes:
           - .:/application
-          - ./gitium:/application/wp-content/plugins/gitium
+          - /application/.git/
+          - ./gitium:/application/public/wp-content/plugins/gitium
           - ./presslabs/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
       ports:
        - "8000:80"
@@ -47,7 +48,8 @@ services:
       working_dir: /application
       volumes:
         - .:/application
-        - ./gitium:/application/wp-content/plugins/gitium
+        - /application/.git/
+        - ./gitium:/application/public/wp-content/plugins/gitium
         - ./presslabs/php-fpm/php-ini-overrides.ini:/etc/php/7.1/fpm/conf.d/99-overrides.ini
 
       links:

@@ -15,7 +15,7 @@ WP_VERSION=${5-latest}
 SKIP_DB_CREATE=${6-false}
 
 WP_TESTS_DIR=${WP_TESTS_DIR-/application/wp-tests/}
-WP_CORE_DIR=${WP_CORE_DIR-/application/}
+WP_CORE_DIR=${WP_CORE_DIR-/application/public/}
 
 echo -ne '[###                           ](10%)\r'
 
