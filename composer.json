@@ -1,6 +1,6 @@
 {
     "require-dev": {
         "codeclimate/php-test-reporter": "dev-master",
-        "phpunit/phpunit": "~5.0"
+        "phpunit/phpunit": "^6.0"
     }
 }

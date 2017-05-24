@@ -10,7 +10,7 @@ test:
 	@echo "\nRunning tests ...\n"
 	@$(PHPUNIT) --config phpunit.xml $(ARGS)
 
-html-report:
+coverage:
 	@echo "\nRunning tests and generateing HTML coverage report ...\n"
 	@$(MAKE) test ARGS="--coverage-html coverage $(ARGS)"
 	@echo "\nReport created in /coverage\n"
@@ -67,6 +67,6 @@ clean:
 permissions-fix:
 	@sudo chown --recursive $(shell whoami):$(shell whoami) .
 
-.PHONY: test html-report up down log \
+.PHONY: test coverage up down log \
     env env_nightly composer-install \
     bash cleanwp-setup wp-debug permissions-fix
