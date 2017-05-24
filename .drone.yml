@@ -3,7 +3,7 @@ build:
     image: presslabs/pl-test-containers:php-$$PHP_VERSION
     pull: true
     commands:
-      - bash bin/install-wp-tests.sh wordpress wordpress wordpress 127.0.0.1 $$WP_VERSION true
+      - bash presslabs/bin/install-wp-tests.sh wordpress wordpress wordpress localhost $$WP_VERSION true
       - composer update -q --no-autoloader --no-suggest
       - dockerize --wait tcp://127.0.0.1:3306 -timeout 10s
       - make test

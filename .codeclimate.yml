@@ -20,4 +20,7 @@ exclude_paths:
 - tests/
 - vendor/
 - wordpress-site/
-
+- wp-content/
+- wp-admin/
+- wp-includes/
+- ./*.php
