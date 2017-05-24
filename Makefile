@@ -38,7 +38,7 @@ bash:
 
 env: composer-install
 	@echo "\nInstalling "latest" WP distribution and test files ..."
-	bash $(INSTALL_WP_TESTS) wordpress wordpress wordpress gitium-mysql latest true
+	@bash $(INSTALL_WP_TESTS) wordpress wordpress wordpress gitium-mysql latest true
 	@echo -ne '\n'
 	@echo "Done! Use 'make' to run tests.\n"
 
@@ -69,4 +69,4 @@ permissions-fix:
 
 .PHONY: test html-report up down log \
     env env_nightly composer-install \
-    bash wp-setup wp-debug permissions-fix
+    bash cleanwp-setup wp-debug permissions-fix
