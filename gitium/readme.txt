@@ -4,7 +4,7 @@ Contributors: PressLabs
 Donate link: https://www.presslabs.com/gitium/
 Tags: git, version, versioning, deployment, version-control, github, bitbucket, travis, code, revision, testing, development, branch, production, staging, debug, plugin, gitium, presslabs, simple
 Requires at least: 3.9
-Tested up to: 4.6
+Tested up to: 4.8
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -77,6 +77,11 @@ Submodules are currently not supported.
 
 
 == Changelog ==
+= 1.0-rc10 =
+* Bumped wordpress tested version
+
+= 1.0-rc9 =
+* PHP7 compat and wp-cli
 
 = 1.0-rc8 =
 * Fix some indents
