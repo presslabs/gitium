@@ -16,6 +16,7 @@ SKIP_DB_CREATE=${6-false}
 
 WP_TESTS_DIR=${WP_TESTS_DIR-/application/wp-tests/}
 WP_CORE_DIR=${WP_CORE_DIR-/application/public/}
+WP_CHECK_DIR=${WP_CHECK_DIR-/application/public/wp-admin/}
 
 echo -ne '[###                           ](10%)\r'
 
@@ -51,7 +52,7 @@ set -e
 
 install_wp() {
 
-	if [ -d $WP_CORE_DIR ]; then
+	if [ -d $WP_CHECK_DIR ]; then
 		return;
 	fi
 
