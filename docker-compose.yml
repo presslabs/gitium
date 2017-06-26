@@ -2,7 +2,7 @@
 # PressLabs Universal Docker Development Environment for WP Plugins
 # =================================================================
 #
-# Run `docker exec -it -u $(id -u) gitium-php-fpm bash`
+# Run `docker exec -it -u $(id -u) presslabs-php-fpm bash`
 # to get inside the container, finish env setup and run tests.
 ##
 
@@ -12,11 +12,11 @@ services:
 
     memcached:
       image: memcached:alpine
-      container_name: gitium-memcached
+      container_name: presslabs-memcached
 
     mysql:
       image: mysql:5.7
-      container_name: gitium-mysql
+      container_name: presslabs-mysql
       working_dir: /application
       volumes:
         - db_data:/var/lib/mysql
@@ -28,12 +28,12 @@ services:
 
     webserver:
       image: nginx:alpine
-      container_name: gitium-webserver
+      container_name: presslabs-webserver
       working_dir: /application
       volumes:
           - .:/application
           - /application/.git/
-          - ./gitium:/application/public/wp-content/plugins/gitium
+          - ./presslabs:/application/public/wp-content/plugins/presslabs
           - ./presslabs/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
       ports:
        - "8000:80"
@@ -44,12 +44,12 @@ services:
       build:
         context: .
         dockerfile: presslabs/php-fpm/Dockerfile
-      container_name: gitium-php-fpm
+      container_name: presslabs-php-fpm
       working_dir: /application
       volumes:
         - .:/application
         - /application/.git/
-        - ./gitium:/application/public/wp-content/plugins/gitium
+        - ./src:/application/public/wp-content/plugins/src
         - ./presslabs/php-fpm/php-ini-overrides.ini:/etc/php/7.1/fpm/conf.d/99-overrides.ini
 
       links:

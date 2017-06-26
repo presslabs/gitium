@@ -33,12 +33,12 @@ log:
 
 bash:
 	@echo "\nDropping you to an interactive shell.\nHappy Testing!\n"
-	@sudo docker exec gitium-php-fpm chown -R `id -u`:`id -g` /application
-	@sudo docker exec -it -u `id -u` gitium-php-fpm bash
+	@sudo docker exec presslabs-php-fpm chown -R `id -u`:`id -g` /application
+	@sudo docker exec -it -u `id -u` presslabs-php-fpm bash
 
 env: composer-install
 	@echo "\nInstalling "latest" WP distribution and test files ..."
-	@bash $(INSTALL_WP_TESTS) wordpress wordpress wordpress gitium-mysql latest true
+	@bash $(INSTALL_WP_TESTS) wordpress wordpress wordpress presslabs-mysql latest true
 	@echo -ne '\n'
 	@echo "Done! Use 'make' to run tests.\n"
 
@@ -48,7 +48,7 @@ composer-install:
 
 wp-setup:
 	@echo "\n"
-	@wp core config --dbname="wordpress" --dbuser="wordpress" --dbpass="wordpress" --dbhost="gitium-mysql"
+	@wp core config --dbname="wordpress" --dbuser="wordpress" --dbpass="wordpress" --dbhost="presslabs-mysql"
 	@wp core install --url="http://localhost:8000" --title="$(TITLE)" --admin_user="$(USR)" --admin_email="$(EMAIL)" --admin_password="$(PASSWORD)" --skip-email
 	@wp plugin activate --all
 
@@ -57,7 +57,7 @@ clean:
 	@-sudo docker-compose down
 	@-sudo rm -rf wp-tests/ wp-includes/ wp-content/ wp-admin/ vendor/ tmp/ public/
 	@-sudo rm -f readme.html license.txt *.php composer.lock
-	@-sudo docker volume rm gitium_db_data
+	@-sudo docker volume rm presslabs_db_data
 	@echo "\nDone! You can now start fresh!\n"
 
 permissions-fix:
