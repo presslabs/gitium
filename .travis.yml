@@ -17,10 +17,14 @@ php:
   - nightly
 
 env:
-  - WP_VERSION=nightly WP_MULTISITE=0
-  - WP_VERSION=latest WP_MULTISITE=0
-  - WP_VERSION=4.6 WP_MULTISITE=0
-  - WP_VERSION=4.7 WP_MULTISITE=0
+  global:
+    - WP_TESTS_DIR=/tmp/wordpress-tests-lib
+    - WP_CORE_DIR=/tmp/wordpress/
+  matrix:
+    - WP_VERSION=nightly WP_MULTISITE=0
+    - WP_VERSION=latest WP_MULTISITE=0
+    - WP_VERSION=4.6 WP_MULTISITE=0
+    - WP_VERSION=4.7 WP_MULTISITE=0
 
 matrix:
   include:
