@@ -49,7 +49,7 @@ services:
       volumes:
         - .:/application
         - /application/.git/
-        - ./src:/application/public/wp-content/plugins/src
+        - ./src:/application/public/wp-content/plugins/gitium
         - ./presslabs/php-fpm/php-ini-overrides.ini:/etc/php/7.1/fpm/conf.d/99-overrides.ini
 
       links:

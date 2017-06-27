@@ -4,7 +4,7 @@ require_once("repl.php");
 
 class Test_Gitium extends WP_UnitTestCase {
 	private $test_gitium_is_activated = false;
-	private $plugin = 'gitium/gitium.php';
+	private $plugin = 'src/gitium.php';
 	var $user_id;
 	var $factory;
 
@@ -17,7 +17,7 @@ class Test_Gitium extends WP_UnitTestCase {
 			array(
 				'plugins' => array(
 					'autover/autover.php'             => array( 'name' => 'AutoVer', 'version' => '1.2.3' ),
-					'gitium/gitium.php'               => array( 'name' => 'Gitium', 'version' => '1.0' ),
+					'src/gitium.php'               => array( 'name' => 'Gitium', 'version' => '1.0' ),
 					'gitium-pltest/gitium-pltest.php' => array( 'name' => 'Gitium PL Test', 'version' => '2.1' ),
 					'struto-camila/camila.php'        => array( 'name' => 'Camila', 'version' => '1.0.1' ),
 					'struto-camila/strutul.php'       => array( 'name' => 'Strutul', 'version' => '3.2.1' ),
