@@ -18,6 +18,11 @@ WP_TESTS_DIR=${WP_TESTS_DIR-/application/wp-tests/}
 WP_CORE_DIR=${WP_CORE_DIR-/application/public/}
 WP_CHECK_DIR=${WP_CHECK_DIR-/application/public/wp-admin/}
 
+
+if [ ! -d $WP_CORE_DIR ]; then
+    mkdir -p $WP_CORE_DIR
+fi
+
 echo -ne '[###                           ](10%)\r'
 
 download() {
