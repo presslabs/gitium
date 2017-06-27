@@ -52,6 +52,8 @@ set -ex
 
 install_wp() {
 
+    mkdir -p $WP_CORE_DIR $WP_TESTS_DIR
+
 	if [ -d $WP_CHECK_DIR ]; then
 		return;
 	fi
