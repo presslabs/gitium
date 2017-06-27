@@ -16,6 +16,9 @@ php:
   - hhvm
   - nightly
 
+services:
+  - mysql
+
 env:
   global:
     - WP_TESTS_DIR=/tmp/wordpress-tests-lib
@@ -40,8 +43,8 @@ addons:
     repo_token: 819c356e2d022f98e4e2717dbd459c3801fef95241a2db7261596a0482dd6ca3
 
 before_script:
-  - bash presslabs/bin/install-wp-tests.sh wordpress_test root '' localhost $WP_VERSION
   - composer update
+  - bash presslabs/bin/install-wp-tests.sh wordpress_test root '' localhost $WP_VERSION
   - ./vendor/bin/phpcs --config-set installed_paths ./vendor/wp-coding-standards/wpcs
 
 script:
