@@ -45,10 +45,10 @@ addons:
 before_script:
   - composer update
   - bash presslabs/bin/install-wp-tests.sh wordpress_test root '' localhost $WP_VERSION
-  - ./vendor/bin/phpcs --config-set installed_paths ./vendor/wp-coding-standards/wpcs
+#  - ./vendor/bin/phpcs --config-set installed_paths ./vendor/wp-coding-standards/wpcs
 
 script:
-  - ./vendor/bin/phpcs --standard=phpcs.ruleset.xml $(find ./gitium/ -name '*.php')
+#  - ./vendor/bin/phpcs --standard=phpcs.ruleset.xml $(find ./gitium/ -name '*.php')
   - ./vendor/bin/phpunit --coverage-clover build/logs/clover.xml
 
 after_success:
