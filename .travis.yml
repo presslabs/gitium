@@ -26,8 +26,6 @@ env:
   matrix:
     - WP_VERSION=nightly WP_MULTISITE=0
     - WP_VERSION=latest WP_MULTISITE=0
-    - WP_VERSION=4.6 WP_MULTISITE=0
-    - WP_VERSION=4.7 WP_MULTISITE=0
 
 matrix:
   include:
