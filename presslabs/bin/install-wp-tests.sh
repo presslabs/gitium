@@ -48,7 +48,7 @@ fi
 
 echo -ne '[#########                     ](30%)\r'
 
-set -e
+set -ex
 
 install_wp() {
 

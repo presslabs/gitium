@@ -9,7 +9,7 @@ if ( ! $_tests_dir ) $_tests_dir = '/application/wp-tests';
 define( 'WP_PLUGIN_DIR', dirname( __DIR__ ) );
 
 $GLOBALS['wp_tests_options'] = array(
-	'active_plugins' => array( 'gitium/gitium.php' ),
+	'active_plugins' => array( 'src/gitium.php' ),
 );
 
 require $_tests_dir . '/includes/bootstrap.php';
