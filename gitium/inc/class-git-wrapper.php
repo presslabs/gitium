@@ -114,15 +114,17 @@ class Git_Wrapper {
 	function _log() {
 		if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) { return; }
 
+		$output = '';
 		if ( func_num_args() == 1 && is_string( func_get_arg( 0 ) ) ) {
-			error_log( func_get_arg( 0 ) );
+			$output .= var_export(func_get_arg( 0 ), true);
 		} else {
 			$args = func_get_args();
-			$output = '';
 			foreach ( $args as $arg ) {
 				$output .= var_export($arg, true).'/n/n';
 			}
 		}
+
+		error_log($output);
 	}
 
 	function _git_temp_key_file() {
