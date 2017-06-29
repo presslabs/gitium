@@ -80,7 +80,7 @@ Submodules are currently not supported.
 * Bumped plugin version
 
 = 1.0-rc11 =
-* Hotfixed an erorr that prevented gitium to error_log properly.
+* Hotfixed an error that prevented gitium to error_log properly.
 
 = 1.0-rc10 =
 * Bumped wordpress tested version
