@@ -302,20 +302,31 @@ function gitium_check_for_themes_deletions() { // Handle theme deletion
 }
 add_action( 'load-themes.php', 'gitium_check_for_themes_deletions' );
 
-// Hook to theme/plugin edit page
-function gitium_hook_plugin_and_theme_editor_page( $hook ) {
-	switch ( $hook ) {
-		case 'plugin-editor.php':
-			if ( isset( $_GET['a'] ) && 'te' == $_GET['a'] ) { gitium_auto_push(); }
-		break;
+// Deprecated function - backward compatibility
+function gitium_hook_plugin_and_theme_editor_page( $hook )
+{
+    switch ($hook) {
+        case 'plugin-editor.php':
+            if (isset($_GET['a']) && 'te' == $_GET['a']) {
+                gitium_auto_push();
+            }
+            break;
 
-		case 'theme-editor.php':
-			if ( isset( $_GET['updated'] ) && 'true' == $_GET['updated'] ) { gitium_auto_push(); }
-		break;
-	}
-	return;
+        case 'theme-editor.php':
+            if (isset($_GET['updated']) && 'true' == $_GET['updated']) {
+                gitium_auto_push();
+            }
+            break;
+    }
+
+    return;
 }
-add_action( 'admin_enqueue_scripts', 'gitium_hook_plugin_and_theme_editor_page' );
+
+// Hook to theme/plugin edit page
+if ( version_compare( $GLOBALS['wp_version'], '4.9', '>=' ) )
+    add_action( 'wp_ajax_edit-theme-plugin-file', 'gitium_auto_push', 1, 0 );
+else
+    add_action( 'admin_enqueue_scripts', 'gitium_hook_plugin_and_theme_editor_page' );
 
 function gitium_options_page_check() {
 	global $git;
