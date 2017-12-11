@@ -323,11 +323,10 @@ function gitium_hook_plugin_and_theme_editor_page( $hook )
 }
 
 // Hook to theme/plugin edit page
-if ( version_compare( $GLOBALS['wp_version'], '4.9', '>' ) ) {
+if ( version_compare( $GLOBALS['wp_version'], '4.9', '>' ) )
     add_action( 'wp_ajax_edit-theme-plugin-file', 'gitium_auto_push', 1, 0 );
-} else {
+else
     add_action( 'admin_enqueue_scripts', 'gitium_hook_plugin_and_theme_editor_page' );
-}
 
 function gitium_options_page_check() {
 	global $git;
