@@ -101,7 +101,7 @@ class Test_Gitium extends WP_UnitTestCase {
 	}
 
 	function test_has_action_gitium_hook_plugin_and_theme_editor_page() {
-		if ( version_compare( $GLOBALS['wp_version'], '4.9', '>' ) )
+		if ( version_compare( $GLOBALS['wp_version'], '4.9', '>=' ) )
 			$this->assertGreaterThan( 0, has_action( 'wp_ajax_edit-theme-plugin-file','gitium_auto_push' ) );
 		else
 			$this->assertGreaterThan(0, has_action('admin_enqueue_scripts', 'gitium_hook_plugin_and_theme_editor_page'));
