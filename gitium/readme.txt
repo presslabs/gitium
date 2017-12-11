@@ -76,6 +76,9 @@ Gitium does not support multisite setups at the moment.
 Submodules are currently not supported.
 
 == Changelog ==
+= 1.0 =
+* Fixed WP 4.9 Compatibility
+
 = 1.0-rc12 =
 * Bumped plugin version
 
