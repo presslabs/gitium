@@ -322,9 +322,34 @@ function gitium_hook_plugin_and_theme_editor_page( $hook )
     return;
 }
 
-// Hook to theme/plugin edit page
+/*
+ * We execute the "gitium_auto_push" on "wp_die_ajax_handler" filter to make sure we are
+ * at the end of our request and the latest file is saved on disk.
+ */
+function gitium_check_ajax_success_call($callback)
+{
+    gitium_auto_push();
+
+    return $callback;
+}
+
+/*
+ * We add this filer on "wp_die_ajax_handler" since our action executes before the actual file is saved on disk
+ * which results in a race condition that would commit only the previously saved data not the
+ * currently saved one.
+ */
+function add_filter_for_ajax_save()
+{
+	add_filter('wp_die_ajax_handler', 'gitium_check_ajax_success_call', 1);
+}
+
+/*
+ * We need to apply different filters while checking for WP version to maintain
+ * backworks compatibility since the Code Editor has changed drastically
+ * with the 4.9 WP update.
+ */
 if ( version_compare( $GLOBALS['wp_version'], '4.9', '>=' ) )
-    add_action( 'wp_ajax_edit-theme-plugin-file', 'gitium_auto_push', 1, 0 );
+    add_action( 'wp_ajax_edit-theme-plugin-file', 'add_filter_for_ajax_save', 1, 0 );
 else
     add_action( 'admin_enqueue_scripts', 'gitium_hook_plugin_and_theme_editor_page' );
 
