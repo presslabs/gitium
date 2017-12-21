@@ -323,13 +323,14 @@ function gitium_hook_plugin_and_theme_editor_page( $hook )
 }
 
 /*
- * We execute the "gitium_auto_push" on "wp_die_ajax_handler" filter.
- * This will get executed twice per request for some odd reason.
- * Still, only one commit will be made since second time we don't have anything to commit.
+ * We execute the "gitium_auto_push" on "wp_die_ajax_handler" filter to make sure we are
+ * at the end of our request and the latest file is saved on disk.
  */
 function gitium_check_ajax_success_call($callback)
 {
     gitium_auto_push();
+
+    return $callback;
 }
 
 /*
