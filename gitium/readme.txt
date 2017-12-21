@@ -76,6 +76,9 @@ Gitium does not support multisite setups at the moment.
 Submodules are currently not supported.
 
 == Changelog ==
+= 1.0.1 =
+* Hotfix - Fix race condition on Code Editor Save
+
 = 1.0 =
 * Fixed WP 4.9 Compatibility
 

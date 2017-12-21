@@ -24,6 +24,8 @@ compose:
 
 matrix:
   WP_VERSION:
-    - 4.7.4
+    - 4.8.4
+    - 4.9.1
   PHP_VERSION:
     - 7.1
+    - 7.2
