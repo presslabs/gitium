@@ -1,7 +1,7 @@
-site_name: gitfs
-site_url: https://presslabs.org/gitfs/
-repo_url: https://github.com/PressLabs/gitfs.git
-repo_name: gitfs
+site_name: gitium
+site_url: https://presslabs.org/gitium/
+repo_url: https://github.com/PressLabs/gitium.git
+repo_name: gitium
 site_author: Presslabs
 theme_dir: docs-theme
 docs_dir: documentation
@@ -14,6 +14,6 @@ markdown_extensions:
         baselevel: 1
 pages:
     - General: 'index.md'
-    - Arguments: 'arguments.md'
-    - How it works: 'how-it-works.md'
     - Usage: 'usage.md'
+    - Testing: 'testing.md'
+    - FAQ: 'faq.md'
