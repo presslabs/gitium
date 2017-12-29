@@ -51,8 +51,8 @@ pipeline:
       - rm -rf /drone/src/presslabs-org/wp-content/root/gitium/docs/*
       - mv compiled_docs/* /drone/src/presslabs-org/wp-content/root/gitium/docs
       - rm -rf compiled_docs/
-    when:
-      branch: master
+    # when:
+    #   branch: master
 
   update-presslabs-org:
     image: appleboy/drone-git-push
@@ -64,8 +64,8 @@ pipeline:
     remote: git@github.com:/Presslabs/presslabs-org.git
     secrets:
       - GIT_PUSH_SSH_KEY
-    when:
-      branch: master
+    # when:
+    #   branch: master
 
 services:
   database:
