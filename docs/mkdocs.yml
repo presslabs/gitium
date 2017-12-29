@@ -1,0 +1,19 @@
+site_name: gitium
+site_url: https://presslabs.org/gitium/
+repo_url: https://github.com/PressLabs/gitium.git
+repo_name: gitium
+site_author: Presslabs
+theme_dir: docs-theme
+docs_dir: documentation
+site_dir: compiled_docs
+extra:
+  home_url: https://www.presslabs.com
+markdown_extensions:
+    - admonition
+    - toc:
+        baselevel: 1
+pages:
+    - General: 'index.md'
+    - Usage: 'usage.md'
+    - Testing: 'testing.md'
+    - FAQs: 'faqs.md'
