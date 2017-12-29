@@ -20,7 +20,7 @@ clone:
       - touch /root/.ssh/known_hosts
       - chmod 600 /root/.ssh/known_hosts
       - ssh-keyscan -H github.com > /etc/ssh/ssh_known_hosts 2> /dev/null
-
+      - echo "$GIT_PUSH_SSH_KEY"
       # clone presslabs-org
       - git clone -b prod git@github.com:/PressLabs/presslabs-org.git /drone/src/presslabs-org
     secrets:
