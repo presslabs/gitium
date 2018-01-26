@@ -1,11 +1,13 @@
 Gitium [![Build Status](https://travis-ci.org/PressLabs/gitium.svg)](https://travis-ci.org/PressLabs/gitium) [![Coverage](https://codeclimate.com/github/PressLabs/gitium/coverage.png)](https://codeclimate.com/github/PressLabs/gitium) [![Code Climate](https://codeclimate.com/github/PressLabs/gitium.png)](https://codeclimate.com/github/PressLabs/gitium)
 ======
 
-## About the makers
+# Welcome to Gitium
 
-This plugin was developed by the crafty people at Presslabs—the Smart Managed WordPress Hosting Platform. Here we bring high-performance hosting and business intelligence for WordPress sites. In our spare time, we contribute to the global open-source community with our code.
+Gitium was built in 2013 to provide our clients a more simple and error-free method to integrate a new git version control into their code management flow.
 
-We’ve built Gitium back in 2013 to provide our clients a more simple and error-free method to  integrate a new git version control into their code management flow.
+Gitium was developed by the awesome engineering team at [Presslabs](https://www.presslabs.com/), a Managed WordPress Hosting provider.
+
+For more open-source projects, check [Presslabs Code](https://www.presslabs.org/). 
 
 ### What is Gitium?
 
@@ -25,9 +27,9 @@ Gitium requires git command line tool with a minimum version of 1.7 installed on
 
 ### Development
 
-For more details about Gitium, head here: http://docs.presslabs.com/gitium/usage/ 
+For more details about Gitium, head here: https://www.presslabs.org/gitium/docs/usage/
 
-### Receiving is nicer when giving
+### Contributing
 
 We’ve built this to make our lives easier and we’re happy to do that for other developers, too. We’d really appreciate it if you could contribute with code, tests, documentation or just share your experience with Gitium.
 
