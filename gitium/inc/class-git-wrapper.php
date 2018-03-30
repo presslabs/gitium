@@ -231,8 +231,12 @@ class Git_Wrapper {
 	}
 
 	function init() {
-		file_put_contents( "$this->repo_dir/.gitignore", $this->gitignore );
-		list( $return, ) = $this->_call( 'init' );
+		if( ! file_exists( "$this->repo_dir/.gitignore" ) ) {
+			file_put_contents( "$this->repo_dir/.gitignore", $this->gitignore );
+		}
+		if( ! $this->is_dot_git_dir( "$this->repo_dir/.git" ) ) {
+			list( $return, ) = $this->_call( 'init' );
+		}
 		$this->_call( 'config', 'user.email', 'gitium@presslabs.com' );
 		$this->_call( 'config', 'user.name', 'Gitium' );
 		$this->_call( 'config', 'push.default', 'matching' );
