@@ -51,6 +51,44 @@ require_once __DIR__ . '/inc/class-gitium-submenu-status.php';
 require_once __DIR__ . '/inc/class-gitium-submenu-commits.php';
 require_once __DIR__ . '/inc/class-gitium-submenu-settings.php';
 
+function gitium_auto_init( ) {
+	global $git;
+
+	error_log( __FUNCTION__ . ' -  in auto_init_all ' );
+
+	if ( ! $git->is_status_working() || ! $git->get_remote_url() || ! ! $git->get_remote_tracking_branch() ) {
+		$remote_url = get_option( 'gitium_remote_url', false );
+		$branch = get_transient( 'gitium_remote_tracking_branch' );
+		
+		error_log( __FUNCTION__ . ' -  $remote_url = ' . $remote_url );
+		error_log( __FUNCTION__ . ' -  $branch = ' . $branch );
+
+		if ( $remote_url && $branch ) {
+			$git->init();
+			$git->add_remote_url( $remote_url );
+			$git->fetch_ref();
+			$git->add();
+			$current_user = wp_get_current_user();
+			$commit = $git->commit( __( 'Merged existing code from ', 'gitium' ) . get_home_url(), $current_user->display_name, $current_user->user_email );
+			if ( ! $commit ) {
+				$git->cleanup();
+				error_log( __FUNCTION__ . ' -  Error commiting existing code' );
+				return;
+			}
+			if ( ! $git->merge_initial_commit( $commit, $branch ) ) {
+				error_log( __FUNCTION__ . ' -  Error merging existing code' );
+				$git->cleanup();
+				return;
+			}
+			$git->push( $branch );		
+
+			_gitium_status( true );
+			gitium_update_is_status_working();
+		}
+	}
+}
+add_action( 'wp_loaded', 'gitium_auto_init' );
+
 function gitium_load_textdomain() {
 	load_plugin_textdomain( 'gitium', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 }
