@@ -89,9 +89,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 
 	public function init_repo() {
 		$remote_url = filter_input(INPUT_POST, 'remote_url', FILTER_SANITIZE_STRING);
-		if ( empty( $remote_url ) ) {
-			$remote_url = get_option( 'gitium_remote_url', '' );
-		} elseif ( $remote_url != get_option( 'gitium_remote_url', '' ) ) {
+		if ( $remote_url != get_option( 'gitium_remote_url', '' ) ) {
 			update_option( 'gitium_remote_url', $remote_url);
 		}
 	    $gitium_submit_fetch = filter_input(INPUT_POST, 'GitiumSubmitFetch', FILTER_SANITIZE_STRING);
