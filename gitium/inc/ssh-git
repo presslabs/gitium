@@ -1,6 +1,12 @@
 #!/bin/sh
 SSH_AUTH_SOCK=''
 SSH="ssh -q -F /dev/null -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+
+if [ "$GIT_SSH_KEY" ] ; then
+    echo "$GIT_SSH_KEY" > /tmp/gitium.key
+    export GIT_KEY_FILE="/tmp/gitium.key"
+fi
+
 if [ -z "$GIT_KEY_FILE" ] ; then
     exec $SSH "$@"
 else
