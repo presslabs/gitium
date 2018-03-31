@@ -89,6 +89,11 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 
 	public function init_repo() {
 		$remote_url = filter_input(INPUT_POST, 'remote_url', FILTER_SANITIZE_STRING);
+		if ( empty( $remote_url ) ) {
+			$remote_url = get_option( 'gitium_remote_url', '' );
+		} elseif ( $remote_url != get_option( 'gitium_remote_url', '' ) ) {
+			update_option( 'gitium_remote_url', $remote_url);
+		}
 	    $gitium_submit_fetch = filter_input(INPUT_POST, 'GitiumSubmitFetch', FILTER_SANITIZE_STRING);
 		if ( ! isset( $gitium_submit_fetch ) || ! isset( $remote_url ) ) {
 			return;
@@ -133,11 +138,12 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 	}
 
 	private function setup_step_1_remote_url() {
+		$remote_url = get_option( 'gitium_remote_url', "" );
 		?>
 		<tr>
 		<th scope="row"><label for="remote_url"><?php _e( 'Remote URL', 'gitium' ); ?></label></th>
 			<td>
-				<input type="text" class="regular-text" name="remote_url" id="remote_url" placeholder="git@github.com:user/example.git" value="">
+				<input type="text" class="regular-text" name="remote_url" id="remote_url" placeholder="git@github.com:user/example.git" value="<?php echo esc_attr( $remote_url ); ?>">
 				<p class="description"><?php _e( 'This URL provide access to a Git repository via SSH, HTTPS, or Subversion.', 'gitium' ); ?><br />
 		<?php _e( 'If you need to authenticate over "https://" instead of SSH use: <code>https://user:pass@github.com/user/example.git</code>', 'gitium' ); ?></p>
 			</td>
