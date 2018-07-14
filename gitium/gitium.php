@@ -238,6 +238,8 @@ add_filter( 'upgrader_post_install', 'gitium_upgrader_post_install', 10, 3 );
 function gitium_auto_push( $msg_prepend = '' ) {
 	global $git;
 	list( , $git_private_key ) = gitium_get_keypair();
+	if ( ! $git_private_key )
+		return;
 	$git->set_key( $git_private_key );
 
 	$commits = gitium_group_commit_modified_plugins_and_themes( $msg_prepend );

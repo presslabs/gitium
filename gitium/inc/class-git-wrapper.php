@@ -111,20 +111,15 @@ class Git_Wrapper {
 		return rmdir( $dir );
 	}
 
-	function _log() {
+	function _log(...$args) {
 		if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) { return; }
 
 		$output = '';
-		if ( func_num_args() == 1 && is_string( func_get_arg( 0 ) ) ) {
-			$output .= var_export(func_get_arg( 0 ), true);
-		} else {
-			$args = func_get_args();
-			foreach ( $args as $arg ) {
-				$output .= var_export($arg, true).'/n/n';
-			}
+		if (isset($args) && $args) foreach ( $args as $arg ) {
+			$output .= var_export($arg, true).'/n/n';
 		}
 
-		error_log($output);
+		if ($output) error_log($output);
 	}
 
 	function _git_temp_key_file() {
@@ -158,8 +153,7 @@ class Git_Wrapper {
 		return $env;
 	}
 
-	protected function _call() {
-		$args     = func_get_args();
+	protected function _call(...$args) {
 		$args     = join( ' ', array_map( 'escapeshellarg', $args ) );
 		$cmd      = "git $args 2>&1";
 		$return   = -1;
@@ -353,12 +347,10 @@ class Git_Wrapper {
 		}
 	}
 
-	function merge_with_accept_mine() {
+	function merge_with_accept_mine(...$commits) {
 		do_action( 'gitium_before_merge_with_accept_mine' );
 
-		// get all commits given by arguments
-		$commits = func_get_args();
-		if ( 1 == func_num_args() && is_array( $commits[0] ) ) {
+		if ( 1 == count($commits) && is_array( $commits[0] ) ) {
 			$commits = $commits[0];
 		}
 
@@ -442,9 +434,8 @@ class Git_Wrapper {
 		return $response;
 	}
 
-	function add() {
-		$args = func_get_args();
-		if ( 1 == func_num_args() && is_array( $args[0] ) ) {
+	function add(...$args) {
+		if ( 1 == count($args) && is_array( $args[0] ) ) {
 			$args = $args[0];
 		}
 		$params = array_merge( array( 'add', '-n', '--all' ), $args );
@@ -482,7 +473,7 @@ class Git_Wrapper {
 		if ( ! empty( $branch ) ) {
 			list( $return, ) = $this->_call( 'push', '--porcelain', '-u', 'origin', $branch );
 		} else {
-			list( $return, ) = $this->_call( 'push', '--porcelain', '-u', 'origin' );
+			list( $return, ) = $this->_call( 'push', '--porcelain', '-u', 'origin', 'HEAD' );
 		}
 		return ( $return == 0 );
 	}

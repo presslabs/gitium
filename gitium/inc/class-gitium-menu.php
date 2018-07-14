@@ -51,7 +51,7 @@ class Gitium_Menu {
 			$url
 		) );
 		wp_safe_redirect( $url );
-		wp_die();
+		exit;
 	}
 
 	public function success_redirect( $message = '', $menu_slug = '' ) {

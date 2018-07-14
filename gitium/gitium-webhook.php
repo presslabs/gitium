@@ -30,7 +30,10 @@ if ( ! empty ( $webhook_key ) && isset( $get_key ) && $webhook_key == $get_key )
 	( '1.7' <= substr( $git->get_version(), 0, 3 ) ) or wp_die( 'Gitium plugin require minimum `git version 1.7`!' );
 
 	list( $git_public_key, $git_private_key ) = gitium_get_keypair();
-	$git->set_key( $git_private_key );
+	if ( ! $git_public_key || ! $git_private_key )
+		wp_die('Not ready.', 'Not ready.', array( 'response' => 403 ));
+	else
+		$git->set_key( $git_private_key );
 
 	$commits   = array();
 	$commitmsg = sprintf( 'Merged changes from %s on %s', $_SERVER['SERVER_NAME'], date( 'm.d.Y' ) );
