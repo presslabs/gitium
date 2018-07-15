@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Gitium
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: Presslabs
  * Author URI: https://www.presslabs.com
  * License: GPL2
@@ -27,7 +27,7 @@
 
 define( 'GITIUM_LAST_COMMITS', 20 );
 define( 'GITIUM_MIN_GIT_VER', '1.7' );
-define( 'GITIUM_MIN_PHP_VER', '5.3' );
+define( 'GITIUM_MIN_PHP_VER', '5.6' );
 
 if ( is_multisite() ) {
 	define( 'GITIUM_ADMIN_MENU_ACTION', 'network_admin_menu' );
