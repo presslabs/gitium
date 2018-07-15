@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Gitium
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: Presslabs
  * Author URI: https://www.presslabs.com
  * License: GPL2
@@ -27,7 +27,7 @@
 
 define( 'GITIUM_LAST_COMMITS', 20 );
 define( 'GITIUM_MIN_GIT_VER', '1.7' );
-define( 'GITIUM_MIN_PHP_VER', '5.3' );
+define( 'GITIUM_MIN_PHP_VER', '5.6' );
 
 if ( is_multisite() ) {
 	define( 'GITIUM_ADMIN_MENU_ACTION', 'network_admin_menu' );
@@ -238,6 +238,8 @@ add_filter( 'upgrader_post_install', 'gitium_upgrader_post_install', 10, 3 );
 function gitium_auto_push( $msg_prepend = '' ) {
 	global $git;
 	list( , $git_private_key ) = gitium_get_keypair();
+	if ( ! $git_private_key )
+		return;
 	$git->set_key( $git_private_key );
 
 	$commits = gitium_group_commit_modified_plugins_and_themes( $msg_prepend );

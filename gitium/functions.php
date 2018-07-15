@@ -54,6 +54,8 @@ function _gitium_commit_changes( $message, $dir = '.' ) {
 	global $git;
 
 	list( , $git_private_key ) = gitium_get_keypair();
+	if (!$git_private_key)
+		return false;
 	$git->set_key( $git_private_key );
 
 	$git->add( $dir );
@@ -351,8 +353,14 @@ function _gitium_generate_keypair() {
 		)
 	);
 
-	$private_key = openssl_pkey_get_private( $rsa_key );
-	openssl_pkey_export( $private_key, $pem ); //Private Key
+	try {
+		$private_key = openssl_pkey_get_private( $rsa_key );
+		$try = openssl_pkey_export( $private_key, $pem ); //Private Key
+		if (!$try)
+			return false;
+	} catch (Exception $e) {
+		return false;
+	}
 
 	$key_info   = openssl_pkey_get_details( $rsa_key );
 	$buffer     = pack( 'N', 7 ) . 'ssh-rsa' .

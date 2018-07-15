@@ -81,8 +81,7 @@ workspace:
 
 matrix:
   WP_VERSION:
-    - 4.8.4
-    - 4.9.1
+    - 4.9.7
   PHP_VERSION:
     - 7.1
     - 7.2

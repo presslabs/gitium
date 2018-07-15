@@ -34,7 +34,7 @@ class Gitium_Menu {
 		$this->submenu_slug = $submenu_slug;
 	}
 
-	public function redirect( $message, $success = false, $menu_slug = '' ) {
+	public function redirect( $message = '', $success = false, $menu_slug = '' ) {
 		$message_id = substr(
 			md5( str_shuffle( 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789' ) . time() ), 0, 8
 		);
@@ -51,7 +51,7 @@ class Gitium_Menu {
 			$url
 		) );
 		wp_safe_redirect( $url );
-		wp_die();
+		exit;
 	}
 
 	public function success_redirect( $message = '', $menu_slug = '' ) {
@@ -67,18 +67,18 @@ class Gitium_Menu {
 		check_admin_referer( 'gitium-admin' );
 		gitium_uninstall_hook();
 		if ( ! $this->git->remove_remote() ) {
-			$this->redirect( 'Could not remove remote.' );
+			$this->redirect( __('Could not remove remote.', 'gitium') );
 		}
-		$this->success_redirect();
+		$this->success_redirect( __('You are now disconnected from the repository. New key pair generated.', 'gitium') );
 	}
 
 	public function show_message() {
 	    $get_message = filter_input(INPUT_GET, 'message', FILTER_SANITIZE_STRING);
 	    $get_success = filter_input(INPUT_GET, 'success', FILTER_SANITIZE_STRING);
 		if ( isset( $get_message ) && $get_message ) {
-			$type    = ( isset( $get_success ) && $get_success == 1 ? 'updated' : 'error' );
+			$type    = ( isset( $get_success ) && $get_success == 1 ) ? 'updated' : 'error';
 			$message = get_transient( 'message_'. $get_message );
-			if ( ! empty( $message ) ) : ?>
+			if ( $message  ) : ?>
 				<div class="<?php echo esc_attr( $type ); ?>"><p><?php echo esc_html( $message ); ?></p></div>
 			<?php endif;
 		}
