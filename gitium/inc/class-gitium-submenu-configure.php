@@ -99,7 +99,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 			$this->redirect( __( 'Please specify a valid repo.', 'gitium' ) );
 		}
 		if ( $this->init_process( $remote_url ) ) {
-			$this->success_redirect();
+			$this->success_redirect( __( 'Repository initialized successfully.', 'gitium' ) );
 		} else {
 			global $git;
 			$this->redirect( __( 'Could not push to remote: ', 'gitium' ) . $remote_url . ' ERROR: ' . serialize( $git->get_last_error() ) );
@@ -129,7 +129,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 			$this->redirect( __( 'Could not merge the initial commit -> ', 'gitium' ) . $this->git->get_last_error() );
 		}
 		$this->git->push( $branch );
-		$this->success_redirect();
+		$this->success_redirect( __( 'Branch selected successfully.', 'gitium' ) );
 	}
 
 	private function setup_step_1_remote_url() {
