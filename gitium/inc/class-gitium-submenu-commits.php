@@ -82,6 +82,13 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 				<span title="<?php echo esc_attr( $author_email ); ?>"><?php echo esc_html( $author_name ) . ' ' . sprintf( __( 'authored %s ago', 'gitium' ), human_time_diff( strtotime( $author_date ) ) ); ?></span><?php echo $committer; ?></div>
 			</td>
 			<td><p style="padding-top:8px"><?php echo $commit_id; ?></p></td>
+			<td><p style="padding-top:8px">
+				<form action="{{$_SERVER['REQUEST_URI']}}" method="POST">
+					<?php wp_nonce_field( 'GitiumRevertNonce' ); ?>
+					<input type="hidden" name="GitiumRevertID" value="<?php echo $commit_id; ?>">
+					<input type="submit" name="GitiumRevertCommit" value="Revert" class="button secondary" onclick="return confirm('Are you sure you want to revert this commit?')">
+				</form>
+			</p></td>
 		<?php
 			$this->table_end_row();
 		}
