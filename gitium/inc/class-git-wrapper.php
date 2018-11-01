@@ -448,6 +448,17 @@ class Git_Wrapper {
 		return $count;
 	}
 
+	function revert( $commit_id ) {
+
+		list( $return, $response ) = $this->_call( 'revert', $commit_id, '--no-edit' );
+
+		if ( $return !== 0 ) { return false; }
+
+		list( $return, $response ) = $this->_call( 'rev-parse', 'HEAD' );
+
+		return ( $return === 0 ) ? $response[0] : false;
+	}
+
 	function commit( $message, $author_name = '', $author_email = '' ) {
 		$author = '';
 		if ( $author_email ) {
