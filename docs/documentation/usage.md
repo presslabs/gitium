@@ -31,5 +31,16 @@ Plugin and search for __gitium__. Then, click on Install and, after that, on Act
 
 All done! your repo should be filled with your theme files now.
 
+### One Buttun Push Deploy
+
+1. Admin menu -> gitium -> settings
+2. Grab the __Webhook URL__ from this page
+3. Navigate into your bitbucket repo -> settings -> webhooks -> add webhook
+4. Paste the URL and hit __save__
+5. clone the repo to your local machine
+6. make changes
+7. push the changes back to your repo
+8. DONE!
+
 
 
