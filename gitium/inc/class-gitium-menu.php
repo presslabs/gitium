@@ -42,7 +42,7 @@ class Gitium_Menu {
 			set_transient( 'message_' . $message_id, $message, 900 );
 		}
 		if ( '' === $menu_slug ) { $menu_slug = $this->menu_slug; }
-		$url = admin_url( 'admin.php?page=' . $menu_slug );
+		$url = network_admin_url( 'admin.php?page=' . $menu_slug );
 		$url = esc_url_raw( add_query_arg(
 			array(
 				'message' => $message_id,
