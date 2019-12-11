@@ -430,7 +430,7 @@ class Git_Wrapper {
 	function get_remote_branches() {
 		list( , $response ) = $this->_call( 'branch', '-r' );
 		$response = array_map( 'trim', $response );
-		$response = array_map( create_function( '$b', 'return str_replace("origin/","",$b);' ), $response );
+		$response = array_map( function( $b ) { return str_replace( "origin/", "", $b ); }, $response );
 		return $response;
 	}
 
