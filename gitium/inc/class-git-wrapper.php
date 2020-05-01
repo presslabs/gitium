@@ -84,6 +84,17 @@ wp-includes/
 /wp-signup.php
 /wp-trackback.php
 /xmlrpc.php
+
+.heroku/
+.profile.d/
+vendor/
+.composer/
+.builders_run
+.bash_history
+.rnd
+.release
+.env
+
 EOF
 );
 
