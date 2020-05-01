@@ -242,6 +242,9 @@ class Git_Wrapper {
 	}
 
 	function init() {
+		if( file_exists( "$this->repo_dir/.gitignore_gitium" ) ) {
+			copy("$this->repo_dir/.gitignore_gitium", "$this->repo_dir/.gitignore");
+		}
 		if( ! file_exists( "$this->repo_dir/.gitignore" ) ) {
 			file_put_contents( "$this->repo_dir/.gitignore", $this->gitignore );
 		}
