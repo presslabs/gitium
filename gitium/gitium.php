@@ -72,11 +72,11 @@ function gitium_auto_init( ) {
 			$commit = $git->commit( __( 'Merged existing code from ', 'gitium' ) . get_home_url(), $current_user->display_name, $current_user->user_email );
 			if ( ! $commit ) {
 				//$git->cleanup();
-				error_log( __FUNCTION__ . ' -  Error commiting existing code: ' . $git->get_last_error() );
+				//error_log( __FUNCTION__ . ' -  Error commiting existing code: ' . $git->get_last_error() );
 				return;
 			}
 			if ( ! $git->merge_initial_commit( $commit, $branch ) ) {
-				error_log( __FUNCTION__ . ' -  Error merging existing code: ' . $git->get_last_error());
+				//error_log( __FUNCTION__ . ' -  Error merging existing code: ' . $git->get_last_error());
 				//$git->cleanup();
 				return;
 			}

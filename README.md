@@ -29,6 +29,61 @@ Gitium requires git command line tool with a minimum version of 1.7 installed on
 
 For more details about Gitium, head here: https://www.presslabs.org/gitium/docs/usage/
 
+### Working with Heroku / Dokku
+
+We recommend using a separate 'gitium' branch for automatic pushes from Gitium.
+
+Add a composer.json file to your root source folder, to save the original .gitignore that would otherwise be deleted by herokuish as
+part of deployment:
+```
+{
+    "scripts": {
+        "post-install-cmd": [
+            "cp .gitignore .gitignore_gitium"
+        ]
+    }
+}
+```
+
+Modify your .gitignore, to have at least the following lines:
+```
+*.log
+*.swp
+*.back
+*.bak
+*.sql
+*.sql.gz
+~*
+.maintenance
+wp-content/blogs.dir/
+wp-content/upgrade/
+wp-content/backup-db/
+wp-content/cache/
+wp-content/backups/
+wp-content/uploads/
+secret/
+**/node_modules/
+!wp-content/**/vendor/
+
+.heroku/
+.profile.d/
+vendor/
+.composer/
+.builders_run
+.bash_history
+.rnd
+.release
+.env
+*log.txt
+```
+
+The deployment process would consist of:
+
+1) Merge contents of 'gitium' branch into 'master', making sure merged contents are correct.
+
+2) Deploy with ```git push dokku``` as usual.
+
+
 ### Contributing
 
 We’ve built this to make our lives easier and we’re happy to do that for other developers, too. We’d really appreciate it if you could contribute with code, tests, documentation or just share your experience with Gitium.
