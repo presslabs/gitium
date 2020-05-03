@@ -107,6 +107,23 @@ class Git_Wrapper {
 	function __construct( $repo_dir ) {
 		$this->repo_dir    = $repo_dir;
 		$this->private_key = '';
+
+		//error_log( __FUNCTION__ . ' -  $remote_url = ' . get_option('gitium_remote_url', '') );
+		//error_log( __FUNCTION__ . ' - GITIUM_REMOTE_URL = ' . GITIUM_REMOTE_URL );
+		if(defined('GITIUM_REMOTE_URL') && GITIUM_REMOTE_URL) {
+			update_option('gitium_remote_url', GITIUM_REMOTE_URL);
+			//error_log( __FUNCTION__ . ' -  $remote_url = ' . get_option('gitium_remote_url', '') );
+		}
+		if(defined('GITIUM_REMOTE_TRACKING_BRANCH') && GITIUM_REMOTE_TRACKING_BRANCH) {
+			set_transient('gitium_remote_tracking_branch', GITIUM_REMOTE_TRACKING_BRANCH);
+			//error_log( __FUNCTION__ . ' -  $gitium_remote_tracking_branch = ' .get_transient('gitium_remote_tracking_branch', '') );
+		}
+		if( gitium_get_keypair() ) {
+			list( $git_public_key, $git_private_key ) = gitium_get_keypair();
+			$this->set_key( $git_private_key );
+			//error_log( __FUNCTION__ . ' -  $git_public_key = ' . $git_public_key );
+		}	
+		$this->init();
 	}
 
 	function _rrmdir( $dir ) {
@@ -248,12 +265,30 @@ class Git_Wrapper {
 		if( ! file_exists( "$this->repo_dir/.gitignore" ) ) {
 			file_put_contents( "$this->repo_dir/.gitignore", $this->gitignore );
 		}
-		if( ! $this->is_dot_git_dir( "$this->repo_dir/.git" ) ) {
-			list( $return, ) = $this->_call( 'init' );
+		$remote_url = get_option( 'gitium_remote_url', "" );
+		if(empty($remote_url)) {
+			if( ! $this->is_dot_git_dir( "$this->repo_dir/.git" ) ) {
+				list( $return, ) = $this->_call( 'init' );
+			}
+		}
+		if( !file_exists("$this->repo_dir/.git") && !file_exists("$this->repo_dir/.temp_cloned_repo") ) {
+			$this->_call( 'clone', $remote_url, "$this->repo_dir/.temp_cloned_repo" );
+			if($this->get_last_error()) {
+				error_log( __FUNCTION__ . ' - GitClassWrapper error: ' . $this->get_last_error() );
+			}
+			elseif(!file_exists("$this->repo_dir/.temp_cloned_repo/.git")) {
+				error_log( __FUNCTION__ . ' - Finished cloning, but $this->repo_dir/.temp_cloned_repo/.git does not exist.');
+			}
+			`cp -r $this->repo_dir/.temp_cloned_repo/.git $this->repo_dir`;
+			`rm -rf $this->repo_dir/.temp_cloned_repo`;
+			if(!file_exists("$this->repo_dir/.git")) {
+				error_log( __FUNCTION__ . " - GitClassWrapper error: $this->repo_dir/.git does not exist" );
+			}
 		}
 		$this->_call( 'config', 'user.email', 'gitium@presslabs.com' );
 		$this->_call( 'config', 'user.name', 'Gitium' );
 		$this->_call( 'config', 'push.default', 'matching' );
+
 		return ( 0 == $return );
 	}
 
@@ -268,6 +303,10 @@ class Git_Wrapper {
 	}
 
 	function cleanup() {
+		if(file_exists("$this->repo_dir/.git")) {
+			error_log( "GitWrapper->cleanup(), deleting existing .git folder" );
+		}
+
 		$dot_git_dir = realpath( $this->repo_dir . '/.git' );
 		if ( $this->is_dot_git_dir( $dot_git_dir ) && $this->_rrmdir( $dot_git_dir ) ) {
 			if ( WP_DEBUG ) {
