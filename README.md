@@ -77,6 +77,12 @@ vendor/
 *log.txt
 ```
 
+Add this to your wp_config.php:
+```
+define( 'GITIUM_REMOTE_URL', <YOUR_REPO_URL>);
+define( 'GITIUM_REMOTE_TRACKING_BRANCH', 'gitium' );
+```
+
 The deployment process would consist of:
 
 1) Merge contents of 'gitium' branch into 'master', making sure merged contents are correct.
