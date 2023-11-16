@@ -93,9 +93,11 @@ class Git_Wrapper {
 	private $last_error = '';
 	private $gitignore  = GITIGNORE;
 
+	private $repo_dir = '';
+	private $private_key = '';
+
 	function __construct( $repo_dir ) {
-		$this->repo_dir    = $repo_dir;
-		$this->private_key = '';
+		$this->repo_dir = $repo_dir;
 	}
 
 	function _rrmdir( $dir ) {
