@@ -7,7 +7,7 @@ Requires at least: 4.7
 Tested up to: 6.2.2
 Requires PHP: 5.6
 License: GPLv2
-Stable tag: 1.0.5
+Stable tag: 1.0.6
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 Automatic git version control and deployment for your plugins and themes integrated into wp-admin.
@@ -100,6 +100,9 @@ Submodules are currently not supported.
 Fixed wrong redirection for multisite installations during initial setup
 
 == Changelog ==
+
+= 1.0.6 =
+* Fixed deprecation warnings for dynamic property in git-wrapper
 
 = 1.0.5 =
 * Various bug fixes
