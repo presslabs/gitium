@@ -17,8 +17,12 @@
 
 header( 'Content-Type: text/html' );
 define( 'SHORTINIT', true );
-//$wordpress_loader = $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php';
-$wordpress_loader = filter_input(INPUT_SERVER, 'DOCUMENT_ROOT', FILTER_SANITIZE_STRING) . '/wp-load.php';
+
+$current_dir = __DIR__;
+// Find the WP core root by splitting the script path with "wp-content/plugins" as delimiter.
+list( $web_root, $rest ) = explode( 'wp-content/plugins', $current_dir, 2 );
+// Now put together the path to wp-load.php.
+$wordpress_loader = $web_root . '/wp-load.php';
 
 require_once $wordpress_loader;
 require_once __DIR__ . '/functions.php';
