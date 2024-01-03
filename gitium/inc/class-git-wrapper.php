@@ -15,7 +15,8 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-define('GITIGNORE', <<<EOF
+if (!defined('GITIGNORE'))
+    define('GITIGNORE', <<<EOF
 *.log
 *.swp
 *.back
