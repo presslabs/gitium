@@ -134,7 +134,9 @@ class Git_Wrapper {
 	}
 
 	private function get_env() {
-		$env      = array();
+		$env      = array(
+			'HOME' => getenv( 'HOME' ),
+		);
 		$key_file = null;
 
 		if ( defined( 'GIT_SSH' ) && GIT_SSH ) {
