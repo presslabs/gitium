@@ -165,7 +165,7 @@ class Git_Wrapper {
 		$env      = $this->get_env();
 
 		$git_bin_path = apply_filters( 'gitium_git_bin_path', '' );
-		$cmd = "${git_bin_path}git $args 2>&1";
+		$cmd = "{$git_bin_path}git $args 2>&1";
 
 		$proc = proc_open(
 			$cmd,

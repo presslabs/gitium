@@ -52,7 +52,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 	}
 
 	public function regenerate_keypair() {
-	    $submit_keypair = filter_input(INPUT_POST, 'GitiumSubmitRegenerateKeypair', FILTER_SANITIZE_STRING);
+	    $submit_keypair = filter_input(INPUT_POST, 'GitiumSubmitRegenerateKeypair', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 		if ( ! isset( $submit_keypair ) ) {
 			return;
 		}
@@ -62,7 +62,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 	}
 
 	public function gitium_warning() {
-		$submit_warning = filter_input(INPUT_POST, 'GitiumSubmitWarning', FILTER_SANITIZE_STRING);
+		$submit_warning = filter_input(INPUT_POST, 'GitiumSubmitWarning', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 		if ( ! isset( $submit_warning ) ) {
 			return;
 		}
@@ -88,8 +88,8 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 	}
 
 	public function init_repo() {
-		$remote_url = filter_input(INPUT_POST, 'remote_url', FILTER_SANITIZE_STRING);
-	    $gitium_submit_fetch = filter_input(INPUT_POST, 'GitiumSubmitFetch', FILTER_SANITIZE_STRING);
+		$remote_url = filter_input(INPUT_POST, 'remote_url', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+	    $gitium_submit_fetch = filter_input(INPUT_POST, 'GitiumSubmitFetch', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 		if ( ! isset( $gitium_submit_fetch ) || ! isset( $remote_url ) ) {
 			return;
 		}
@@ -107,8 +107,8 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 	}
 
 	public function choose_branch() {
-	    $gitium_submit_merge_push = filter_input(INPUT_POST, 'GitiumSubmitMergeAndPush', FILTER_SANITIZE_STRING);
-        $tracking_branch = filter_input(INPUT_POST, 'tracking_branch', FILTER_SANITIZE_STRING);
+	    $gitium_submit_merge_push = filter_input(INPUT_POST, 'GitiumSubmitMergeAndPush', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $tracking_branch = filter_input(INPUT_POST, 'tracking_branch', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 		if ( ! isset( $gitium_submit_merge_push ) || ! isset( $tracking_branch ) ) {
 			return;
 		}
