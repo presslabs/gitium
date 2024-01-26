@@ -77,7 +77,7 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 	}
 
 	public function save_ignorelist() {
-	    $gitium_ignore_path = filter_input(INPUT_POST, 'GitiumIgnorePath', FILTER_SANITIZE_STRING);
+	    $gitium_ignore_path = filter_input(INPUT_POST, 'GitiumIgnorePath', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 		if ( ! isset( $gitium_ignore_path ) ) {
 			return;
 		} else {
@@ -94,8 +94,8 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 	}
 
 	public function save_changes() {
-	    $gitium_save_changes = filter_input(INPUT_POST, 'GitiumSubmitSaveChanges', FILTER_SANITIZE_STRING);
-		$gitium_commit_msg = filter_input(INPUT_POST, 'commitmsg', FILTER_SANITIZE_STRING);
+	    $gitium_save_changes = filter_input(INPUT_POST, 'GitiumSubmitSaveChanges', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+		$gitium_commit_msg = filter_input(INPUT_POST, 'commitmsg', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 	    if ( ! isset( $gitium_save_changes ) ) {
 			return;
 		}

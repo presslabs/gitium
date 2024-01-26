@@ -38,7 +38,7 @@ class Gitium_Submenu_Settings extends Gitium_Menu {
 	}
 
 	public function regenerate_webhook() {
-		$gitium_regen_webhook = filter_input(INPUT_POST, 'GitiumSubmitRegenerateWebhook', FILTER_SANITIZE_STRING);
+		$gitium_regen_webhook = filter_input(INPUT_POST, 'GitiumSubmitRegenerateWebhook', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 		if ( ! isset( $gitium_regen_webhook ) ) {
 			return;
 		}
@@ -48,7 +48,7 @@ class Gitium_Submenu_Settings extends Gitium_Menu {
 	}
 
 	public function regenerate_public_key() {
-		$submit_regenerate_pub_key = filter_input(INPUT_POST, 'GitiumSubmitRegeneratePublicKey', FILTER_SANITIZE_STRING);
+		$submit_regenerate_pub_key = filter_input(INPUT_POST, 'GitiumSubmitRegeneratePublicKey', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 		if ( ! isset( $submit_regenerate_pub_key ) ) {
 			return;
 		}
@@ -99,8 +99,8 @@ class Gitium_Submenu_Settings extends Gitium_Menu {
 	}
 
 	public function save() {
-	    $submit_save = filter_input(INPUT_POST, 'GitiumSubmitSave', FILTER_SANITIZE_STRING);
-	    $gitignore_content = filter_input(INPUT_POST, 'gitignore_content', FILTER_SANITIZE_STRING);
+	    $submit_save = filter_input(INPUT_POST, 'GitiumSubmitSave', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+	    $gitignore_content = filter_input(INPUT_POST, 'gitignore_content', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 		if ( ! isset( $submit_save ) || ! isset( $gitignore_content ) ) {
 			return;
 		}

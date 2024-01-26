@@ -193,7 +193,7 @@ function gitium_group_commit_modified_plugins_and_themes( $msg_append = '' ) {
 	}
 
 	foreach ( $commit_groups as $base_path => $change ) {
-		$commit_message = _gitium_format_message( $change['name'], $change['version'], "${change['action']} ${change['type']}" );
+		$commit_message = _gitium_format_message( $change['name'], $change['version'], "{$change['action']} {$change['type']}" );
 		$commit = _gitium_commit_changes( "$commit_message $msg_append", $base_path, false );
 		if ( $commit ) {
 			$commits[] = $commit;

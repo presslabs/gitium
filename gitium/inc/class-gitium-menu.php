@@ -59,7 +59,7 @@ class Gitium_Menu {
 	}
 
 	public function disconnect_repository() {
-        $gitium_disconnect_repo = filter_input(INPUT_POST, 'GitiumSubmitDisconnectRepository', FILTER_SANITIZE_STRING);
+        $gitium_disconnect_repo = filter_input(INPUT_POST, 'GitiumSubmitDisconnectRepository', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
 		if ( ! isset( $gitium_disconnect_repo ) ) {
 			return;
@@ -73,8 +73,8 @@ class Gitium_Menu {
 	}
 
 	public function show_message() {
-	    $get_message = filter_input(INPUT_GET, 'message', FILTER_SANITIZE_STRING);
-	    $get_success = filter_input(INPUT_GET, 'success', FILTER_SANITIZE_STRING);
+	    $get_message = filter_input(INPUT_GET, 'message', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+	    $get_success = filter_input(INPUT_GET, 'success', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 		if ( isset( $get_message ) && $get_message ) {
 			$type    = ( isset( $get_success ) && $get_success == 1 ) ? 'updated' : 'error';
 			$message = get_transient( 'message_'. $get_message );
