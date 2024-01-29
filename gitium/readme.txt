@@ -4,7 +4,7 @@ Contributors: PressLabs
 Donate link: https://www.presslabs.com/gitium/
 Tags: git, version, versioning, deployment, version-control, github, bitbucket, travis, code, revision, testing, development, branch, production, staging, debug, plugin, gitium, presslabs, simple
 Requires at least: 4.7
-Tested up to: 6.4.2
+Tested up to: 6.4
 Requires PHP: 5.6
 License: GPLv2
 Stable tag: 1.0.7
@@ -95,15 +95,21 @@ Gitium does not support multisite setups at the moment.
 
 Submodules are currently not supported.
 
+= Where do I report security bugs found in this plugin? =
+
+Please report security bugs found in the source code of the Gitium plugin through the [Patchstack Vulnerability Disclosure Program](https://patchstack.com/database/vdp/gitium). The Patchstack team will assist you with verification, CVE assignment, and notify the developers of this plugin.
+
 == Upgrade Notice ==
 = 1.0.7 =
-PHP8 compatibility, check if gitignore is already defined and add HOME env
+PHP8.1 compatibility, check if gitignore is already defined and add HOME env
 
 == Changelog ==
+
 = 1.0.7 =
-* Fix HOME env and add composer.json package
-* Custom GITIGNORE
-* Replace filter sanitize string because is deprecated in PHP 8.1 
+* Fix: HOME env definition;
+* Fix: deprecation warnings in PHP 8.1;
+* Compat: added composer.json package;
+* Compat: add the possibility to use a custom `.gitignore` by defining the `GITIGNORE` constant.
 
 = 1.0.6 =
 * Fixed deprecation warnings for dynamic property in git-wrapper
