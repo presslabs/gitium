@@ -4,10 +4,10 @@ Contributors: PressLabs
 Donate link: https://www.presslabs.com/gitium/
 Tags: git, version, versioning, deployment, version-control, github, bitbucket, travis, code, revision, testing, development, branch, production, staging, debug, plugin, gitium, presslabs, simple
 Requires at least: 4.7
-Tested up to: 6.2.2
+Tested up to: 6.4.2
 Requires PHP: 5.6
 License: GPLv2
-Stable tag: 1.0.6
+Stable tag: 1.0.7
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 Automatic git version control and deployment for your plugins and themes integrated into wp-admin.
@@ -96,10 +96,14 @@ Gitium does not support multisite setups at the moment.
 Submodules are currently not supported.
 
 == Upgrade Notice ==
-= 1.0.5 =
-Fixed wrong redirection for multisite installations during initial setup
+= 1.0.7 =
+PHP8 compatibility, check if gitignore is already defined and add HOME env
 
 == Changelog ==
+= 1.0.7 =
+* Fix HOME env and add composer.json package
+* Custom GITIGNORE
+* Replace filter sanitize string because is deprecated in PHP 8.1 
 
 = 1.0.6 =
 * Fixed deprecation warnings for dynamic property in git-wrapper
