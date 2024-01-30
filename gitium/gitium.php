@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Gitium
- * Version: 1.0.6
+ * Version: 1.0.7
  * Author: Presslabs
  * Author URI: https://www.presslabs.com
  * License: GPL2
@@ -9,7 +9,7 @@
  * Text Domain: gitium
  * Domain Path: /languages/
  */
-/*  Copyright 2014-2016 Presslabs SRL <ping@presslabs.com>
+/*  Copyright 2014-2024 Presslabs <ping@presslabs.com>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License, version 2, as
