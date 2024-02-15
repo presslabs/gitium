@@ -95,6 +95,10 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 		}
 		check_admin_referer( 'gitium-admin' );
 
+
+		if ( false === file_put_contents( GIT_DIR . "/.gitignore", GITIGNORE )) {
+			$this->redirect( __( 'We could not write the .gitignore file to the root server. Please check server permissions.', 'gitium' ) );
+		}
 		if ( empty( $remote_url ) ) {
 			$this->redirect( __( 'Please specify a valid repo.', 'gitium' ) );
 		}
