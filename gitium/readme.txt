@@ -54,18 +54,40 @@ This WordPress plugin can be found at https://wordpress.org/plugins/gitium/
 == Installation ==
 
 = Manual Installation =
-1. Upload `gitium.zip` to the `/wp-content/plugins/` directory;
-2. Extract the `gitium.zip` archive into the `/wp-content/plugins/` directory;
-3. Activate the plugin through the 'Plugins' menu in WordPress.
 
-Alternatively, go into your WordPress dashboard and click on Plugins -> Add Plugin and search for `Gitium`. Then, click on Install and, after that, on Activate Now.
-
+1. Go to your WordPress admin dashboard.
+2. Navigate to 'Plugins' → 'Add New'.
+3. Search for "Gitium".
+4. Install and activate the Gitium plugin.
 
 = Usage =
 
-Activate the plugin and follow the on-screen instructions under the `Gitium` menu.
+- Connect Your Repository
+After activation, go to the Gitium settings in your WordPress admin area.
+Copy the Public Key that Gitium has generated for you from the Key Pair field.
+In your repository manager of choice (GitHub, GitLab, or Bitbucket), go to the settings page and find the “Deploy keys” (or similar) section. There you will need to add the Public Key you’ve copied from Gitium. This will grant Gitium access to your repository. Make sure to allow write access as well. Also make sure that you copy the entire key from gitium.
+Now go back to your main repository page and copy the SSH URL to your repo. Paste this URL in Gitium and press the “Fetch” button.
+A “Repository initialized successfully” message will show up. This means that your repository has been populated with the current code of your website and it is ready to start working with Gitium.
 
-_IMPORTANT_: Gitium does its best not to version your WordPress core, neither your `/wp-content/uploads` folder.
+- Initial Commit
+Once connected, Gitium will automatically commit your existing WordPress theme and plugins to the connected repository.
+This initial commit serves as the baseline for your site’s code.
+
+- Making Changes
+Make changes to your WordPress site’s code (themes, plugins) as needed.
+Gitium will automatically commit these changes to your Git repository.
+Using the webhook provided by Gitium, it will also automatically deploy the changes from the repository to your WordPress site.
+
+- Webook Configuration
+Gitium uses the webhook to automatically deploy remote changes to your server. To configure it follow these steps:
+    1. Go to your WordPress website and go to your Gitium Settings page;
+    2. Copy the full Webhook URL that Gitium provides;
+    3. In your Git Manager settings, go to Webhook section, add a new webhook and paste the webhook URL you have copied from Gitium.
+    4. Press Add, no settings changes needed. The webook simply needs a ping, nothing more. The security key is already embedded in the final URL Gitium has generated for you.
+
+Now when you push to your repo, this webhook will automatically pull the changes to your remote server and deploy them.
+
+You can see more details about the plugin also in our documentation here: https://www.presslabs.com/docs/code/gitium/install-gitium/
 
 == Frequently Asked Questions ==
 
