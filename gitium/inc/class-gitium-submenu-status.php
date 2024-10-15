@@ -94,29 +94,59 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 	}
 
 	public function save_changes() {
-	    $gitium_save_changes = filter_input(INPUT_POST, 'GitiumSubmitSaveChanges', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+		$gitium_save_changes = filter_input(INPUT_POST, 'GitiumSubmitSaveChanges', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 		$gitium_commit_msg = filter_input(INPUT_POST, 'commitmsg', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-	    if ( ! isset( $gitium_save_changes ) ) {
+		if ( ! isset( $gitium_save_changes ) ) {
 			return;
 		}
 		check_admin_referer( 'gitium-admin' );
-
+	
 		gitium_enable_maintenance_mode() or wp_die( __( 'Could not enable the maintenance mode!', 'gitium' ) );
+	
+		// Check if the local repository is behind the remote
+		$behind_commits = $this->git->get_behind_commits();
+		if ( $behind_commits !== false && count($behind_commits) > 0 ) {
+			// Perform a git pull if the local branch is behind
+			if ( ! $this->git->pull() ) {
+				gitium_disable_maintenance_mode();
+				$this->redirect( __( 'Could not pull the latest changes from the repository!', 'gitium' ) );
+				return;
+			}
+		}
+	
+		// Check if there are any changes in the working directory after pulling
+		list( $branch_status, $new_response ) = $this->git->status(true);
+		if (empty($new_response)) {
+			// No changes to commit, exit maintenance mode and redirect with success
+			gitium_disable_maintenance_mode();
+			$this->success_redirect( __( 'No changes to commit, repository is up-to-date.', 'gitium' ) );
+			return;
+		}
+	
+		// Add all changes in the working directory
 		$this->git->add();
+	
+		// Prepare the commit message
 		$commitmsg = sprintf( __( 'Merged changes from %s on %s', 'gitium' ), get_site_url(), date( 'm.d.Y' ) );
 		if ( isset( $gitium_commit_msg ) && ! empty( $gitium_commit_msg ) ) {
 			$commitmsg = $gitium_commit_msg;
 		}
+	
 		$current_user = wp_get_current_user();
 		$commit = $this->git->commit( $commitmsg, $current_user->display_name, $current_user->user_email );
 		if ( ! $commit ) {
+			gitium_disable_maintenance_mode();
 			$this->redirect( __( 'Could not commit!', 'gitium' ) );
+			return;
 		}
+	
 		$merge_success = gitium_merge_and_push( $commit );
 		gitium_disable_maintenance_mode();
 		if ( ! $merge_success ) {
 			$this->redirect( __( 'Merge failed: ', 'gitium' ) . $this->git->get_last_error() );
+			return;
 		}
+	
 		$this->success_redirect( sprintf( __( 'Pushed commit: `%s`', 'gitium' ), $commitmsg ) );
 	}
 

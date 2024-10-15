@@ -476,6 +476,20 @@ class Git_Wrapper {
 		return ( $return === 0 ) ? $response[0] : false;
 	}
 
+	function pull() {
+		// Perform a git pull
+		list( $status, $output ) = $this->_call('pull');
+	
+		// Check if the pull was successful
+		if ( $status !== 0 ) {
+			// Log or handle error if the pull fails
+			$this->log_error('Git pull failed: ' . $output);
+			return false;
+		}
+	
+		return true;
+	}
+
 	function push( $branch = '' ) {
 		if ( ! empty( $branch ) ) {
 			list( $return, ) = $this->_call( 'push', '--porcelain', '-u', 'origin', $branch );
