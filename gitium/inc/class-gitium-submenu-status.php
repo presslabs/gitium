@@ -94,30 +94,54 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 	}
 
 	public function save_changes() {
-	    $gitium_save_changes = filter_input(INPUT_POST, 'GitiumSubmitSaveChanges', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+		$gitium_save_changes = filter_input(INPUT_POST, 'GitiumSubmitSaveChanges', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 		$gitium_commit_msg = filter_input(INPUT_POST, 'commitmsg', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-	    if ( ! isset( $gitium_save_changes ) ) {
+
+		if ( ! isset( $gitium_save_changes ) ) {
 			return;
 		}
+	
 		check_admin_referer( 'gitium-admin' );
-
+		
 		gitium_enable_maintenance_mode() or wp_die( __( 'Could not enable the maintenance mode!', 'gitium' ) );
-		$this->git->add();
+		
 		$commitmsg = sprintf( __( 'Merged changes from %s on %s', 'gitium' ), get_site_url(), date( 'm.d.Y' ) );
+		
 		if ( isset( $gitium_commit_msg ) && ! empty( $gitium_commit_msg ) ) {
 			$commitmsg = $gitium_commit_msg;
 		}
+
+		$commits = array();
+
 		$current_user = wp_get_current_user();
-		$commit = $this->git->commit( $commitmsg, $current_user->display_name, $current_user->user_email );
-		if ( ! $commit ) {
-			$this->redirect( __( 'Could not commit!', 'gitium' ) );
+        
+		// Get local status and behind commits
+		$local_status = $this->git->local_status();
+		$behind_commits = count( $this->git->get_behind_commits() );
+        
+		if ( $this->git->is_dirty() && $this->git->add() > 0 ) {
+			$commit = $this->git->commit( $commitmsg, $current_user->display_name, $current_user->user_email );
+			if ( ! $commit ) {
+				gitium_disable_maintenance_mode();
+				$this->redirect( __( 'Could not commit!', 'gitium' ) );
+			}
+			$commits[] = $commit;
 		}
-		$merge_success = gitium_merge_and_push( $commit );
+
+		$merge_success = gitium_merge_and_push( $commits );
+		
 		gitium_disable_maintenance_mode();
+		
 		if ( ! $merge_success ) {
 			$this->redirect( __( 'Merge failed: ', 'gitium' ) . $this->git->get_last_error() );
 		}
-		$this->success_redirect( sprintf( __( 'Pushed commit: `%s`', 'gitium' ), $commitmsg ) );
+		
+		// Determine message based on previous conditions
+		if ( $behind_commits > 0 && empty( $local_status[1] ) ) {
+			$this->success_redirect( sprintf( __( 'Pull done!', 'gitium' ) ) );
+		} else{
+			$this->success_redirect( sprintf( __( 'Pushed commit: `%s`', 'gitium' ), $commitmsg ) );
+		}
 	}
 
 	private function show_ahead_and_behind_info( $changes = '' ) {
@@ -193,18 +217,32 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		</table>
 		<?php
 	}
+    
+   private function show_git_changes_table_submit_buttons( $changes ) {
+        // Get local status and behind commits
+        $local_status = $this->git->local_status();
+        $behind_commits = count( $this->git->get_behind_commits() );
 
-	private function show_git_changes_table_submit_buttons( $changes ) {
-		if ( ! empty( $changes ) ) : ?>
-			<p>
-			<label for="save-changes"><?php _e( 'Commit message', 'gitium' ); ?>:</label>
-			<input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="<?php printf( __( 'Merged changes from %s on %s', 'gitium' ), get_site_url(), date( 'm.d.Y' ) ); ?>" />
-			</p>
-			<p>
-			<input type="submit" name="GitiumSubmitSaveChanges" class="button-primary button" value="<?php _e( 'Save changes', 'gitium' ); ?>" <?php if ( get_transient( 'gitium_remote_disconnected' ) ) { echo 'disabled="disabled" '; } ?>/>&nbsp;
-			</p>
-		<?php endif;
-	}
+        // Determine button value based on conditions
+        if ( $behind_commits > 0 && !empty( $local_status[1] ) ) {
+            $button_value = __( 'Pull & Push changes', 'gitium' );
+        } else if ( $behind_commits > 0 ) {
+            $button_value = __( 'Pull changes', 'gitium' );
+        } else if ( !empty( $local_status[1] ) ) {
+            $button_value = __( 'Push changes', 'gitium' );
+        }
+
+        // Check if there are any changes to display the form
+        if ( !empty( $changes ) ) : ?>
+            <p>
+                <label for="save-changes"><?php _e( 'Commit message', 'gitium' ); ?>:</label>
+                <input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="<?php printf( __( 'Merged changes from %s on %s', 'gitium' ), get_site_url(), date( 'm.d.Y' ) ); ?>" />
+            </p>
+            <p>
+                <input type="submit" name="GitiumSubmitSaveChanges" class="button-primary button" value="<?php echo esc_html( $button_value ); ?>" <?php if ( get_transient( 'gitium_remote_disconnected' ) ) { echo 'disabled="disabled" '; } ?>/>&nbsp;
+            </p>
+        <?php endif;
+    }
 
 	private function changes_page() {
 		list( , $changes ) = _gitium_status();
