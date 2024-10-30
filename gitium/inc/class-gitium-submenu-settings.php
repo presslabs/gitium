@@ -63,11 +63,16 @@ class Gitium_Submenu_Settings extends Gitium_Menu {
 			<th><label for="webhook-url"><?php _e( 'Webhook URL', 'gitium' ); ?>:</label></th>
 			<td>
 			  <p><code id="webhook-url"><?php echo esc_url( gitium_get_webhook() ); ?></code>
-			  <?php if ( ! defined( 'GIT_WEBHOOK_URL' ) || GIT_WEBHOOK_URL == '' ) : ?>
-			  <input type="submit" name="GitiumSubmitRegenerateWebhook" class="button" value="<?php _e( 'Regenerate Webhook', 'gitium' ); ?>" />
-                          <a class="button" href="<?php echo esc_url( gitium_get_webhook() ); ?>" target="_blank">Merge changes</a></p>
-			  <?php endif; ?>
-			  <p class="description"><?php _e( 'Pinging this URL triggers an update from remote repository.', 'gitium' ); ?></p>
+				<?php if ( ! defined( 'GIT_WEBHOOK_URL' ) || GIT_WEBHOOK_URL == '' ) : ?>
+				<input type="submit" name="GitiumSubmitRegenerateWebhook" class="button" value="<?php _e( 'Regenerate Webhook', 'gitium' ); ?>" />
+							<a class="button" href="<?php echo esc_url( gitium_get_webhook() ); ?>" target="_blank">Merge changes</a></p>
+				<?php endif; ?>
+			  	<p>
+					<div>
+						<button id="copyButton" class="button" data-copy-text="<?php echo esc_url( gitium_get_webhook() ) ?>">Copy Webhook URL</button>
+					</div>
+				</p>
+				<p class="description"><?php _e( 'Pinging this URL triggers an update from remote repository.', 'gitium' ); ?></p>
 			</td>
 		</tr>
 		<?php

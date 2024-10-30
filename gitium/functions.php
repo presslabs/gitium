@@ -418,3 +418,18 @@ function gitium_admin_init() {
 	}
 }
 add_action( 'admin_init', 'gitium_admin_init' );
+
+add_action('admin_enqueue_scripts', 'enqueue_script_for_gitium_page');
+function enqueue_script_for_gitium_page($hook) {
+    // Check if the current page is your plugin's settings page
+    if ((isset($_GET['page']) && $_GET['page'] === 'gitium/gitium.php') || (isset($_GET['page']) && $_GET['page'] === 'gitium/gitium-settings.php')) {
+        // Enqueue your JavaScript file
+        wp_enqueue_script(
+            'my-plugin-script',  // Handle for the script
+            plugin_dir_url(__FILE__) . 'js/copy-to-clipboard.js',  // URL to the script
+            array('jquery'),  // Dependencies
+            '1.1',  // Version number 
+            true    // Load in footer
+        );
+    }
+}
