@@ -23,10 +23,36 @@
 
 header( 'Content-Type: text/html' );
 define( 'SHORTINIT', true );
-//$wordpress_loader = $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php';
-$wordpress_loader = filter_input(INPUT_SERVER, 'DOCUMENT_ROOT', FILTER_SANITIZE_FULL_SPECIAL_CHARS) . '/wp-load.php';
 
-require_once $wordpress_loader;
+$current_dir = __DIR__;
+
+// Define an array of possible WordPress root locations
+$try_wp_roots = [
+    getenv('DOCUMENT_ROOT'),
+    filter_input(INPUT_SERVER, 'DOCUMENT_ROOT', FILTER_SANITIZE_FULL_SPECIAL_CHARS),
+    realpath($current_dir . '/../../../../../'),
+    realpath($current_dir . '/../../../../'), 
+    realpath($current_dir . '/../../../'), // Typical WordPress structure
+    realpath($current_dir . '/../../'),    // Alternative structure
+    realpath($current_dir . '/../'),       // Closer parent directory
+    $current_dir,                          // Fallback to current directory
+];
+
+$wordpress_loader = null;
+
+foreach ($try_wp_roots as $root) {
+    if ($root && file_exists($root . '/wp-load.php')) {
+        $wordpress_loader = $root . '/wp-load.php';
+        break;
+    }
+}
+
+if ($wordpress_loader) {
+    require_once $wordpress_loader;
+} else {
+    die('Error: Unable to locate wp-load.php. Please verify your WordPress installation.');
+}
+
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/inc/class-git-wrapper.php';
 
