@@ -17,10 +17,34 @@
 
 header( 'Content-Type: text/html' );
 define( 'SHORTINIT', true );
-//$wordpress_loader = $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php';
+
+$current_dir = __DIR__;
+
+// First, check if wp-load.php exists in the DOCUMENT_ROOT
 $wordpress_loader = filter_input(INPUT_SERVER, 'DOCUMENT_ROOT', FILTER_SANITIZE_FULL_SPECIAL_CHARS) . '/wp-load.php';
 
-require_once $wordpress_loader;
+if ( file_exists( $wordpress_loader ) ) {
+    require_once $wordpress_loader;
+} else {
+    // Try to locate wp-load.php dynamically
+    if ( defined( 'WP_CONTENT_DIR' ) ) {
+        $web_root = dirname( WP_CONTENT_DIR );
+    } else {
+        // Fallback: search upward from the current directory
+        $web_root = $current_dir;
+        while ( $web_root && ! file_exists( $web_root . '/wp-load.php' ) ) {
+            $web_root = dirname( $web_root );
+        }
+    }
+
+    $wordpress_loader = $web_root . '/wp-load.php';
+
+    if ( $web_root && file_exists( $wordpress_loader ) ) {
+        require_once $wordpress_loader;
+    } else {
+        die( 'Error: Unable to locate wp-load.php. Please verify your WordPress installation.' );
+    }
+}
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/inc/class-git-wrapper.php';
 
