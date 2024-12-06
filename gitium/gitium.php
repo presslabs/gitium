@@ -1,29 +1,35 @@
 <?php
 /**
- * Plugin Name: Gitium
- * Version: 1.0.7
- * Author: Presslabs
- * Author URI: https://www.presslabs.com
- * License: GPL2
- * Description: Keep all your code on git version control system.
- * Text Domain: gitium
- * Domain Path: /languages/
+ * Plugin Name:     Gitium
+ * Plugin URI:      https://www.presslabs.com/gitium/
+ * Description:     Keep all your code on git version control system.
+ * Author:          PRESSINFRA SRL
+ * Author URI:      https://www.presslabs.com
+ * Text Domain:     gitium
+ * Domain Path:     /languages
+ * Version:         1.0.7
+ * License:         GPL3
+ *
+ * Gitium provides automatic git version control and deployment for
+ * your plugins and themes integrated into wp-admin.
+ *
+ * Copyright (C) 2014-2025 PRESSINFRA SRL <ping@presslabs.com>
+ *
+ * Gitium is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Gitium is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Gitium. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @package         Gitium
  */
-/*  Copyright 2014-2024 Presslabs <ping@presslabs.com>
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License, version 2, as
-    published by the Free Software Foundation.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
 
 define( 'GITIUM_LAST_COMMITS', 20 );
 define( 'GITIUM_MIN_GIT_VER', '1.7' );
