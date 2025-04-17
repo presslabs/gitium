@@ -120,17 +120,6 @@ class Git_Wrapper {
 		return rmdir( $dir );
 	}
 
-	function _log(...$args) {
-		if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) { return; }
-
-		$output = '';
-		if (isset($args) && $args) foreach ( $args as $arg ) {
-			$output .= var_export($arg, true).'/n/n';
-		}
-
-		if ($output) error_log($output);
-	}
-
 	function _git_temp_key_file() {
 		$key_file = tempnam( sys_get_temp_dir(), 'ssh-git' );
 		return $key_file;
@@ -190,7 +179,6 @@ class Git_Wrapper {
 			}
 			$return = (int)proc_close( $proc );
 		}
-		$this->_log( "$return $cmd", join( "\n", $response ) );
 		if ( ! defined( 'GIT_KEY_FILE' ) && isset( $env['GIT_KEY_FILE'] ) ) {
 			unlink( $env['GIT_KEY_FILE'] );
 		}
@@ -259,16 +247,11 @@ class Git_Wrapper {
 	function cleanup() {
 		$dot_git_dir = realpath( $this->repo_dir . '/.git' );
 		if ( $this->is_dot_git_dir( $dot_git_dir ) && $this->_rrmdir( $dot_git_dir ) ) {
-			if ( WP_DEBUG ) {
-				error_log( "Gitium cleanup successfull. Removed '$dot_git_dir'." );
-			}
-			return True;
+			return true;
 		}
-		if ( WP_DEBUG ) {
-			error_log( "Gitium cleanup failed. '$dot_git_dir' is not a .git dir." );
-		}
-		return False;
+		return false;  // Failure silently handled.
 	}
+	
 
 	function add_remote_url( $url ) {
 		list( $return, ) = $this->_call( 'remote', 'add', 'origin', $url );
@@ -311,7 +294,6 @@ class Git_Wrapper {
 
 	protected function _resolve_merge_conflicts( $message ) {
 		list( , $changes ) = $this->status( true );
-		$this->_log( $changes );
 		foreach ( $changes as $path => $change ) {
 			if ( in_array( $change, array( 'UD', 'DD' ) ) ) {
 				$this->_call( 'rm', $path );

@@ -21,11 +21,6 @@
  * @package         Gitium
  */
 
-function gitium_error_log( $message ) {
-	if ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) { return; }
-	error_log( "gitium_error_log: $message" );
-}
-
 function wp_content_is_versioned() {
 	return file_exists( WP_CONTENT_DIR . '/.git' );
 }
@@ -234,7 +229,6 @@ if ( ! function_exists( 'gitium_acquire_merge_lock' ) ) :
 				return false; // timeout
 			}
 		}
-		gitium_error_log( __FUNCTION__ );
 		return array( $gitium_lock_path, $gitium_lock_handle );
 	}
 endif;
@@ -242,7 +236,6 @@ endif;
 if ( ! function_exists( 'gitium_release_merge_lock' ) ) :
 	function gitium_release_merge_lock( $lock ) {
 		list( $gitium_lock_path, $gitium_lock_handle ) = $lock;
-		gitium_error_log( __FUNCTION__ );
 		flock( $gitium_lock_handle, LOCK_UN );
 		fclose( $gitium_lock_handle );
 	}
@@ -250,21 +243,24 @@ endif;
 
 // Merges the commits with remote and pushes them back
 function gitium_merge_and_push( $commits ) {
-	global $git;
+    global $git;
 
-	$lock = gitium_acquire_merge_lock()
-		or trigger_error( 'Timeout when gitium lock was acquired', E_USER_WARNING );
+    $lock = gitium_acquire_merge_lock();
+    if ( ! $lock ) {
+        wp_die( 'Gitium: failed to acquire merge lock. Please try again later.' );
+    }
 
-	if ( ! $git->fetch_ref() ) {
-		return false;
-	}
+    if ( ! $git->fetch_ref() ) {
+        return false;
+    }
 
-	$merge_status = $git->merge_with_accept_mine( $commits );
+    $merge_status = $git->merge_with_accept_mine( $commits );
 
-	gitium_release_merge_lock( $lock );
+    gitium_release_merge_lock( $lock );
 
-	return $git->push() && $merge_status;
+    return $git->push() && $merge_status;
 }
+
 
 function gitium_check_after_event( $plugin, $event = 'activation' ) {
 	global $git;

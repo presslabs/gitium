@@ -196,11 +196,6 @@ function gitium_upgrader_post_install( $res, $hook_extra, $result ) {
 		}
 	}
 
-	if ( WP_DEBUG ) {
-		error_log( __FUNCTION__ . ':hook_extra:' . serialize( $hook_extra ) );
-		error_log( __FUNCTION__ . ':action:type:' . $action . ':' . $type );
-	}
-
 	$git_dir = $result['destination'];
 	$version = '';
 
