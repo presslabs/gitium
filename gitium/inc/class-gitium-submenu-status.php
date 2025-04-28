@@ -36,7 +36,7 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 
 	public function admin_menu() {
 		add_menu_page(
-			__( 'Git Status', 'gitium' ),
+			'Git Status',
 			'Gitium',
 			GITIUM_MANAGE_OPTIONS_CAPABILITY,
 			$this->menu_slug,
@@ -46,8 +46,8 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 
 		$submenu_hook = add_submenu_page(
 			$this->menu_slug,
-			__( 'Git Status', 'gitium' ),
-			__( 'Status', 'gitium' ),
+			'Git Status',
+			'Status',
 			GITIUM_MANAGE_OPTIONS_CAPABILITY,
 			$this->menu_slug,
 			array( $this, 'page' )
@@ -57,15 +57,15 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 
 	private function get_change_meanings() {
 		return array(
-			'??' => __( 'untracked', 'gitium' ),
-			'rM' => __( 'modified on remote', 'gitium' ),
-			'rA' => __( 'added to remote', 'gitium' ),
-			'rD' => __( 'deleted from remote', 'gitium' ),
-			'D'  => __( 'deleted from work tree', 'gitium' ),
-			'M'  => __( 'updated in work tree', 'gitium' ),
-			'A'  => __( 'added to work tree', 'gitium' ),
-			'AM' => __( 'added to work tree', 'gitium' ),
-			'R'  => __( 'deleted from work tree', 'gitium' ),
+			'??' => 'untracked',
+			'rM' => 'modified on remote',
+			'rA' => 'added to remote',
+			'rD' => 'deleted from remote',
+			'D'  => 'deleted from work tree',
+			'M'  => 'updated in work tree',
+			'A'  => 'added to work tree',
+			'AM' => 'added to work tree',
+			'R'  => 'deleted from work tree',
 		);
 	}
 
@@ -77,7 +77,7 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		}
 		if ( 0 === strpos( $change, 'R ' ) ) {
 			$old_filename = substr( $change, 2 );
-			$change = sprintf( __( 'renamed from `%s`', 'gitium' ), $old_filename );
+			$change = sprintf( 'renamed from `%s`', $old_filename );
 		}
 		return $change;
 	}
@@ -93,9 +93,9 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 
 		if ( $this->git->set_gitignore( join( "\n", array_unique( array_merge( explode( "\n", $this->git->get_gitignore() ), array( $path ) ) ) ) ) ) {
 			gitium_commit_and_push_gitignore_file( $path );
-			$this->success_redirect( __( 'The file `.gitignore` is saved!', 'gitium' ), $this->gitium_menu_slug );
+			$this->success_redirect( 'The file `.gitignore` is saved!', $this->gitium_menu_slug );
 		} else {
-			$this->redirect( __( 'The file `.gitignore` could not be saved!', 'gitium' ), false, $this->gitium_menu_slug );
+			$this->redirect( 'The file `.gitignore` could not be saved!', false, $this->gitium_menu_slug );
 		}
 	}
 
@@ -109,9 +109,13 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 	
 		check_admin_referer( 'gitium-admin' );
 		
-		gitium_enable_maintenance_mode() or wp_die( __( 'Could not enable the maintenance mode!', 'gitium' ) );
+		gitium_enable_maintenance_mode() or wp_die('Could not enable the maintenance mode!');
 		
-		$commitmsg = sprintf( __( 'Merged changes from %s on %s', 'gitium' ), get_site_url(), date( 'm.d.Y' ) );
+		$commitmsg = sprintf(
+			'Merged changes from %s on %s',
+			esc_url( get_site_url() ),
+			esc_html( date( 'm.d.Y' ) )
+		);
 		
 		if ( isset( $gitium_commit_msg ) && ! empty( $gitium_commit_msg ) ) {
 			$commitmsg = $gitium_commit_msg;
@@ -129,7 +133,7 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 			$commit = $this->git->commit( $commitmsg, $current_user->display_name, $current_user->user_email );
 			if ( ! $commit ) {
 				gitium_disable_maintenance_mode();
-				$this->redirect( __( 'Could not commit!', 'gitium' ) );
+				$this->redirect( 'Could not commit!');
 			}
 			$commits[] = $commit;
 		}
@@ -139,14 +143,14 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		gitium_disable_maintenance_mode();
 		
 		if ( ! $merge_success ) {
-			$this->redirect( __( 'Merge failed: ', 'gitium' ) . $this->git->get_last_error() );
+			$this->redirect( 'Merge failed: ' . $this->git->get_last_error() );
 		}
 		
 		// Determine message based on previous conditions
 		if ( $behind_commits > 0 && empty( $local_status[1] ) ) {
-			$this->success_redirect( sprintf( __( 'Pull done!', 'gitium' ) ) );
+			$this->success_redirect( sprintf( 'Pull done!' ) );
 		} else{
-			$this->success_redirect( sprintf( __( 'Pushed commit: `%s`', 'gitium' ), $commitmsg ) );
+			$this->success_redirect( sprintf( 'Pushed commit: `%s`', $commitmsg ) );
 		}
 	}
 
@@ -156,18 +160,32 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		$behind = count( $this->git->get_behind_commits() );
 		?>
 		<p>
-			<?php printf( __( 'Following remote branch <code>%s</code>.', 'gitium' ), $branch );
-		?>&nbsp;<?php
-		if ( ! $ahead && ! $behind && empty( $changes ) ) {
-			_e( 'Everything is up to date', 'gitium' );
-		}
-		if ( $ahead && $behind ) {
-			printf( __( 'You are %s commits ahead and %s behind remote.', 'gitium' ), $ahead, $behind );
-		} elseif ( $ahead ) {
-			printf( __( 'You are %s commits ahead remote.', 'gitium' ), $ahead );
-		} elseif ( $behind ) {
-			printf( __( 'You are %s commits behind remote.', 'gitium' ), $behind );
-		}
+			<?php 
+			printf(
+				'%s',
+				wp_kses_post( 'Following remote branch <code>' . esc_html( $branch ) . '</code>.' )
+			);
+			?>&nbsp;
+			<?php
+			if ( ! $ahead && ! $behind && empty( $changes ) ) {
+				echo esc_html( 'Everything is up to date' );
+			}
+			if ( $ahead && $behind ) {
+				printf(
+					'%s',
+					esc_html( sprintf( 'You are %s commits ahead and %s behind remote.', $ahead, $behind ) )
+				);
+			} elseif ( $ahead ) {
+				printf(
+					'%s',
+					esc_html( sprintf( 'You are %s commits ahead remote.', $ahead ) )
+				);
+			} elseif ( $behind ) {
+				printf(
+					'%s',
+					esc_html( sprintf( 'You are %s commits behind remote.', $behind ) )
+				);
+			}
 			?>
 		</p>
 		<?php
@@ -192,10 +210,10 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 			$counter++;
 			echo ( 0 != $counter % 2 ) ? '<tr class="alternate">' : '<tr>';
 			echo '<td><strong>' . esc_html( $path ) . '</strong>';
-			echo '<div class="row-actions"><span class="edit"><a href="#" onclick="add_path_and_submit(\'' . $path . '\');">' . __( 'Add this file to the `.gitignore` list.', 'gitium' ) . '</a></span></div></td>';
+			echo '<div class="row-actions"><span class="edit"><a href="#" onclick="add_path_and_submit(\'' . esc_html($path) . '\');">' . 'Add this file to the `.gitignore` list.' . '</a></span></div></td>';
 			echo '<td>';
 			if ( is_dir( ABSPATH . '/' . $path ) && is_dir( ABSPATH . '/' . trailingslashit( $path ) . '.git' ) ) { // test if is submodule
-				_e( 'Submodules are not supported in this version.', 'gitium' );
+				echo 'Submodules are not supported in this version.';
 			} else {
 				echo '<span title="' . esc_html( $type ) .'">' . esc_html( $this->humanized_change( $type ) ) . '</span>';
 			}
@@ -207,14 +225,12 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 	private function show_git_changes_table( $changes = '' ) {
 		?>
 		<table class="widefat" id="git-changes-table">
-		<thead><tr><th scope="col" class="manage-column"><?php _e( 'Path', 'gitium' ); ?></th><th scope="col" class="manage-column"><?php _e( 'Change', 'gitium' ); ?></th></tr></thead>
-		<tfoot><tr><th scope="col" class="manage-column"><?php _e( 'Path', 'gitium' ); ?></th><th scope="col" class="manage-column"><?php _e( 'Change', 'gitium' ); ?></th></tr></tfoot>
+		<thead><tr><th scope="col" class="manage-column"><?php echo 'Path'; ?></th><th scope="col" class="manage-column"><?php echo 'Change'; ?></th></tr></thead>
+		<tfoot><tr><th scope="col" class="manage-column"><?php echo 'Path'; ?></th><th scope="col" class="manage-column"><?php echo 'Change'; ?></th></tr></tfoot>
 		<tbody>
 		<?php
 		if ( empty( $changes ) ) :
-			echo '<tr><td><p>';
-			_e( 'Nothing to commit, working directory clean.', 'gitium' );
-			echo '</p></td></tr>';
+			echo '<tr><td><p>Nothing to commit, working directory clean.</p></td></tr>';
 		else :
 			$this->show_git_changes_table_rows( $changes );
 		endif;
@@ -231,18 +247,18 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 
         // Determine button value based on conditions
         if ( $behind_commits > 0 && !empty( $local_status[1] ) ) {
-            $button_value = __( 'Pull & Push changes', 'gitium' );
+            $button_value = 'Pull & Push changes';
         } else if ( $behind_commits > 0 ) {
-            $button_value = __( 'Pull changes', 'gitium' );
+            $button_value = 'Pull changes';
         } else if ( !empty( $local_status[1] ) ) {
-            $button_value = __( 'Push changes', 'gitium' );
+            $button_value = 'Push changes';
         }
 
         // Check if there are any changes to display the form
         if ( !empty( $changes ) ) : ?>
             <p>
-                <label for="save-changes"><?php _e( 'Commit message', 'gitium' ); ?>:</label>
-                <input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="<?php printf( __( 'Merged changes from %s on %s', 'gitium' ), get_site_url(), date( 'm.d.Y' ) ); ?>" />
+                <label for="save-changes"><?php echo 'Commit message'; ?>:</label>
+                <input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="<?php printf( 'Merged changes from %s on %s', esc_url(get_site_url()), esc_html(date( 'm.d.Y' ) )); ?>" />
             </p>
             <p>
                 <input type="submit" name="GitiumSubmitSaveChanges" class="button-primary button" value="<?php echo esc_html( $button_value ); ?>" <?php if ( get_transient( 'gitium_remote_disconnected' ) ) { echo 'disabled="disabled" '; } ?>/>&nbsp;
@@ -255,7 +271,7 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		?>
 		<div class="wrap">
 		<div id="icon-options-general" class="icon32">&nbsp;</div>
-		<h2><?php _e( 'Status', 'gitium' ); ?> <code class="small" style="background-color:forestgreen; color:whitesmoke;"><?php _e( 'connected to', 'gitium' ); ?> <strong><?php echo esc_html( $this->git->get_remote_url() ); ?></strong></code></h2>
+		<h2><?php echo 'Status'; ?> <code class="small" style="background-color:forestgreen; color:whitesmoke;"><?php echo 'connected to'; ?> <strong><?php echo esc_html( $this->git->get_remote_url() ); ?></strong></code></h2>
 
 		<form name="form_status" id="form_status" action="" method="POST">
 		<?php

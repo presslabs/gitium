@@ -73,9 +73,9 @@ if ( ! empty ( $webhook_key ) && isset( $get_key ) && $webhook_key == $get_key )
 	if ( $git->is_dirty() && $git->add() > 0 ) {
 		$commits[] = $git->commit( $commitmsg ) or trigger_error( 'Could not commit local changes!', E_USER_ERROR );
 	}
-	gitium_merge_and_push( $commits ) or trigger_error( 'Failed merge & push: ' . serialize( $git->get_last_error() ), E_USER_ERROR );
+	gitium_merge_and_push( $commits ) or trigger_error( 'Failed merge & push: ' . esc_html(serialize( $git->get_last_error() ) ), E_USER_ERROR );
 
-	wp_die( $commitmsg , 'Pull done!', array( 'response' => 200 ) );
+	wp_die( esc_html($commitmsg) , 'Pull done!', array( 'response' => 200 ) );
 else :
 	wp_die( 'Cheating uh?', 'Cheating uh?', array( 'response' => 403 ) );
 endif;

@@ -38,7 +38,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 
 	public function admin_menu() {
 		add_menu_page(
-			__( 'Git Configuration', 'gitium' ),
+			'Git Configuration',
 			'Gitium',
 			GITIUM_MANAGE_OPTIONS_CAPABILITY,
 			$this->menu_slug,
@@ -48,8 +48,8 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 
 		$submenu_hook = add_submenu_page(
 			$this->menu_slug,
-			__( 'Git Configuration', 'gitium' ),
-			__( 'Configuration', 'gitium' ),
+			'Git Configuration',
+			'Configuration',
 			GITIUM_MANAGE_OPTIONS_CAPABILITY,
 			$this->menu_slug,
 			array( $this, 'page' )
@@ -64,7 +64,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 		}
 		check_admin_referer( 'gitium-admin' );
 		gitium_get_keypair( true );
-		$this->success_redirect( __( 'Keypair successfully regenerated.', 'gitium' ) );
+		$this->success_redirect( 'Keypair successfully regenerated.' );
 	}
 
 	public function gitium_warning() {
@@ -84,7 +84,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 		if ( count( $git->get_remote_branches() ) == 0 ) {
 			$git->add( 'wp-content', '.gitignore' );
 			$current_user = wp_get_current_user();
-			$git->commit( __( 'Initial commit', 'gitium' ), $current_user->display_name, $current_user->user_email );
+			$git->commit(  'Initial commit', $current_user->display_name, $current_user->user_email );
 			if ( ! $git->push( 'master' ) ) {
 				$git->cleanup();
 				return false;
@@ -102,13 +102,13 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 		check_admin_referer( 'gitium-admin' );
 
 		if ( empty( $remote_url ) ) {
-			$this->redirect( __( 'Please specify a valid repo.', 'gitium' ) );
+			$this->redirect( 'Please specify a valid repo.' );
 		}
 		if ( $this->init_process( $remote_url ) ) {
-			$this->success_redirect( __( 'Repository initialized successfully.', 'gitium' ) );
+			$this->success_redirect( 'Repository initialized successfully.' );
 		} else {
 			global $git;
-			$this->redirect( __( 'Could not push to remote: ', 'gitium' ) . $remote_url . ' ERROR: ' . serialize( $git->get_last_error() ) );
+			$this->redirect( 'Could not push to remote: ' . $remote_url . ' ERROR: ' . serialize( $git->get_last_error() ) );
 		}
 	}
 
@@ -125,27 +125,27 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 		set_transient( 'gitium_remote_tracking_branch', $branch );
 		$current_user = wp_get_current_user();
 
-		$commit = $this->git->commit( __( 'Merged existing code from ', 'gitium' ) . get_home_url(), $current_user->display_name, $current_user->user_email );
+		$commit = $this->git->commit( 'Merged existing code from ' . get_home_url(), $current_user->display_name, $current_user->user_email );
 		if ( ! $commit ) {
 			$this->git->cleanup();
-			$this->redirect( __( 'Could not create initial commit -> ', 'gitium' ) . $this->git->get_last_error() );
+			$this->redirect( 'Could not create initial commit -> ' . $this->git->get_last_error() );
 		}
 		if ( ! $this->git->merge_initial_commit( $commit, $branch ) ) {
 			$this->git->cleanup();
-			$this->redirect( __( 'Could not merge the initial commit -> ', 'gitium' ) . $this->git->get_last_error() );
+			$this->redirect( 'Could not merge the initial commit -> ' . $this->git->get_last_error() );
 		}
 		$this->git->push( $branch );
-		$this->success_redirect( __( 'Branch selected successfully.', 'gitium' ) );
+		$this->success_redirect( 'Branch selected successfully.' );
 	}
 
 	private function setup_step_1_remote_url() {
 		?>
 		<tr>
-		<th scope="row"><label for="remote_url"><?php _e( 'Remote URL', 'gitium' ); ?></label></th>
+		<th scope="row"><label for="remote_url"><?php echo 'Remote URL'; ?></label></th>
 			<td>
 				<input type="text" class="regular-text" name="remote_url" id="remote_url" placeholder="git@github.com:user/example.git" value="">
-				<p class="description"><?php _e( 'This URL provide access to a Git repository via SSH, HTTPS, or Subversion.', 'gitium' ); ?><br />
-		<?php _e( 'If you need to authenticate over "https://" instead of SSH use: <code>https://user:pass@github.com/user/example.git</code>', 'gitium' ); ?></p>
+				<p class="description"><?php echo 'This URL provide access to a Git repository via SSH, HTTPS, or Subversion.'; ?><br />
+		<?php echo 'If you need to authenticate over "https://" instead of SSH use: <code>https://user:pass@github.com/user/example.git</code>'; ?></p>
 			</td>
 		</tr>
 		<?php
@@ -155,19 +155,19 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 		if ( ! defined( 'GIT_KEY_FILE' ) || GIT_KEY_FILE == '' ) :
 			list( $git_public_key, ) = gitium_get_keypair(); ?>
 			<tr>
-			<th scope="row"><label for="key_pair"><?php _e( 'Key pair', 'gitium' ); ?></label></th>
+			<th scope="row"><label for="key_pair"><?php echo 'Key pair'; ?></label></th>
 				<td>
 					<p>
 						<input type="text" class="regular-text" name="key_pair" id="key_pair" value="<?php echo esc_attr( $git_public_key ); ?>" readonly="readonly">
-						<input type="submit" name="GitiumSubmitRegenerateKeypair" class="button" value="<?php _e( 'Regenerate Key', 'gitium' ); ?>" />
+						<input type="submit" name="GitiumSubmitRegenerateKeypair" class="button" value="<?php echo 'Regenerate Key'; ?>" />
 					</p>
 					<p>
 						<div>
 							<button id="copyButton" class="button" data-copy-text="<?php echo esc_attr($git_public_key); ?>">Copy Key Pair</button>
 						</div>
 					</p>
-					<p class="description"><?php _e( 'If your code use ssh keybased authentication for git you need to allow write access to your repository using this key.', 'gitium' ); ?><br />
-			<?php _e( 'Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="https://confluence.atlassian.com/display/BITBUCKET/Add+an+SSH+key+to+an+account#AddanSSHkeytoanaccount-HowtoaddakeyusingSSHforOSXorLinux" target="_blank">bitbucket</a>.', 'gitium' ); ?>
+					<p class="description"><?php echo 'If your code use ssh keybased authentication for git you need to allow write access to your repository using this key.'; ?><br />
+			<?php echo 'Checkout instructions for <a href="https://help.github.com/articles/generating-ssh-keys#step-3-add-your-ssh-key-to-github" target="_blank">github</a> or <a href="https://confluence.atlassian.com/display/BITBUCKET/Add+an+SSH+key+to+an+account#AddanSSHkeytoanaccount-HowtoaddakeyusingSSHforOSXorLinux" target="_blank">bitbucket</a>.'; ?>
 					</p>
 				</td>
 			</tr>
@@ -177,7 +177,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 	private function setup_warning() {
 		?>
 		<div class="wrap">
-			<h2><?php _e( 'Warning!', 'gitium' ); ?></h2>
+			<h2><?php echo 'Warning!'; ?></h2>
 			<form name="gitium_form_warning" id="gitium_form_warning" action="" method="POST">
 				<?php wp_nonce_field( 'gitium-admin' ); ?>
 				<p><code>wp-content</code> is already under version control. You <a onclick="document.getElementById('gitium_form_warning').submit();" style="color:red;" href="#">must remove it from version control</a> in order to continue.</p>
@@ -191,8 +191,8 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 	private function setup_step_1() {
 		?>
 		<div class="wrap">
-			<h2><?php _e( 'Configuration step 1', 'gitium' ); ?></h2>
-			<p><?php _e( 'If you need help to set this up, please click on the "Help" button from the top right corner of this screen.' ); ?></p>
+			<h2>Configuration step 1</h2>
+			<p>If you need help to set this up, please click on the "Help" button from the top right corner of this screen.</p>
 			<form action="" method="POST">
 				<?php wp_nonce_field( 'gitium-admin' ); ?>
 				<table class="form-table">
@@ -200,7 +200,7 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 					<?php $this->setup_step_1_key_pair(); ?>
 				</table>
 				<p class="submit">
-				<input type="submit" name="GitiumSubmitFetch" class="button-primary" value="<?php _e( 'Fetch', 'gitium' ); ?>" />
+				<input type="submit" name="GitiumSubmitFetch" class="button-primary" value="<?php echo 'Fetch'; ?>" />
 				</p>
 			</form>
 		</div>
@@ -210,8 +210,8 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 	private function setup_step_2() {
 		$git = $this->git; ?>
 		<div class="wrap">
-		<h2><?php _e( 'Configuration step 2', 'gitium' ); ?></h2>
-		<p><?php _e( 'If you need help to set this up, please click on the "Help" button from the top right corner of this screen.' ); ?></p>
+		<h2>Configuration step 2</h2>
+		<p>If you need help to set this up, please click on the "Help" button from the top right corner of this screen.</p>
 
 
 		<form action="" method="POST">
@@ -219,20 +219,20 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 
 		<table class="form-table">
 		<tr>
-		<th scope="row"><label for="tracking_branch"><?php _e( 'Choose tracking branch', 'gitium' ); ?></label></th>
+		<th scope="row"><label for="tracking_branch">Choose tracking branch</label></th>
 			<td>
 				<select name="tracking_branch" id="tracking_branch">
 				<?php foreach ( $git->get_remote_branches() as $branch ) : ?>
 					<option value="<?php echo esc_attr( $branch ); ?>"><?php echo esc_html( $branch ); ?></option>
 				<?php endforeach; ?>
 				</select>
-				<p class="description"><?php _e( 'Your code origin is set to', 'gitium' ); ?> <code><?php echo esc_html( $git->get_remote_url() ); ?></code></p>
+				<p class="description"><?php echo 'Your code origin is set to'; ?> <code><?php echo esc_html( $git->get_remote_url() ); ?></code></p>
 			</td>
 		</tr>
 		</table>
 
 		<p class="submit">
-		<input type="submit" name="GitiumSubmitMergeAndPush" class="button-primary" value="<?php _e( 'Merge & Push', 'gitium' ); ?>" />
+		<input type="submit" name="GitiumSubmitMergeAndPush" class="button-primary" value="<?php echo 'Merge & Push'; ?>" />
 		</p>
 		</form>
 		<?php

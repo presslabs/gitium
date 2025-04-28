@@ -31,8 +31,8 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 	public function admin_menu() {
 		$submenu_hook = add_submenu_page(
 			$this->menu_slug,
-			__( 'Git Commits', 'gitium' ),
-			__( 'Commits', 'gitium' ),
+			'Git Commits',
+			'Commits',
 			GITIUM_MANAGE_OPTIONS_CAPABILITY,
 			$this->submenu_slug,
 			array( $this, 'page' )
@@ -44,7 +44,7 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 		?>
 		<thead>
 		<tr>
-			<th scope="col"><?php _e( 'Commits', 'gitium' ); ?></th>
+			<th scope="col"><?php echo 'Commits'; ?></th>
 			<th scope="col"></th>
 		</tr>
 		</thead>
@@ -64,37 +64,65 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 	public function page() {
 		?>
 		<div class="wrap">
-		<h2><?php printf( __( 'Last %s commits', 'gitium' ), GITIUM_LAST_COMMITS ); ?></h2>
-		<table class="wp-list-table widefat plugins">
-		<?php $this->table_head(); ?>
-		<tbody>
-		<?php
-		foreach ( $this->git->get_last_commits( GITIUM_LAST_COMMITS ) as $commit_id => $data ) {
-			unset( $committer_name );
-			extract( $data );
-			if ( isset( $committer_name ) ) {
-				$committer         = "<span title='$committer_email'> -> $committer_name " . sprintf( __( 'committed %s ago', 'gitium' ), human_time_diff( strtotime( $committer_date ) ) ) . '</span>';
-				$committers_avatar = '<div style="position:absolute; left:30px; border: 1px solid white; background:white; height:17px; top:30px; border-radius:2px">' . get_avatar( $committer_email, 16 ) . '</div>';
-			} else {
-				$committer = '';
-				$committers_avatar = '';
-			}
-			$this->table_start_row();
-			?>
-			<td style="position:relative">
-				<div style="float:left; width:auto; height:auto; padding-left:2px; padding-right:5px; padding-top:2px; margin-right:5px; border-radius:2px"><?php echo get_avatar( $author_email, 32 ); ?></div>
-				<?php echo $committers_avatar; ?>
-				<div style="float:left; width:auto; height:auto;"><strong><?php echo esc_html( $subject ); ?></strong><br />
-				<span title="<?php echo esc_attr( $author_email ); ?>"><?php echo esc_html( $author_name ) . ' ' . sprintf( __( 'authored %s ago', 'gitium' ), human_time_diff( strtotime( $author_date ) ) ); ?></span><?php echo $committer; ?></div>
-			</td>
-			<td><p style="padding-top:8px"><?php echo $commit_id; ?></p></td>
-		<?php
-			$this->table_end_row();
-		}
-		?>
-		</tbody>
-		</table>
+			<h2><?php printf( 'Last %s commits', esc_html( GITIUM_LAST_COMMITS ) ); ?></h2>
+			<table class="wp-list-table widefat plugins">
+				<?php $this->table_head(); ?>
+				<tbody>
+					<?php
+					foreach ( $this->git->get_last_commits( GITIUM_LAST_COMMITS ) as $commit_id => $data ) {
+						unset( $committer_name );
+						extract( $data );
+	
+						// Prepare committer HTML
+						if ( isset( $committer_name ) ) {
+							$committer = sprintf(
+								'<span title="%s"> -> %s %s</span>',
+								esc_attr( $committer_email ),
+								esc_html( $committer_name ),
+								sprintf( esc_html( 'committed %s ago'), human_time_diff( strtotime( $committer_date ) ) )
+							);
+	
+							$committers_avatar = sprintf(
+								'<div style="position:absolute; left:30px; top:30px; border:1px solid white; background:white; height:17px; border-radius:2px;">%s</div>',
+								get_avatar( $committer_email, 16 )
+							);
+						} else {
+							$committer = '';
+							$committers_avatar = '';
+						}
+	
+						$this->table_start_row();
+						?>
+						<td style="position:relative;">
+							<div style="float:left; width:auto; height:auto; padding:2px 5px 0 2px; margin-right:5px; border-radius:2px;">
+								<?php echo get_avatar( $author_email, 32 ); ?>
+							</div>
+							<?php echo wp_kses_post( $committers_avatar ); ?>
+							<div style="float:left; width:auto; height:auto;">
+								<strong><?php echo esc_html( $subject ); ?></strong><br />
+								<span title="<?php echo esc_attr( $author_email ); ?>">
+									<?php
+									echo esc_html( $author_name ) . ' ';
+									printf(
+										esc_html( 'authored %s ago'),
+										esc_html( human_time_diff( strtotime( $author_date ) ) )
+									);
+									?>
+								</span>
+								<?php echo wp_kses_post( $committer ); ?>
+							</div>
+						</td>
+						<td>
+							<p style="padding-top:8px;"><?php echo esc_html( $commit_id ); ?></p>
+						</td>
+						<?php
+						$this->table_end_row();
+					}
+					?>
+				</tbody>
+			</table>
 		</div>
 		<?php
 	}
+	
 }
