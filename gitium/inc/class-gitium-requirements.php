@@ -54,7 +54,7 @@ class Gitium_Requirements {
 
 		foreach ( $this->req as $key => $value ) {
 			if ( false === $value ) {
-				echo "<div class='error-nag error'><p>Gitium Requirement: {$this->msg[$key]}</p></div>";
+				echo "<div class='error-nag error'><p>Gitium Requirement: {" . esc_html($this->msg[$key]) . "}</p></div>";
 			}
 		}
 	}
