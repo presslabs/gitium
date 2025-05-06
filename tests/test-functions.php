@@ -36,7 +36,7 @@ class Test_Functions extends WP_UnitTestCase
 	}
 
 	function test_gitium_get_remote_tracking_branch_true() {
-		$this->assertEquals( '', _gitium_get_remote_tracking_branch(True) );
+		$this->assertEquals( '', _gitium_get_remote_tracking_branch(true) );
 	}
 
 	function test_gitium_update_remote_tracking_branch() {
@@ -48,7 +48,7 @@ class Test_Functions extends WP_UnitTestCase
 	}
 
 	function test_gitium_is_status_working_true() {
-		$this->assertFalse( _gitium_is_status_working(True) );
+		$this->assertFalse( _gitium_is_status_working(true) );
 	}
 
 	function test_gitium_update_is_status_working() {
