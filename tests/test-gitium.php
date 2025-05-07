@@ -63,7 +63,7 @@ class Test_Gitium extends WP_UnitTestCase {
 			'gitium_webhook_key'
 		);
 		foreach ( $deleted_options as $option ) {
-			add_option( $option, True );
+			add_option( $option, true );
 		}
 
 		$deleted_transients = array(
@@ -76,7 +76,7 @@ class Test_Gitium extends WP_UnitTestCase {
 			'gitium_is_status_working',
 		);
 		foreach ( $deleted_transients as $transient ) {
-			set_transient( $transient, True );
+			set_transient( $transient, true );
 		}
 
 		gitium_uninstall_hook();
