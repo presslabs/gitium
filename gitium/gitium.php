@@ -7,7 +7,7 @@
  * Author URI:      https://www.presslabs.com
  * Text Domain:     gitium
  * Domain Path:     /languages
- * Version:         1.2.1
+ * Version:         1.2.2
  * License:         GPL3
  *
  * Gitium provides automatic git version control and deployment for

@@ -4,10 +4,10 @@ Contributors: PressLabs
 Donate link: https://www.presslabs.com/gitium/
 Tags: git, version control, revision, gitium, presslabs
 Requires at least: 4.7
-Tested up to: 6.8
+Tested up to: 6.9
 Requires PHP: 7.4
 License: GPLv3
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 License URI: https://www.gnu.org/licenses/gpl-3.0.en.html
 
 Automatic git version control and deployment for your plugins and themes integrated into wp-admin.
@@ -122,10 +122,13 @@ Submodules are currently not supported.
 Please report security bugs found in the source code of the Gitium plugin through the [Patchstack Vulnerability Disclosure Program](https://patchstack.com/database/vdp/gitium). The Patchstack team will assist you with verification, CVE assignment, and notify the developers of this plugin.
 
 == Upgrade Notice ==
-= 1.2.1 =
-Tested up to WP 6.8
+= 1.2.2 =
+Tested up to WP 6.9
 
 == Changelog ==
+
+= 1.2.2 =
+* Tested the compatibility of the plugin with WP 6.9
 
 = 1.2.1 =
 * Tested the compatibility of the plugin with WP 6.8
