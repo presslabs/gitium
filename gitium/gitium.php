@@ -378,3 +378,12 @@ function gitium_remote_disconnected_notice() {
 	<?php endif;
 }
 add_action( 'admin_notices', 'gitium_remote_disconnected_notice' );
+
+/*
+ * Create a commit when a plugin is deleted through WP CLI.
+ */
+if ( defined('WP_CLI') && WP_CLI ) {
+    WP_CLI::add_hook('after_invoke:plugin delete', function() {
+        gitium_auto_push('Deleted plugin via WP-CLI');
+    });
+}
