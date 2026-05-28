@@ -129,6 +129,7 @@ Tested up to WP 7.0
 
 = 1.2.3 =
 * Tested the compatibility of the plugin with WP 7.0
+* Added: Create a commit message when a plugin is deleted via WP CLI
 
 = 1.2.2 =
 * Tested the compatibility of the plugin with WP 6.9
