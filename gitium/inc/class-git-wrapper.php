@@ -652,6 +652,11 @@ class Git_Wrapper {
 		return ( $return == 0 );
 	}
 
+	function revert_commit( $commit_hash ) {
+		list( $return, ) = $this->_call( 'revert', '--no-edit', $commit_hash );
+		return ( $return === 0 );
+	}
+
 	function remove_wp_content_from_version_control() {
 		$process = proc_open(
 			'rm -rf ' . ABSPATH . '/wp-content/.git',

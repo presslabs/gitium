@@ -26,6 +26,33 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 	public function __construct() {
 		parent::__construct( $this->gitium_menu_slug, $this->commits_menu_slug );
 		add_action( GITIUM_ADMIN_MENU_ACTION, array( $this, 'admin_menu' ) );
+		if ( current_user_can( GITIUM_MANAGE_OPTIONS_CAPABILITY ) ) {
+			add_action( 'admin_init', array( $this, 'revert_last_commit' ) );
+		}
+	}
+
+	public function revert_last_commit() {
+		if ( ! filter_input( INPUT_POST, 'GitiumSubmitRevertLastCommit', FILTER_SANITIZE_FULL_SPECIAL_CHARS ) ) {
+			return;
+		}
+		check_admin_referer( 'gitium-admin' );
+
+		$commits = $this->git->get_last_commits( 1 );
+		if ( empty( $commits ) ) {
+			$this->redirect( 'No commits to revert.', false, $this->commits_menu_slug );
+		}
+
+		$commit_hash = key( $commits );
+
+		if ( ! $this->git->revert_commit( $commit_hash ) ) {
+			$this->redirect( 'Could not revert commit: ' . $this->git->get_last_error(), false, $this->commits_menu_slug );
+		}
+
+		if ( ! $this->git->push() ) {
+			$this->redirect( 'Revert commit created locally but push failed: ' . $this->git->get_last_error(), false, $this->commits_menu_slug );
+		}
+
+		$this->success_redirect( 'Commit `' . $commit_hash . '` reverted and pushed successfully.', $this->commits_menu_slug );
 	}
 
 	public function admin_menu() {
@@ -69,6 +96,7 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 				<?php $this->table_head(); ?>
 				<tbody>
 					<?php
+					$first = true;
 					foreach ( $this->git->get_last_commits( GITIUM_LAST_COMMITS ) as $commit_id => $data ) {
 						unset( $committer_name );
 						extract( $data );
@@ -114,9 +142,21 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 						</td>
 						<td>
 							<p style="padding-top:8px;"><?php echo esc_html( $commit_id ); ?></p>
+							<?php if ( $first ) : ?>
+							<form method="POST" style="display:inline;">
+								<?php wp_nonce_field( 'gitium-admin' ); ?>
+								<input type="submit"
+									name="GitiumSubmitRevertLastCommit"
+									class="button button-secondary"
+									value="Revert"
+									onclick="return confirm('Revert commit <?php echo esc_js( $commit_id ); ?>?');"
+								/>
+							</form>
+							<?php endif; ?>
 						</td>
 						<?php
 						$this->table_end_row();
+						$first = false;
 					}
 					?>
 				</tbody>
