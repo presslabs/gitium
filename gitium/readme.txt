@@ -7,7 +7,7 @@ Requires at least: 4.7
 Tested up to: 7.1
 Requires PHP: 7.4
 License: GPLv3
-Stable tag: 1.2.4
+Stable tag: 1.2.5
 License URI: https://www.gnu.org/licenses/gpl-3.0.en.html
 
 Automatic git version control and deployment for your plugins and themes integrated into wp-admin.
@@ -122,10 +122,13 @@ Submodules are currently not supported.
 Please report security bugs found in the source code of the Gitium plugin through the [Patchstack Vulnerability Disclosure Program](https://patchstack.com/database/vdp/gitium). The Patchstack team will assist you with verification, CVE assignment, and notify the developers of this plugin.
 
 == Upgrade Notice ==
-= 1.2.4 =
-Tested up to WP 7.1
+= 1.2.5 =
+Added a button to revert the last commit from wp-admin
 
 == Changelog ==
+
+= 1.2.5 =
+* Added: Revert the last commit from the Gitium Commits page in wp-admin
 
 = 1.2.4 =
 * Tested the compatibility of the plugin with WP 7.1
