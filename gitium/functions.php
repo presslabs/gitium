@@ -32,9 +32,31 @@ function wp_content_is_versioned() {
 
 if ( ! function_exists( 'gitium_enable_maintenance_mode' ) ) :
 	function gitium_enable_maintenance_mode() {
+		global $gitium_maintenance_lock;
 		$file = ABSPATH . '/.maintenance';
 
-		if ( false === file_put_contents( $file, '<?php $upgrading = ' . time() .';' ) ) {
+		// The maintenance mode lasts only while this request holds the lock. If the PHP process is
+		// killed (e.g. by a PHP-FPM timeout) the lock is released and the site is available again,
+		// instead of being unavailable for 10 minutes.
+		$lock_file = dirname( WP_CONTENT_DIR ) . '/.git/gitium-maintenance.lock';
+		$gitium_maintenance_lock = @fopen( $lock_file, 'c' );
+		if ( $gitium_maintenance_lock && flock( $gitium_maintenance_lock, LOCK_EX | LOCK_NB ) ) {
+			$content = '<?php
+// Written by Gitium, the maintenance mode ends when the Gitium request that started it stops.
+$upgrading = ' . time() . ';
+$gitium_lock = @fopen( ' . var_export( $lock_file, true ) . ', \'r\' );
+if ( ! $gitium_lock || flock( $gitium_lock, LOCK_SH | LOCK_NB ) ) {
+	$upgrading = 0;
+}
+if ( $gitium_lock ) {
+	fclose( $gitium_lock );
+}
+';
+		} else {
+			$content = '<?php $upgrading = ' . time() . ';';
+		}
+
+		if ( false === file_put_contents( $file, $content ) ) {
 			return false;
 		} else {
 			return true;
@@ -44,7 +66,14 @@ endif;
 
 if ( ! function_exists( 'gitium_disable_maintenance_mode' ) ) :
 	function gitium_disable_maintenance_mode() {
-		return unlink( ABSPATH . '/.maintenance' );
+		global $gitium_maintenance_lock;
+		$removed = unlink( ABSPATH . '/.maintenance' );
+		if ( $gitium_maintenance_lock ) {
+			flock( $gitium_maintenance_lock, LOCK_UN );
+			fclose( $gitium_maintenance_lock );
+			$gitium_maintenance_lock = null;
+		}
+		return $removed;
 	}
 endif;
 
@@ -58,6 +87,11 @@ function gitium_get_versions() {
 
 function _gitium_commit_changes( $message, $dir = '.' ) {
 	global $git;
+
+	// the files on disk are not the local ones until the interrupted merge is recovered
+	if ( $git->get_interrupted_merge( false ) ) {
+		return false;
+	}
 
 	list( , $git_private_key ) = gitium_get_keypair();
 	if (!$git_private_key)
@@ -185,6 +219,10 @@ function _gitium_module_by_path( $path ) {
 function gitium_group_commit_modified_plugins_and_themes( $msg_append = '' ) {
 	global $git;
 
+	if ( $git->get_interrupted_merge( false ) ) {
+		return array();
+	}
+
 	$uncommited_changes = $git->get_local_changes();
 	$commit_groups = array();
 	$commits = array();
@@ -212,6 +250,10 @@ function gitium_group_commit_modified_plugins_and_themes( $msg_append = '' ) {
 function gitium_commit_and_push_gitignore_file( $path = '' ) {
 	global $git;
 
+	if ( $git->get_interrupted_merge( false ) ) {
+		return false;
+	}
+
 	$current_user = wp_get_current_user();
 	if ( ! empty( $path ) ) { $git->rm_cached( $path ); }
 	$git->add( '.gitignore' );
@@ -223,6 +265,9 @@ if ( ! function_exists( 'gitium_acquire_merge_lock' ) ) :
 	function gitium_acquire_merge_lock() {
 		$gitium_lock_path   = apply_filters( 'gitium_lock_path', sys_get_temp_dir().'/.gitium-lock' );
 		$gitium_lock_handle = fopen( $gitium_lock_path, 'w+' );
+		if ( ! $gitium_lock_handle ) {
+			return false;
+		}
 
 		$lock_timeout    = intval( ini_get( 'max_execution_time' ) ) > 10 ? intval( ini_get( 'max_execution_time' ) ) - 5 : 10;
 		$lock_timeout_ms = 10;
@@ -252,10 +297,24 @@ endif;
 function gitium_merge_and_push( $commits ) {
 	global $git;
 
-	$lock = gitium_acquire_merge_lock()
-		or trigger_error( 'Timeout when gitium lock was acquired', E_USER_WARNING );
+	gitium_prevent_interruption();
+
+	// two merges running at the same time would overwrite each other's backup branch
+	$lock = gitium_acquire_merge_lock();
+	if ( ! $lock ) {
+		trigger_error( 'Timeout when gitium lock was acquired', E_USER_WARNING );
+		$git->set_last_error( 'Another merge is in progress, please try again.' );
+		return false;
+	}
+
+	if ( $git->get_interrupted_merge() ) {
+		gitium_release_merge_lock( $lock );
+		$git->set_last_error( GITIUM_INTERRUPTED_MERGE_ERROR );
+		return false;
+	}
 
 	if ( ! $git->fetch_ref() ) {
+		gitium_release_merge_lock( $lock );
 		return false;
 	}
 
@@ -263,7 +322,15 @@ function gitium_merge_and_push( $commits ) {
 
 	gitium_release_merge_lock( $lock );
 
-	return $git->push() && $merge_status;
+	return $merge_status && $git->push();
+}
+
+// A request killed in the middle of a merge leaves the working tree without the local files
+function gitium_prevent_interruption() {
+	ignore_user_abort( true );
+	if ( function_exists( 'set_time_limit' ) ) {
+		@set_time_limit( 0 );
+	}
 }
 
 function gitium_check_after_event( $plugin, $event = 'activation' ) {

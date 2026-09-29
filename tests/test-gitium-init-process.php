@@ -37,4 +37,31 @@ class Test_Gitium_Init_Process extends Gitium_UnitTestCase {
 	function test_init_process() {
 		$this->assertTrue( $this->gitium_init_process() );
 	}
+
+	/**
+	 * A failed fetch (e.g. ssh-git blocked by SELinux) must not be treated as an empty remote
+	 */
+	function test_init_process_with_unreachable_remote() {
+		global $git;
+
+		$git->cleanup();
+		$config = new Gitium_Submenu_Configure();
+		$this->assertFalse( $config->init_process( '/nonexistent/gitium-remote.git' ) );
+		$this->assertFileNotExists( dirname( WP_CONTENT_DIR ) . '/.git' );
+		$this->assertNotEmpty( $git->get_last_error() );
+	}
+
+	/**
+	 * A failed init_process() must keep the history of an existing repository
+	 */
+	function test_init_process_with_unreachable_remote_keeps_existing_history() {
+		global $git;
+
+		$git->remove_remote();
+		$head = $git->get_head_commit();
+		$config = new Gitium_Submenu_Configure();
+		$this->assertFalse( $config->init_process( '/nonexistent/gitium-remote.git' ) );
+		$this->assertEquals( $head, $git->get_head_commit() );
+		$this->assertEmpty( $git->get_remote_url() );
+	}
 }

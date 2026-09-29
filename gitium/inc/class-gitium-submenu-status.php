@@ -108,6 +108,10 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		}
 	
 		check_admin_referer( 'gitium-admin' );
+
+		if ( $this->git->get_interrupted_merge() ) {
+			$this->redirect( GITIUM_INTERRUPTED_MERGE_ERROR );
+		}
 		
 		gitium_enable_maintenance_mode() or wp_die('Could not enable the maintenance mode!');
 		
