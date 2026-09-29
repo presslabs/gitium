@@ -256,8 +256,8 @@ class Test_Gitium_Merge_Conflicts extends Gitium_UnitTestCase {
 
 		// 3.check if the local and remote file exists
 		$this->_create_work_fresh_clone();
-		$this->assertFileNotExists( $this->local_file );
-		$this->assertFileNotExists( $this->work_file );
+		$this->assertFileDoesNotExist( $this->local_file );
+		$this->assertFileDoesNotExist( $this->work_file );
 	}
 
 	/**
@@ -344,7 +344,7 @@ class Test_Gitium_Merge_Conflicts extends Gitium_UnitTestCase {
 
 		// 3.check if the local and remote file exists
 		$this->_create_work_fresh_clone();
-		$this->assertFileNotExists( $this->local_file );
-		$this->assertFileNotExists( $this->work_file );
+		$this->assertFileDoesNotExist( $this->local_file );
+		$this->assertFileDoesNotExist( $this->work_file );
 	}
 }

@@ -133,7 +133,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 
 	function test_cleanup_with_dot_git() {
 		global $git;
-		$dot_git_dir = $git->repo_dir . '/.git';
+		$dot_git_dir = $this->repo_dir( $git ) . '/.git';
 
 		// make sure that .git dir is already initialized and it is a true .git dir
 		$this->assertFileExists( $dot_git_dir );
@@ -141,14 +141,14 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		$this->assertFileExists( $dot_git_dir . '/index' );
 
 		$this->assertTrue( $git->cleanup() );
-		$this->assertFileNotExists( $dot_git_dir );
-		$this->assertFileNotExists( $dot_git_dir . '/config' );
-		$this->assertFileNotExists( $dot_git_dir . '/index' );
+		$this->assertFileDoesNotExist( $dot_git_dir );
+		$this->assertFileDoesNotExist( $dot_git_dir . '/config' );
+		$this->assertFileDoesNotExist( $dot_git_dir . '/index' );
 	}
 
 	function test_cleanup_with_wrong_dot_git() {
 		global $git;
-		$wrong_dot_git_dir = $git->repo_dir . '/.git';
+		$wrong_dot_git_dir = $this->repo_dir( $git ) . '/.git';
 		$git->cleanup(); // remove the already initialized .git dir
 		mkdir( $wrong_dot_git_dir ); // create a fake .git dir
 		$this->assertFalse( $git->cleanup() );
@@ -213,7 +213,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 	function test_repo_dir_init() {
 		$repo_dir_name = '/my/repo/dir';
 		$wrapper = new Git_Wrapper( $repo_dir_name );
-		$this->assertEquals( $repo_dir_name, $wrapper->repo_dir );
+		$this->assertEquals( $repo_dir_name, $this->repo_dir( $wrapper ) );
 	}
 
 	function test_merge_initial_commit() {
@@ -281,11 +281,11 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		global $git;
 		$filename     = 'some-file.txt';
 		$new_filename = 'another-file.txt';
-		file_put_contents( $git->repo_dir . '/' . $filename, 'some content' . PHP_EOL );
+		file_put_contents( $this->repo_dir( $git ) . '/' . $filename, 'some content' . PHP_EOL );
 		$git->add();
 		$git->commit('Add some file');
-		$response = explode( "\n", shell_exec( "cd {$git->repo_dir} ; git mv {$filename} {$new_filename}" ) );
-		$this->delete_on_teardown[] = $git->repo_dir . '/' . $new_filename;
+		$response = explode( "\n", (string) shell_exec( "cd {$this->repo_dir( $git )} ; git mv {$filename} {$new_filename}" ) );
+		$this->delete_on_teardown[] = $this->repo_dir( $git ) . '/' . $new_filename;
 
 		list( $branch_status, $changes ) = $git->local_status();
 
@@ -312,7 +312,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 	function test_git_dir_constant() {
 		global $git;
 		$this->assertTrue( defined( 'GIT_DIR' ) );
-		$this->assertEquals( GIT_DIR, $git->repo_dir );
+		$this->assertEquals( GIT_DIR, $this->repo_dir( $git ) );
 	}
 
 	/**
@@ -320,7 +320,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 	 */
 	function test_commit_path_with_whitespace() {
 		global $git;
-		$dir = $git->repo_dir . "/some dir/";
+		$dir = $this->repo_dir( $git ) . "/some dir/";
 		$this->delete_on_teardown[] = $dir;
 		try {
 			mkdir( $dir, 0777, true );
@@ -328,8 +328,8 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		file_put_contents( $dir . "some file", "ana are mere" );
 		$git->add();
 		$changeset = $git->commit( "add path with whitespace" );
-		// chdir( $git->repo_dir );
-		$output = explode( "\n", shell_exec( "cd {$git->repo_dir} ; git show --name-status $changeset" ) );
+		// chdir( $this->repo_dir( $git ) );
+		$output = explode( "\n", shell_exec( "cd {$this->repo_dir( $git )} ; git show --name-status $changeset" ) );
 		$expected = array(
 			"    add path with whitespace",
 			"",
@@ -343,7 +343,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 	 */
 	function test_is_dirty_with_whitespace() {
 		global $git;
-		$dir = $git->repo_dir . "/some dir/";
+		$dir = $this->repo_dir( $git ) . "/some dir/";
 		$this->delete_on_teardown[] = $dir;
 		try {
 			mkdir( $dir, 0777, true );
@@ -357,7 +357,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 	 */
 	function test_get_local_changes_with_whitespace() {
 		global $git;
-		$dir = $git->repo_dir . "/some dir/";
+		$dir = $this->repo_dir( $git ) . "/some dir/";
 		$this->delete_on_teardown[] = $dir;
 		try {
 			mkdir( $dir, 0777, true );

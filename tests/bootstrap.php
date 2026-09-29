@@ -24,9 +24,15 @@
 ini_set('error_reporting', E_ALL); // or error_reporting(E_ALL);
 ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
+// with WP_DEBUG Gitium logs every git command it runs, keep them out of the test output
+ini_set( 'error_log', getenv( 'GITIUM_TESTS_LOG' ) ?: sys_get_temp_dir() . '/gitium-tests.log' );
 
 $_tests_dir = getenv( 'WP_TESTS_DIR' );
 if ( ! $_tests_dir ) $_tests_dir = '/tmp/wordpress-tests-lib';
+
+// the WordPress test suite needs the PHPUnit polyfills and our config (it reads the WordPress path from WP_CORE_DIR)
+define( 'WP_TESTS_PHPUNIT_POLYFILLS_PATH', dirname( __DIR__ ) . '/vendor/yoast/phpunit-polyfills' );
+define( 'WP_TESTS_CONFIG_FILE_PATH', __DIR__ . '/wp-tests-config.php' );
 
 define( 'WP_PLUGIN_DIR', dirname( __DIR__ ) );
 

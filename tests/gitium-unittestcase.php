@@ -83,7 +83,9 @@ class Gitium_UnitTestCase extends WP_UnitTestCase {
 		return $config->init_process( $this->remote_repo );
 	}
 
-	public function setup() {
+	public function set_up() {
+		parent::set_up();
+
 		// create file with unique file name and with 0600 access permission
 		$dir = tempnam( sys_get_temp_dir(), 'gitium-' );
 		if ( file_exists( $dir ) ) {
@@ -109,7 +111,7 @@ class Gitium_UnitTestCase extends WP_UnitTestCase {
 		$this->_create_work_fresh_clone();
 	}
 
-	public function teardown() {
+	public function tear_down() {
 		global $git;
 
 		if ( $this->remote_repo ) {
@@ -129,6 +131,13 @@ class Gitium_UnitTestCase extends WP_UnitTestCase {
 			exec( "rm -rf " . escapeshellarg( $file ) );
 		}
 		$this->delete_on_teardown = array();
+
+		parent::tear_down();
+	}
+
+	// the repository dir is a private property of Git_Wrapper
+	protected function repo_dir( $wrapper ) {
+		return ( function() { return $this->repo_dir; } )->call( $wrapper );
 	}
 
 	function test_class_exists_git_wrapper() {
