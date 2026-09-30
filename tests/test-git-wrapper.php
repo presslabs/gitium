@@ -371,4 +371,212 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		);
 	}
 
+
+	/**
+	 * Create another remote repository that doesn't have the files of this site
+	 */
+	protected function _create_other_remote() {
+		$dir = tempnam( sys_get_temp_dir(), 'gitium-other-' );
+		unlink( $dir );
+		mkdir( $dir );
+		$this->delete_on_teardown[] = $dir;
+		$clone = "$dir-clone";
+		$this->delete_on_teardown[] = $clone;
+
+		exec( "git init -q --bare $dir" );
+		exec( "git clone -q $dir $clone" );
+		exec( "cd $clone ; git checkout -q -b master ; echo other > README.md ; git add README.md ; git -c user.email=gitium@presslabs.com -c user.name=Gitium commit -q -m 'Other repository' ; git push -q origin master" );
+
+		return $dir;
+	}
+
+	/**
+	 * The site is disconnected from the repository and connected to another one:
+	 * the files committed before the disconnect must not be removed by the merge.
+	 */
+	function test_merge_initial_commit_keeps_files_of_older_local_commits() {
+		global $git;
+
+		$older_file = $this->_add_untracked_changes_locally( 'older' );
+		$git->add();
+		$git->commit( 'Older local commit' );
+		$git->remove_remote();
+
+		$git->add_remote_url( $this->_create_other_remote() );
+		$this->assertTrue( $git->fetch_ref() );
+
+		$this->_add_changes_locally( 'changed' );
+		$commit = $git->commit( 'Merged existing code' );
+		$this->assertTrue( $git->merge_initial_commit( $commit, 'master' ) );
+
+		$this->assertFileExists( $older_file );
+		$this->assertFileExists( dirname( WP_CONTENT_DIR ) . '/README.md' );
+		$this->delete_on_teardown[] = dirname( WP_CONTENT_DIR ) . '/README.md';
+	}
+
+	/**
+	 * A merge that would remove local files must be cancelled and the files restored
+	 */
+	function test_merge_initial_commit_restores_files_when_the_merge_would_remove_them() {
+		global $git;
+
+		$git->remove_remote();
+		$base = $git->get_head_commit();
+		$file = $this->_add_untracked_changes_locally( 'local' );
+		$git->add();
+		$git->commit( 'Add local file' );
+
+		$git->add_remote_url( $this->_create_other_remote() );
+		$this->assertTrue( $git->fetch_ref() );
+
+		// the snapshot of $base doesn't have $file
+		$this->assertFalse( $git->merge_initial_commit( $base, 'master' ) );
+		$this->assertFileExists( $file );
+		$this->assertEquals( 'master', $git->get_local_branch() );
+		$this->assertFalse( $git->branch_exists( 'initial' ) );
+	}
+
+	/**
+	 * The backup branch of a merge that did not finish must never be deleted
+	 */
+	function test_merge_with_accept_mine_keeps_the_backup_of_an_unfinished_merge() {
+		global $git;
+
+		exec( 'cd ' . dirname( WP_CONTENT_DIR ) . ' ; git branch merge_local' );
+		$this->_add_changes_locally( 'local', true );
+		$this->_add_changes_remotely( 'remote', true );
+		$git->fetch_ref();
+
+		$this->assertFalse( $git->merge_with_accept_mine() );
+		$this->assertTrue( $git->branch_exists( 'merge_local' ) );
+		$this->assertEquals( 'master', $git->get_local_branch() );
+	}
+
+	/**
+	 * Files deleted on the remote branch are deleted locally, the other local files are kept
+	 */
+	function test_merge_with_accept_mine_applies_remote_deletions() {
+		global $git;
+
+		$this->_add_changes_remotely( 'remote', true );
+		$git->fetch_ref();
+		$this->assertTrue( $git->merge_with_accept_mine() );
+		$this->assertFileExists( $this->local_file );
+
+		exec( "cd {$this->work_repo} ; git pull -q ; git rm -q {$this->work_fname} ; git commit -q -m 'Remove the file' ; git push -q" );
+		$this->_add_untracked_changes_locally( 'local' );
+		$git->add();
+		$git->commit( 'Add local file' );
+		$git->fetch_ref();
+
+		$this->assertTrue( $git->merge_with_accept_mine() );
+		$this->assertFileNotExists( $this->local_file );
+		$this->assertFalse( $git->branch_exists( 'merge_local' ) );
+	}
+
+	function test_rrmdir_does_not_follow_symlinks() {
+		global $git;
+
+		$outside = tempnam( sys_get_temp_dir(), 'gitium-outside-' );
+		unlink( $outside );
+		mkdir( $outside );
+		file_put_contents( "$outside/keep", 'keep' );
+		$this->delete_on_teardown[] = $outside;
+		symlink( $outside, dirname( WP_CONTENT_DIR ) . '/.git/linked' );
+
+		$this->assertTrue( $git->cleanup() );
+		$this->assertFileExists( "$outside/keep" );
+	}
+
+	/**
+	 * Leave the repository as a merge killed at its first cherry-pick does (e.g. by the
+	 * PHP-FPM request_terminate_timeout): the local file is only in the 'merge_local' branch.
+	 */
+	protected function _simulate_killed_merge() {
+		$file = $this->_add_untracked_changes_locally( 'local' );
+		$this->_add_changes_remotely( 'remote', true );
+		global $git;
+		$git->add();
+		$git->commit( 'Add local file' );
+		$git->fetch_ref();
+
+		$repo = dirname( WP_CONTENT_DIR );
+		exec( "cd $repo ; git branch -m merge_local ; git branch master origin/master ; git checkout -q master" );
+		file_put_contents( "$repo/.git/gitium-merge", json_encode( array(
+			'backup'  => 'merge_local',
+			'branch'  => 'master',
+			'temp'    => 'master',
+			'started' => time(),
+		) ) );
+		return $file;
+	}
+
+	function test_interrupted_merge_is_detected_and_recovered() {
+		global $git;
+
+		$file = $this->_simulate_killed_merge();
+		$this->assertFileNotExists( $file );
+
+		$merge = $git->get_interrupted_merge();
+		$this->assertEquals( 'merge_local', $merge['backup'] );
+		$this->assertEquals( 'master', $merge['branch'] );
+
+		$saved = $git->recover_interrupted_merge();
+		$this->assertStringStartsWith( 'gitium-interrupted-', $saved );
+		$this->assertFileExists( $file );
+		$this->assertEquals( 'master', $git->get_local_branch() );
+		$this->assertEquals( 'origin/master', $git->get_remote_tracking_branch() );
+		$this->assertFalse( $git->get_interrupted_merge() );
+
+		$this->assertTrue( $git->merge_with_accept_mine() );
+		$this->assertFileExists( $file );
+		$this->assertFileExists( $this->local_file );
+	}
+
+	function test_no_merge_while_a_merge_is_interrupted() {
+		global $git;
+
+		$this->_simulate_killed_merge();
+		$this->assertFalse( $git->merge_with_accept_mine() );
+		$this->assertEquals( GITIUM_INTERRUPTED_MERGE_ERROR, $git->get_last_error() );
+		$this->assertFalse( gitium_merge_and_push( array() ) );
+		$this->assertEmpty( gitium_group_commit_modified_plugins_and_themes() );
+	}
+
+	function test_running_merge_is_not_reported_as_interrupted() {
+		global $git;
+
+		$this->_simulate_killed_merge();
+		$marker = fopen( dirname( WP_CONTENT_DIR ) . '/.git/gitium-merge', 'r' );
+		flock( $marker, LOCK_EX ); // the process doing the merge holds the lock
+		$this->assertFalse( $git->get_interrupted_merge() );
+		flock( $marker, LOCK_UN );
+		fclose( $marker );
+		$this->assertNotFalse( $git->get_interrupted_merge() );
+	}
+
+	function test_finished_merge_leaves_no_record() {
+		global $git;
+
+		$this->_add_changes_locally( 'local', true );
+		$this->_add_changes_remotely( 'remote', true );
+		$git->fetch_ref();
+		$this->assertTrue( $git->merge_with_accept_mine() );
+		$this->assertFileNotExists( dirname( WP_CONTENT_DIR ) . '/.git/gitium-merge' );
+		$this->assertFalse( $git->get_interrupted_merge() );
+	}
+
+	function test_stale_index_lock() {
+		global $git;
+
+		$lock = dirname( WP_CONTENT_DIR ) . '/.git/index.lock';
+		touch( $lock );
+		$this->assertFalse( $git->get_stale_index_lock() ); // git may be running right now
+		$this->assertFalse( $git->remove_stale_index_lock() );
+
+		touch( $lock, time() - 3600 );
+		$this->assertGreaterThanOrEqual( 3600, $git->get_stale_index_lock() );
+		$this->assertTrue( $git->remove_stale_index_lock() );
+		$this->assertFileNotExists( $lock );
+	}
 }

@@ -76,18 +76,45 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 		$this->git->remove_wp_content_from_version_control();
 	}
 
+	// Undo a failed init_process() without losing the history of a repository that existed before
+	private function init_process_rollback( $repo_existed ) {
+		$git   = $this->git;
+		$error = $git->get_last_error();
+		if ( $repo_existed ) {
+			$git->remove_remote();
+		} else {
+			$git->cleanup();
+		}
+		$git->set_last_error( $error );
+		return false;
+	}
+
 	public function init_process( $remote_url ) {
 		$git = $this->git;
-		$git->init();
-		$git->add_remote_url( $remote_url );
-		$git->fetch_ref();
+		gitium_prevent_interruption();
+
+		$repo_existed = $git->has_dot_git();
+		if ( ! $git->init() ) {
+			return $this->init_process_rollback( $repo_existed );
+		}
+		// the repository may already have an 'origin' remote, then use the new url for it
+		if ( ! $git->add_remote_url( $remote_url ) && ! ( $git->get_remote_url() && $git->set_remote_url( $remote_url ) ) ) {
+			return $this->init_process_rollback( $repo_existed );
+		}
+		// a failed fetch doesn't mean the remote is empty, never push over it
+		if ( ! $git->fetch_ref() ) {
+			return $this->init_process_rollback( $repo_existed );
+		}
 		if ( count( $git->get_remote_branches() ) == 0 ) {
 			$git->add( 'wp-content', '.gitignore' );
 			$current_user = wp_get_current_user();
 			$git->commit(  'Initial commit', $current_user->display_name, $current_user->user_email );
-			if ( ! $git->push( 'master' ) ) {
-				$git->cleanup();
-				return false;
+			$branch = $git->get_local_branch();
+			if ( ! $branch || 'HEAD' == $branch ) {
+				$branch = 'master';
+			}
+			if ( ! $git->push( $branch ) ) {
+				return $this->init_process_rollback( $repo_existed );
 			}
 		}
 		return true;
@@ -119,6 +146,16 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 			return;
 		}
 		check_admin_referer( 'gitium-admin' );
+		gitium_prevent_interruption();
+
+		if ( $this->git->get_interrupted_merge() ) {
+			$this->redirect( GITIUM_INTERRUPTED_MERGE_ERROR );
+		}
+		// a second click on the button must not start another merge
+		$lock = gitium_acquire_merge_lock();
+		if ( ! $lock ) {
+			$this->redirect( 'Another merge is in progress, please try again.' );
+		}
 		$this->git->add();
 
 		$branch = $tracking_branch;
@@ -126,13 +163,22 @@ class Gitium_Submenu_Configure extends Gitium_Menu {
 		$current_user = wp_get_current_user();
 
 		$commit = $this->git->commit( 'Merged existing code from ' . get_home_url(), $current_user->display_name, $current_user->user_email );
-		if ( ! $commit ) {
-			$this->git->cleanup();
-			$this->redirect( 'Could not create initial commit -> ' . $this->git->get_last_error() );
+		if ( ! $commit && ! $this->git->get_local_changes() ) {
+			// nothing new to commit, the last commit already holds the site's files
+			$commit = $this->git->get_head_commit();
 		}
-		if ( ! $this->git->merge_initial_commit( $commit, $branch ) ) {
-			$this->git->cleanup();
-			$this->redirect( 'Could not merge the initial commit -> ' . $this->git->get_last_error() );
+		// on failure disconnect the remote, but never delete the local history, it may be the only copy of the files
+		if ( ! $commit ) {
+			$error = $this->git->get_last_error();
+			$this->git->remove_remote();
+			$this->redirect( 'Could not create initial commit -> ' . $error );
+		}
+		$merged = $this->git->merge_initial_commit( $commit, $branch );
+		gitium_release_merge_lock( $lock );
+		if ( ! $merged ) {
+			$error = $this->git->get_last_error();
+			$this->git->remove_remote();
+			$this->redirect( 'Could not merge the initial commit -> ' . $error );
 		}
 		$this->git->push( $branch );
 		$this->success_redirect( 'Branch selected successfully.' );

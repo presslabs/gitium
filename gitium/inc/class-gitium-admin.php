@@ -34,6 +34,8 @@ class Gitium_Admin {
 				return false;
 			}
 
+			new Gitium_Interrupted_Merge();
+
 			if ( $this->has_configuration() ) {
 				new Gitium_Submenu_Status();
 				new Gitium_Submenu_Commits();

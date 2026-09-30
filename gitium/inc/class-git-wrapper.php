@@ -95,6 +95,10 @@ EOF
 );
 
 
+if ( ! defined( 'GITIUM_INTERRUPTED_MERGE_ERROR' ) ) {
+	define( 'GITIUM_INTERRUPTED_MERGE_ERROR', 'A previous merge was interrupted before it finished (the PHP process was stopped). Recover it from the Gitium notice before merging again.' );
+}
+
 class Git_Wrapper {
 
 	private $last_error = '';
@@ -102,6 +106,9 @@ class Git_Wrapper {
 
 	private $repo_dir = '';
 	private $private_key = '';
+
+	// handle of the locked file that records the merge in progress
+	private $merge_marker = null;
 
 	function __construct( $repo_dir ) {
 		$this->repo_dir = $repo_dir;
@@ -114,8 +121,9 @@ class Git_Wrapper {
 
 		$files = array_diff( scandir( $dir ), array( '.', '..' ) );
 		foreach ( $files as $file ) {
-			$filepath = realpath("$dir/$file");
-			( is_dir( $filepath ) ) ? $this->_rrmdir( $filepath ) : unlink( $filepath );
+			// do not resolve symlinks, otherwise the target of a link would be removed
+			$filepath = "$dir/$file";
+			( is_dir( $filepath ) && ! is_link( $filepath ) ) ? $this->_rrmdir( $filepath ) : unlink( $filepath );
 		}
 		return rmdir( $dir );
 	}
@@ -206,6 +214,10 @@ class Git_Wrapper {
 		return $this->last_error;
 	}
 
+	function set_last_error( $error ) {
+		$this->last_error = $error;
+	}
+
 	function can_exec_git() {
 		list( $return, ) = $this->_call( 'version' );
 		return ( 0 == $return );
@@ -227,14 +239,14 @@ class Git_Wrapper {
 
 	// git rev-list @{u}..
 	function get_ahead_commits() {
-		list( , $commits ) = $this->_call( 'rev-list', '@{u}..' );
-		return $commits;
+		list( $return, $commits ) = $this->_call( 'rev-list', '@{u}..' );
+		return ( 0 == $return ) ? $commits : array();
 	}
 
 	// git rev-list ..@{u}
 	function get_behind_commits() {
-		list( , $commits  ) = $this->_call( 'rev-list', '..@{u}' );
-		return $commits;
+		list( $return, $commits ) = $this->_call( 'rev-list', '..@{u}' );
+		return ( 0 == $return ) ? $commits : array();
 	}
 
 	function init() {
@@ -247,13 +259,24 @@ class Git_Wrapper {
 	}
 
 	function is_dot_git_dir( $dir ) {
+		if ( empty( $dir ) ) {
+			return false;
+		}
 		$realpath   = realpath( $dir );
-		$git_config = realpath( $realpath . '/config' );
-		$git_index  = realpath( $realpath . '/index' );
-		if ( ! empty( $realpath ) && is_dir( $realpath ) && file_exists( $git_config ) && file_exists( $git_index ) ) {
+		$git_config  = realpath( $realpath . '/config' );
+		$git_index   = realpath( $realpath . '/index' );
+		// a repository without any commit or staged file has no index yet
+		$git_head    = realpath( $realpath . '/HEAD' );
+		$git_objects = realpath( $realpath . '/objects' );
+		$has_index   = file_exists( $git_index ) || ( file_exists( $git_head ) && is_dir( $git_objects ) );
+		if ( ! empty( $realpath ) && is_dir( $realpath ) && file_exists( $git_config ) && $has_index ) {
 			return true;
 		}
 		return false;
+	}
+
+	function has_dot_git() {
+		return file_exists( $this->repo_dir . '/.git' );
 	}
 
 	function cleanup() {
@@ -272,6 +295,11 @@ class Git_Wrapper {
 
 	function add_remote_url( $url ) {
 		list( $return, ) = $this->_call( 'remote', 'add', 'origin', $url );
+		return ( 0 == $return );
+	}
+
+	function set_remote_url( $url ) {
+		list( $return, ) = $this->_call( 'remote', 'set-url', 'origin', $url );
 		return ( 0 == $return );
 	}
 
@@ -302,6 +330,387 @@ class Git_Wrapper {
 			return $response[0];
 		}
 		return false;
+	}
+
+	function get_head_commit() {
+		list( $return, $response ) = $this->_call( 'rev-parse', '--verify', '-q', 'HEAD' );
+		if ( 0 == $return && ! empty( $response[0] ) ) {
+			return $response[0];
+		}
+		return false;
+	}
+
+	function branch_exists( $branch ) {
+		list( $return, ) = $this->_call( 'rev-parse', '--verify', '-q', "refs/heads/$branch" );
+		return ( 0 == $return );
+	}
+
+	/*
+	 * Files tracked in $ref that are missing from $target.
+	 * When $target is empty the files are searched in the working tree.
+	 * Returns false if the files could not be listed.
+	 */
+	function get_missing_files( $ref, $target = '' ) {
+		return $this->_diff_names( '--diff-filter=D', $ref, $target );
+	}
+
+	/*
+	 * Names of the files that differ between $ref and $target (or the working tree), filtered by $filter.
+	 * Returns false if the files could not be listed.
+	 */
+	private function _diff_names( $filter, $ref, $target = '' ) {
+		$args = array( 'diff', '-z', '--name-only', '--no-renames', $filter, $ref );
+		if ( ! empty( $target ) ) {
+			$args[] = $target;
+		}
+		list( $return, $response ) = $this->_call( ...$args );
+		if ( 0 != $return ) {
+			return false;
+		}
+		return array_values( array_filter( explode( chr( 0 ), join( "\n", $response ) ), 'strlen' ) );
+	}
+
+	/*
+	 * A git command killed in the middle (e.g. `git add` or `git commit` stopped by a PHP-FPM timeout)
+	 * leaves the index.lock file behind and every next commit fails. Returns the age in seconds of an
+	 * index.lock older than $min_age, false if there is none.
+	 */
+	function get_stale_index_lock( $min_age = 600 ) {
+		$lock = $this->repo_dir . '/.git/index.lock';
+		clearstatcache( true, $lock );
+		if ( ! file_exists( $lock ) ) {
+			return false;
+		}
+		$age = time() - filemtime( $lock );
+		return ( $age >= $min_age ) ? $age : false;
+	}
+
+	function remove_stale_index_lock( $min_age = 600 ) {
+		if ( false === $this->get_stale_index_lock( $min_age ) ) {
+			return false;
+		}
+		return unlink( $this->repo_dir . '/.git/index.lock' );
+	}
+
+	/*
+	 * Returns the $paths whose content on disk is the same as in $ref. It compares the content
+	 * directly, so it works for files that are not in the index too.
+	 */
+	private function _files_same_as( $ref, $paths ) {
+		$repo_dir = $this->repo_dir;
+		$same     = array();
+		foreach ( array_chunk( array_values( $paths ), 100 ) as $chunk ) {
+			list( $return, $response ) = $this->_call( '--literal-pathspecs', 'ls-tree', '-z', $ref, '--', ...$chunk );
+			if ( 0 != $return ) {
+				continue;
+			}
+			// <mode> SP <type> SP <object> TAB <file>
+			$blobs = array();
+			foreach ( array_filter( explode( chr( 0 ), join( "\n", $response ) ), 'strlen' ) as $entry ) {
+				list( $info, $path ) = explode( "\t", $entry, 2 );
+				$info = explode( ' ', $info );
+				if ( 'blob' == $info[1] ) {
+					$blobs[ $path ] = $info[2];
+				}
+			}
+			$files = array_values( array_filter( $chunk, function( $path ) use ( $blobs, $repo_dir ) {
+				return isset( $blobs[ $path ] ) && is_file( "$repo_dir/$path" ) && ! is_link( "$repo_dir/$path" );
+			} ) );
+			if ( empty( $files ) ) {
+				continue;
+			}
+			list( $return, $hashes ) = $this->_call( 'hash-object', '--', ...$files );
+			if ( 0 != $return || count( $hashes ) != count( $files ) ) {
+				continue;
+			}
+			foreach ( $files as $idx => $path ) {
+				if ( $hashes[ $idx ] == $blobs[ $path ] ) {
+					$same[] = $path;
+				}
+			}
+		}
+		return $same;
+	}
+
+	private function _merge_marker_path() {
+		return $this->repo_dir . '/.git/gitium-merge';
+	}
+
+	/*
+	 * Records the merge that starts. The file stays locked while this process runs: if PHP is killed in
+	 * the middle of the merge (e.g. by the PHP-FPM request_terminate_timeout) the system releases the
+	 * lock but the file is left behind, so the next requests know that the merge was interrupted.
+	 */
+	private function _start_merge( $backup_branch, $branch_name, $temp_branch ) {
+		if ( $this->merge_marker || ! is_dir( $this->repo_dir . '/.git' ) ) {
+			return;
+		}
+		$handle = @fopen( $this->_merge_marker_path(), 'c+' );
+		if ( ! $handle ) {
+			return;
+		}
+		if ( ! flock( $handle, LOCK_EX | LOCK_NB ) ) {
+			fclose( $handle );
+			return;
+		}
+		ftruncate( $handle, 0 );
+		fwrite( $handle, json_encode( array(
+			'backup'  => $backup_branch,
+			'branch'  => $branch_name,
+			'temp'    => $temp_branch,
+			'started' => time(),
+		) ) );
+		fflush( $handle );
+		$this->merge_marker = $handle;
+	}
+
+	private function _end_merge( $keep_record = false ) {
+		if ( ! $this->merge_marker ) {
+			return;
+		}
+		flock( $this->merge_marker, LOCK_UN );
+		fclose( $this->merge_marker );
+		$this->merge_marker = null;
+		if ( ! $keep_record ) {
+			@unlink( $this->_merge_marker_path() );
+		}
+	}
+
+	/*
+	 * Returns the merge that was interrupted before it could finish or undo its changes, as an array with
+	 * the keys: backup (the branch that holds the local files), branch (the name of the local branch),
+	 * temp (the branch used for the merge) and started (timestamp, 0 if unknown). Returns false if
+	 * there is no interrupted merge, or if the merge is still running.
+	 */
+	function get_interrupted_merge( $check_branches = true ) {
+		$path = $this->_merge_marker_path();
+		if ( file_exists( $path ) ) {
+			$handle = @fopen( $path, 'r' );
+			if ( ! $handle ) {
+				return false;
+			}
+			if ( ! flock( $handle, LOCK_SH | LOCK_NB ) ) {
+				fclose( $handle ); // the merge is still running
+				return false;
+			}
+			$merge = json_decode( stream_get_contents( $handle ), true );
+			flock( $handle, LOCK_UN );
+			fclose( $handle );
+			if ( is_array( $merge ) && ! empty( $merge['backup'] ) && ! empty( $merge['branch'] ) && $this->branch_exists( $merge['backup'] ) ) {
+				return $merge;
+			}
+			// the merge was interrupted before it changed anything or after it finished
+			@unlink( $path );
+			return false;
+		}
+
+		// a merge interrupted by a Gitium version that did not record it
+		if ( ! $check_branches || ! is_dir( $this->repo_dir . '/.git' ) ) {
+			return false;
+		}
+		list( $return, $branches ) = $this->_call( 'for-each-ref', '--format=%(refname:short)', 'refs/heads/merge_local', 'refs/heads/initial' );
+		if ( 0 != $return || empty( $branches ) ) {
+			return false;
+		}
+		$current = $this->get_local_branch();
+		if ( in_array( 'merge_local', $branches ) ) {
+			$backup = 'merge_local';
+		} elseif ( ! $this->get_remote_tracking_branch() ) {
+			$backup = 'initial'; // only used while the repository is set up
+		} else {
+			return false;
+		}
+		$branch = $current;
+		if ( ! $current || 'HEAD' == $current || $backup == $current ) {
+			list( $return, $upstream ) = $this->_call( 'rev-parse', '--abbrev-ref', "$backup@{u}" );
+			$branch = ( 0 == $return && ! empty( $upstream[0] ) ) ? preg_replace( '#^[^/]+/#', '', $upstream[0] ) : 'master';
+		}
+		return array( 'backup' => $backup, 'branch' => $branch, 'temp' => $current, 'started' => 0 );
+	}
+
+	/*
+	 * Recovers the files of an interrupted merge: the local branch is set back to the backup branch and
+	 * the files that the merge removed or replaced are put back. Only the files that the merge brought
+	 * from the remote branch (unchanged since then) are removed, the other files are left on disk and
+	 * the branch used for the merge is kept under a new name.
+	 * Returns the name of the branch that keeps the commits of the merge ('' if none), false on failure.
+	 */
+	function recover_interrupted_merge() {
+		$merge = $this->get_interrupted_merge();
+		if ( ! $merge ) {
+			$this->last_error = 'There is no interrupted merge to recover.';
+			return false;
+		}
+		$backup = $merge['backup'];
+		$branch = $merge['branch'];
+		$temp   = $merge['temp'];
+
+		// if this recovery is interrupted too, it can be started again
+		$this->_start_merge( $backup, $branch, $temp );
+		$recovered = false;
+		try {
+			// leave the cherry-pick without touching the files
+			if ( $this->_cherry_pick_in_progress() ) {
+				list( $return, ) = $this->_call( 'cherry-pick', '--quit' );
+				if ( 0 != $return ) {
+					$this->_call( 'cherry-pick', '--abort' );
+				}
+			}
+
+			$current = $this->get_local_branch();
+			$temp_exists = ( $temp && 'HEAD' != $temp && $temp != $backup && $this->branch_exists( $temp ) );
+
+			// files changed by the merge and not modified since then get back their local version
+			$replaced = array();
+			// files brought by the merge from the remote branch and not modified since then are removed,
+			// otherwise they block the next merge (they are still in the remote branch)
+			$brought  = array();
+			if ( $temp_exists ) {
+				$changed = $this->_diff_names( '--diff-filter=MT', $backup, $temp );
+				$added   = $this->_diff_names( '--diff-filter=A', $backup, $temp );
+				$touched = $this->_diff_names( '--diff-filter=MTD', $temp );
+				if ( false !== $changed && false !== $touched ) {
+					$replaced = array_diff( $changed, $touched );
+				}
+				list( $return, $upstream ) = $this->_call( 'rev-parse', '--abbrev-ref', "$temp@{u}" );
+				if ( false !== $added && 0 == $return && ! empty( $upstream[0] ) ) {
+					$not_on_remote = $this->_diff_names( '--diff-filter=ADMT', $temp, $upstream[0] );
+					if ( false !== $not_on_remote ) {
+						$brought = $this->_files_same_as( $temp, array_diff( $added, $not_on_remote ) );
+					}
+				}
+			}
+
+			if ( $current != $backup ) {
+				// switch to the backup branch without touching the files on disk
+				list( $return, ) = $this->_call( 'symbolic-ref', 'HEAD', "refs/heads/$backup" );
+				if ( 0 != $return ) {
+					return false;
+				}
+				list( $return, ) = $this->_call( 'reset', '-q' );
+				if ( 0 != $return ) {
+					return false;
+				}
+			}
+
+			// put back the files removed by the merge
+			$missing = $this->get_missing_files( 'HEAD' );
+			if ( false === $missing ) {
+				return false;
+			}
+			foreach ( array_chunk( array_values( array_unique( array_merge( $missing, $replaced ) ) ), 100 ) as $paths ) {
+				list( $return, ) = $this->_call( '--literal-pathspecs', 'checkout', 'HEAD', '--', ...$paths );
+				if ( 0 != $return ) {
+					return false;
+				}
+			}
+
+			foreach ( $brought as $path ) {
+				$file = $this->repo_dir . '/' . $path;
+				if ( is_file( $file ) || is_link( $file ) ) {
+					unlink( $file );
+				}
+				// remove the directories left empty
+				for ( $dir = dirname( $file ); strlen( $dir ) > strlen( $this->repo_dir ) && @rmdir( $dir ); $dir = dirname( $dir ) );
+			}
+
+			// keep the commits of the merge branch
+			$saved = '';
+			if ( $temp_exists ) {
+				$saved = 'gitium-interrupted-' . gmdate( 'Ymd-His' );
+				list( $return, ) = $this->_call( 'branch', '-m', $temp, $saved );
+				if ( 0 != $return ) {
+					return false;
+				}
+			}
+			if ( $branch != $backup ) {
+				list( $return, ) = $this->_call( 'branch', '-m', $branch );
+				if ( 0 != $return ) {
+					return false;
+				}
+			}
+			$recovered = true;
+		} finally {
+			// on failure keep the record, the merge still needs to be recovered
+			$this->_end_merge( ! $recovered );
+		}
+		$this->last_error = null;
+		return $saved;
+	}
+
+	private function _cherry_pick_in_progress() {
+		list( $return, ) = $this->_call( 'rev-parse', '--verify', '-q', 'CHERRY_PICK_HEAD' );
+		return ( 0 == $return );
+	}
+
+	private function _is_merge_commit( $commit ) {
+		list( $return, ) = $this->_call( 'rev-parse', '--verify', '-q', "$commit^2" );
+		return ( 0 == $return );
+	}
+
+	/*
+	 * Puts back the branch that was saved as $backup_branch before a merge,
+	 * together with its files, and removes the $temp_branch used for the merge.
+	 */
+	private function _restore_branch( $backup_branch, $branch_name, $temp_branch ) {
+		$error = $this->last_error;
+
+		if ( $this->_cherry_pick_in_progress() ) {
+			$this->_call( 'cherry-pick', '--abort' );
+		}
+		list( $return, ) = $this->_call( 'checkout', $backup_branch );
+		if ( 0 != $return ) {
+			list( $return, ) = $this->_call( 'checkout', '-f', $backup_branch );
+		}
+		if ( 0 != $return ) {
+			$this->last_error = "$error\nCould not restore the '$backup_branch' branch: {$this->last_error}";
+			return false;
+		}
+		if ( $temp_branch != $backup_branch ) {
+			$this->_call( 'branch', '-D', $temp_branch );
+		}
+		if ( $branch_name != $backup_branch ) {
+			$this->_call( 'branch', '-m', $branch_name );
+		}
+		$this->last_error = $error;
+		return true;
+	}
+
+	/*
+	 * Returns the files of $backup_branch that the merge would remove (from HEAD or from the working
+	 * tree), except the ones listed in $allowed_deletions. $missing_before are the files that were
+	 * already missing from the working tree before the merge started.
+	 */
+	private function _get_lost_files( $backup_branch, $missing_before, $allowed_deletions = array() ) {
+		$missing_from_head = $this->get_missing_files( $backup_branch, 'HEAD' );
+		$missing_from_disk = $this->get_missing_files( 'HEAD' );
+		if ( false === $missing_from_head || false === $missing_from_disk ) {
+			return array( '(could not list the files)' );
+		}
+		$lost = array_diff( $missing_from_head, $allowed_deletions );
+		$lost = array_merge( $lost, array_diff( $missing_from_disk, $missing_before ) );
+		return array_values( array_unique( $lost ) );
+	}
+
+	// A new merge must not start while another one runs, or before an interrupted one is recovered
+	private function _can_start_merge( $backup_branch ) {
+		if ( $this->get_interrupted_merge() ) {
+			$this->last_error = GITIUM_INTERRUPTED_MERGE_ERROR;
+			return false;
+		}
+		if ( $this->branch_exists( $backup_branch ) ) {
+			$this->last_error = "Another merge is in progress (the branch '$backup_branch' exists), please try again later.";
+			return false;
+		}
+		return true;
+	}
+
+	private function _lost_files_error( $lost ) {
+		$list = join( ', ', array_slice( $lost, 0, 10 ) );
+		if ( count( $lost ) > 10 ) {
+			$list .= sprintf( ' and %d more', count( $lost ) - 10 );
+		}
+		return "The merge was cancelled because it would remove local files: $list";
 	}
 
 	function fetch_ref() {
@@ -344,7 +753,8 @@ class Git_Wrapper {
 
 	private function cherry_pick( $commits ) {
 		foreach ( $commits as $commit ) {
-			if ( empty( $commit ) ) { return false; }
+			// the changes of a merge commit are picked with the commits it merged
+			if ( $this->_is_merge_commit( $commit ) ) { continue; }
 
 			list( $return, $response ) = $this->_call( 'cherry-pick', $commit );
 
@@ -355,9 +765,25 @@ class Git_Wrapper {
 			}
 
 			if ( $return != 0 ) {
+				$error = $this->last_error;
+				if ( ! $this->_cherry_pick_in_progress() ) {
+					// cherry-pick failed without starting (not a conflict), nothing was picked
+					$this->last_error = $error;
+					return false;
+				}
 				$this->_resolve_merge_conflicts( $this->get_commit_message( $commit ) );
+				if ( $this->_cherry_pick_in_progress() ) {
+					list( $staged, ) = $this->_call( 'diff', '--cached', '--quiet', 'HEAD' );
+					if ( 0 != $staged ) {
+						$this->last_error = $error;
+						return false;
+					}
+					// the conflicts were resolved with no changes left to commit
+					$this->_call( 'cherry-pick', '--abort' );
+				}
 			}
 		}
+		return true;
 	}
 
 	function merge_with_accept_mine(...$commits) {
@@ -367,47 +793,90 @@ class Git_Wrapper {
 			$commits = $commits[0];
 		}
 
-		// get ahead commits
-		$ahead_commits = $this->get_ahead_commits();
-
-		// combine all commits with the ahead commits
-		$commits = array_unique( array_merge( array_reverse( $commits ), $ahead_commits ) );
-		$commits = array_reverse( $commits );
-
 		// get the remote branch
 		$remote_branch = $this->get_remote_tracking_branch();
 
 		// get the local branch
 		$local_branch  = $this->get_local_branch();
 
+		if ( ! $remote_branch || ! $local_branch || 'HEAD' == $local_branch ) {
+			return false;
+		}
+
+		if ( ! $this->_can_start_merge( 'merge_local' ) ) {
+			return false;
+		}
+
+		// get ahead commits
+		$ahead_commits = $this->get_ahead_commits();
+
+		// combine all commits with the ahead commits
+		$commits = array_unique( array_merge( array_reverse( $commits ), $ahead_commits ) );
+		$commits = array_reverse( $commits );
+		$commits = array_values( array_filter( $commits, function( $commit ) {
+			return is_string( $commit ) && preg_match( '/^[0-9a-f]{7,64}$/i', $commit );
+		} ) );
+
+		// files deleted on the remote branch are allowed to be removed by the merge
+		$remote_deletions = array();
+		list( $return, $merge_base ) = $this->_call( 'merge-base', 'HEAD', $remote_branch );
+		if ( 0 == $return && ! empty( $merge_base[0] ) ) {
+			$remote_deletions = $this->get_missing_files( $merge_base[0], $remote_branch );
+		}
+		$missing_before = $this->get_missing_files( 'HEAD' );
+		if ( false === $remote_deletions || false === $missing_before ) {
+			return false;
+		}
+
+		$this->_start_merge( 'merge_local', $local_branch, $local_branch );
+		try {
+			return $this->_merge_with_accept_mine( $commits, $local_branch, $remote_branch, $remote_deletions, $missing_before );
+		} finally {
+			$this->_end_merge();
+		}
+	}
+
+	private function _merge_with_accept_mine( $commits, $local_branch, $remote_branch, $remote_deletions, $missing_before ) {
 		// rename the local branch to 'merge_local'
-		$this->_call( 'branch', '-m', 'merge_local' );
+		list( $return, ) = $this->_call( 'branch', '-m', 'merge_local' );
+		if ( $return != 0 ) {
+			return false;
+		}
 
 		// local branch set up to track remote branch
-		$this->_call( 'branch', $local_branch, $remote_branch );
+		list( $return, ) = $this->_call( 'branch', $local_branch, $remote_branch );
+		if ( $return != 0 ) {
+			$this->_call( 'branch', '-m', $local_branch );
+			return false;
+		}
 
 		// checkout to the $local_branch
 		list( $return, ) = $this->_call( 'checkout', $local_branch );
 		if ( $return != 0 ) {
-			$this->_call( 'branch', '-M', $local_branch );
+			$this->_restore_branch( 'merge_local', $local_branch, $local_branch );
 			return false;
 		}
 
 		// don't cherry pick if there are no commits
-		if ( count( $commits ) > 0 ) {
-			$this->cherry_pick( $commits );
-		}
+		$picked = ( count( $commits ) > 0 ) ? $this->cherry_pick( $commits ) : true;
 
-		if ( $this->successfully_merged() ) { // git status without states: AA, DD, UA, AU ...
-			// delete the 'merge_local' branch
-			$this->_call( 'branch', '-D', 'merge_local' );
-			return true;
-		} else {
-			$this->_call( 'cherry-pick', '--abort' );
-			$this->_call( 'checkout', '-b', 'merge_local' );
-			$this->_call( 'branch', '-M', $local_branch );
+		// git status without states: AA, DD, UA, AU ...
+		if ( ! $picked || $this->_cherry_pick_in_progress() || ! $this->successfully_merged() ) {
+			$this->_restore_branch( 'merge_local', $local_branch, $local_branch );
 			return false;
 		}
+
+		// never finish a merge that removes files the remote did not delete
+		$lost = $this->_get_lost_files( 'merge_local', $missing_before, $remote_deletions );
+		if ( ! empty( $lost ) ) {
+			$this->last_error = $this->_lost_files_error( $lost );
+			$this->_restore_branch( 'merge_local', $local_branch, $local_branch );
+			return false;
+		}
+
+		// delete the 'merge_local' branch
+		$this->_call( 'branch', '-D', 'merge_local' );
+		return true;
 	}
 
 	function successfully_merged() {
@@ -417,34 +886,85 @@ class Git_Wrapper {
 	}
 
 	function merge_initial_commit( $commit, $branch ) {
+		$local_branch = $this->get_local_branch();
+		if ( ! $local_branch || 'HEAD' == $local_branch ) {
+			return false;
+		}
+
+		// cherry-pick replays only the changes of a commit relative to its parent. When the local
+		// history has more commits (e.g. the site was disconnected and connected again) the files
+		// added by the older commits would be removed by the checkout and never put back, so we
+		// cherry-pick a parentless commit holding the complete snapshot of $commit instead.
+		list( $return, $author ) = $this->_call( 'log', '-n', '1', '--format=%an%n%ae', $commit );
+		if ( 0 != $return || count( $author ) < 2 ) {
+			return false;
+		}
+		list( $return, $snapshot ) = $this->_call(
+			'-c', "user.name={$author[0]}", '-c', "user.email={$author[1]}",
+			'commit-tree', "$commit^{tree}", '-m', $this->get_commit_message( $commit )
+		);
+		if ( 0 != $return || empty( $snapshot[0] ) ) {
+			return false;
+		}
+		$snapshot = $snapshot[0];
+
+		$missing_before = $this->get_missing_files( 'HEAD' );
+		if ( false === $missing_before || ! $this->_can_start_merge( 'initial' ) ) {
+			return false;
+		}
+
+		$this->_start_merge( 'initial', $local_branch, $branch );
+		try {
+			return $this->_merge_initial_commit( $commit, $branch, $local_branch, $snapshot, $missing_before );
+		} finally {
+			$this->_end_merge();
+		}
+	}
+
+	private function _merge_initial_commit( $commit, $branch, $local_branch, $snapshot, $missing_before ) {
 		list( $return, ) = $this->_call( 'branch', '-m', 'initial' );
 		if ( 0 != $return ) {
 			return false;
 		}
 		list( $return, ) = $this->_call( 'checkout', $branch );
 		if ( 0 != $return ) {
+			$this->_restore_branch( 'initial', $local_branch, $branch );
 			return false;
 		}
 		list( $return, ) = $this->_call(
-			'cherry-pick', '--strategy', 'recursive', '--strategy-option', 'theirs', $commit
+			'cherry-pick', '--strategy', 'recursive', '--strategy-option', 'theirs', $snapshot
 		);
 		if ( $return != 0 ) {
+			$error = $this->last_error;
 			$this->_resolve_merge_conflicts( $this->get_commit_message( $commit ) );
-			if ( ! $this->successfully_merged() ) {
-				$this->_call( 'cherry-pick', '--abort' );
-				$this->_call( 'checkout', 'initial' );
+			if ( $this->_cherry_pick_in_progress() || ! $this->successfully_merged() ) {
+				$this->last_error = $error;
+				$this->_restore_branch( 'initial', $local_branch, $branch );
 				return false;
 			}
 		}
+
+		// every file of the local site must still be there after the merge
+		$lost = $this->_get_lost_files( 'initial', $missing_before );
+		if ( ! empty( $lost ) ) {
+			$this->last_error = $this->_lost_files_error( $lost );
+			$this->_restore_branch( 'initial', $local_branch, $branch );
+			return false;
+		}
+
 		$this->_call( 'branch', '-D', 'initial' );
 		return true;
 	}
 
 	function get_remote_branches() {
-		list( , $response ) = $this->_call( 'branch', '-r' );
-		$response = array_map( 'trim', $response );
-		$response = array_map( function( $b ) { return str_replace( "origin/", "", $b ); }, $response );
-		return $response;
+		list( $return, $response ) = $this->_call( 'branch', '-r' );
+		if ( 0 != $return ) {
+			return array();
+		}
+		// skip symbolic refs like 'origin/HEAD -> origin/master'
+		$response = array_filter( array_map( 'trim', $response ), function( $b ) { return false === strpos( $b, '->' ); } );
+		$response = array_map( function( $b ) { return preg_replace( '#^origin/#', '', $b ); }, $response );
+		return array_values( $response );
 	}
 
 	function add(...$args) {
@@ -658,20 +1178,11 @@ class Git_Wrapper {
 	}
 
 	function remove_wp_content_from_version_control() {
-		$process = proc_open(
-			'rm -rf ' . ABSPATH . '/wp-content/.git',
-			array(
-				0 => array( 'pipe', 'r' ),  // stdin
-				1 => array( 'pipe', 'w' ),  // stdout
-			),
-			$pipes
-		);
-		if ( is_resource( $process ) ) {
-			fclose( $pipes[0] );
-			proc_close( $process );
-			return true;
+		$dot_git = WP_CONTENT_DIR . '/.git';
+		if ( is_link( $dot_git ) || is_file( $dot_git ) ) {
+			return unlink( $dot_git );
 		}
-		return false;
+		return $this->_rrmdir( $dot_git );
 	}
 }
 

@@ -67,6 +67,10 @@ if ( ! empty ( $webhook_key ) && isset( $get_key ) && $webhook_key == $get_key )
 	else
 		$git->set_key( $git_private_key );
 
+	if ( $git->get_interrupted_merge() ) {
+		wp_die( esc_html( GITIUM_INTERRUPTED_MERGE_ERROR ), 'Merge interrupted', array( 'response' => 409 ) );
+	}
+
 	$commits   = array();
 	$commitmsg = sprintf( 'Merged changes from %s on %s', $_SERVER['SERVER_NAME'], date( 'm.d.Y' ) );
 	
