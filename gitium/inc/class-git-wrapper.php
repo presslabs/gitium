@@ -653,8 +653,27 @@ class Git_Wrapper {
 	}
 
 	function revert_commit( $commit_hash ) {
-		list( $return, ) = $this->_call( 'revert', '--no-edit', $commit_hash );
-		return ( $return === 0 );
+		list( $return, $response ) = $this->_call( 'rev-list', '--parents', '-n', '1', $commit_hash );
+		if ( 0 !== $return || empty( $response ) ) {
+			return false;
+		}
+
+		$args = array( 'revert', '--no-edit' );
+		// a merge commit has more than one parent, revert it against the first one (mainline)
+		if ( count( explode( ' ', $response[0] ) ) > 2 ) {
+			array_push( $args, '-m', '1' );
+		}
+		$args[] = $commit_hash;
+
+		list( $return, ) = $this->_call( ...$args );
+		if ( 0 !== $return ) {
+			// don't leave the working tree in a half reverted (conflicted) state
+			$last_error = $this->last_error;
+			$this->_call( 'revert', '--abort' );
+			$this->last_error = $last_error;
+			return false;
+		}
+		return true;
 	}
 
 	function remove_wp_content_from_version_control() {
