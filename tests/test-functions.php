@@ -54,4 +54,47 @@ class Test_Functions extends WP_UnitTestCase
 	function test_gitium_update_is_status_working() {
 		$this->assertFalse( gitium_update_is_status_working() );
 	}
+
+	function test_gitium_format_message() {
+		$this->assertEquals( '`Plugin Name`', _gitium_format_message( 'Plugin Name' ) );
+		$this->assertEquals( '`Plugin Name` version 1.2.3', _gitium_format_message( 'Plugin Name', '1.2.3' ) );
+		$this->assertEquals( 'Updated `Plugin Name` version 1.2.3', _gitium_format_message( 'Plugin Name', '1.2.3', 'Updated' ) );
+	}
+
+	function test_gitium_ssh_encode_buffer() {
+		$buffer = "\x01\x02\x03";
+		$encoded = _gitium_ssh_encode_buffer( $buffer );
+
+		$this->assertEquals( pack( 'Na*', 3, $buffer ), $encoded );
+
+		$buffer = "\x80\x01";
+		$encoded = _gitium_ssh_encode_buffer( $buffer );
+		$this->assertEquals( pack( 'Na*', 3, "\x00" . $buffer ), $encoded );
+	}
+
+	function test_gitium_get_webhook_key_persists_and_regenerates() {
+		delete_option( 'gitium_webhook_key' );
+
+		$key = gitium_get_webhook_key();
+		$this->assertRegExp( '/^[a-f0-9]{32}$/', $key );
+		$this->assertEquals( $key, gitium_get_webhook_key() );
+
+		$new_key = gitium_get_webhook_key( true );
+		$this->assertRegExp( '/^[a-f0-9]{32}$/', $new_key );
+		$this->assertNotEquals( $key, $new_key );
+		$this->assertEquals( $new_key, gitium_get_webhook_key() );
+
+		delete_option( 'gitium_webhook_key' );
+	}
+
+	function test_gitium_get_webhook_contains_persisted_key() {
+		delete_option( 'gitium_webhook_key' );
+		$key = gitium_get_webhook_key();
+		$webhook = gitium_get_webhook();
+
+		$this->assertContains( 'gitium-webhook.php', $webhook );
+		$this->assertContains( 'key=' . $key, $webhook );
+
+		delete_option( 'gitium_webhook_key' );
+	}
 }
