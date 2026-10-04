@@ -55,6 +55,36 @@ class Test_Functions extends WP_UnitTestCase
 		$this->assertFalse( gitium_update_is_status_working() );
 	}
 
+	function test_gitium_maintenance_mode_can_be_enabled_and_disabled() {
+		$file = ABSPATH . '/.maintenance';
+		if ( file_exists( $file ) ) {
+			unlink( $file );
+		}
+
+		$this->assertTrue( gitium_enable_maintenance_mode() );
+		$this->assertFileExists( $file );
+		$this->assertRegExp( '/^\<\?php \$upgrading = \d+;$/', trim( file_get_contents( $file ) ) );
+		$this->assertTrue( gitium_disable_maintenance_mode() );
+		$this->assertFileNotExists( $file );
+	}
+
+	function test_gitium_get_versions_returns_cached_versions() {
+		$versions = array(
+			'themes' => array(
+				'example' => array(
+					'name'    => 'Example',
+					'version' => '1.0',
+					'msg'     => '`Example` version 1.0',
+				),
+			),
+		);
+		set_transient( 'gitium_versions', $versions );
+
+		$this->assertEquals( $versions, gitium_get_versions() );
+
+		delete_transient( 'gitium_versions' );
+	}
+
 	function test_gitium_format_message() {
 		$this->assertEquals( '`Plugin Name`', _gitium_format_message( 'Plugin Name' ) );
 		$this->assertEquals( '`Plugin Name` version 1.2.3', _gitium_format_message( 'Plugin Name', '1.2.3' ) );
