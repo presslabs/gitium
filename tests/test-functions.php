@@ -85,6 +85,36 @@ class Test_Functions extends WP_UnitTestCase
 		delete_transient( 'gitium_versions' );
 	}
 
+	function test_gitium_update_versions_includes_installed_gitium_plugin() {
+		$versions = gitium_update_versions();
+
+		$this->assertArrayHasKey( 'plugins', $versions );
+		$this->assertArrayHasKey( 'gitium/gitium.php', $versions['plugins'] );
+		$this->assertEquals( 'Gitium', $versions['plugins']['gitium/gitium.php']['name'] );
+		$this->assertEquals( '1.2.5', $versions['plugins']['gitium/gitium.php']['version'] );
+		$this->assertEquals( '`Gitium` version 1.2.5', $versions['plugins']['gitium/gitium.php']['msg'] );
+		$this->assertEquals( $versions, get_transient( 'gitium_versions' ) );
+	}
+
+	function test_gitium_merge_lock_can_be_acquired_and_released() {
+		$lock_path = tempnam( sys_get_temp_dir(), 'gitium-lock-' );
+		unlink( $lock_path );
+		add_filter( 'gitium_lock_path', function() use ( $lock_path ) {
+			return $lock_path;
+		} );
+
+		$lock = gitium_acquire_merge_lock();
+		$this->assertInternalType( 'array', $lock );
+		$this->assertEquals( $lock_path, $lock[0] );
+		$this->assertTrue( is_resource( $lock[1] ) );
+
+		gitium_release_merge_lock( $lock );
+		$this->assertFileExists( $lock_path );
+
+		remove_all_filters( 'gitium_lock_path' );
+		unlink( $lock_path );
+	}
+
 	function test_gitium_format_message() {
 		$this->assertEquals( '`Plugin Name`', _gitium_format_message( 'Plugin Name' ) );
 		$this->assertEquals( '`Plugin Name` version 1.2.3', _gitium_format_message( 'Plugin Name', '1.2.3' ) );
