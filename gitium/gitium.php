@@ -203,6 +203,7 @@ function gitium_upgrader_post_install( $res, $hook_extra, $result ) {
 
 	$git_dir = $result['destination'];
 	$version = '';
+	$old_version = false;
 
 	if ( ABSPATH == substr( $git_dir, 0, strlen( ABSPATH ) ) ) {
 		$git_dir = substr( $git_dir, strlen( ABSPATH ) );
@@ -210,11 +211,15 @@ function gitium_upgrader_post_install( $res, $hook_extra, $result ) {
 	switch ( $type ) {
 		case 'theme':
 			wp_clean_themes_cache();
+			$old_version = _gitium_get_previous_version( 'themes', $result['destination_name'] );
 			$theme_data = wp_get_theme( $result['destination_name'] );
 			$name       = $theme_data->get( 'Name' );
 			$version    = $theme_data->get( 'Version' );
 		break;
 		case 'plugin':
+			if ( isset( $hook_extra['plugin'] ) ) {
+				$old_version = _gitium_get_previous_version( 'plugins', $hook_extra['plugin'] );
+			}
 			foreach ( $result['source_files'] as $file ) :
 				if ( '.php' != substr( $file, -4 ) ) { continue; }
 				// every .php file is a possible plugin so we check if it's a plugin
@@ -232,7 +237,11 @@ function gitium_upgrader_post_install( $res, $hook_extra, $result ) {
 	if ( empty( $name ) ) {
 		$name = $result['destination_name'];
 	}
-	$commit_message = _gitium_format_message( $name,$version,"$action $type" );
+	if ( 'updated' === $action ) {
+		$commit_message = _gitium_format_update_message( $name, $old_version, $version, $type );
+	} else {
+		$commit_message = _gitium_format_message( $name, $version, "$action $type" );
+	}
 	$commit = _gitium_commit_changes( $commit_message, $git_dir, false );
 	gitium_merge_and_push( $commit );
 
