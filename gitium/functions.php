@@ -81,6 +81,30 @@ function _gitium_format_message( $name, $version = false, $prefix = '' ) {
 	return $commit_message;
 }
 
+function _gitium_format_update_message( $name, $old_version, $new_version, $type ) {
+	if ( $old_version && $new_version ) {
+		return sprintf(
+			'Updated %s `%s` from version %s to %s',
+			$type,
+			$name,
+			$old_version,
+			$new_version
+		);
+	}
+
+	return _gitium_format_message( $name, $new_version, "updated $type" );
+}
+
+function _gitium_get_previous_version( $type, $identifier ) {
+	$versions = get_transient( 'gitium_versions' );
+
+	if ( ! is_array( $versions ) || empty( $versions[ $type ][ $identifier ]['version'] ) ) {
+		return false;
+	}
+
+	return $versions[ $type ][ $identifier ]['version'];
+}
+
 /**
  * This function return the basic info about a path.
  *

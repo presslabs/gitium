@@ -57,6 +57,28 @@ class Test_Gitium extends WP_UnitTestCase {
 		$this->assertFalse( get_transient( 'gitium_git_version' ) );
 	}
 
+	function test_gitium_format_update_message() {
+		$this->assertEquals(
+			'Updated plugin `AutoVer` from version 1.2.3 to 1.2.4',
+			_gitium_format_update_message( 'AutoVer', '1.2.3', '1.2.4', 'plugin' )
+		);
+	}
+
+	function test_gitium_format_update_message_without_previous_version() {
+		$this->assertEquals(
+			'updated plugin `AutoVer` version 1.2.4',
+			_gitium_format_update_message( 'AutoVer', false, '1.2.4', 'plugin' )
+		);
+	}
+
+	function test_gitium_get_previous_version() {
+		$this->assertEquals( '1.2.3', _gitium_get_previous_version( 'plugins', 'autover/autover.php' ) );
+	}
+
+	function test_gitium_get_previous_version_without_cached_version() {
+		$this->assertFalse( _gitium_get_previous_version( 'plugins', 'missing/missing.php' ) );
+	}
+
 	function test_gitium_uninstall_hook() {
 		$deleted_options = array(
 			'gitium_keypair',
