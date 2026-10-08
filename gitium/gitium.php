@@ -233,12 +233,23 @@ function gitium_upgrader_post_install( $res, $hook_extra, $result ) {
 		$name = $result['destination_name'];
 	}
 	$commit_message = _gitium_format_message( $name,$version,"$action $type" );
-	$commit = _gitium_commit_changes( $commit_message, $git_dir, false );
-	gitium_merge_and_push( $commit );
+	// Only commit, the site may be in maintenance mode now. The commit is pushed by gitium_auto_push()
+	// when the update completes, after WordPress disabled the maintenance mode.
+	_gitium_commit_changes( $commit_message, $git_dir, false );
 
 	return $res;
 }
 add_filter( 'upgrader_post_install', 'gitium_upgrader_post_install', 10, 3 );
+
+// An update starts (the package is downloaded or uploaded)
+function gitium_upgrader_start( $reply ) {
+	gitium_protect_maintenance_mode();
+	return $reply;
+}
+add_filter( 'upgrader_pre_download', 'gitium_upgrader_start', 1 );
+add_filter( 'upgrader_pre_install', 'gitium_upgrader_start', 1 );
+
+add_action( 'init', 'gitium_remove_stale_maintenance_file', 1 );
 
 // Checks for local changes, tries to group them by plugin/theme and pushes the changes
 function gitium_auto_push( $msg_prepend = '' ) {
@@ -378,6 +389,20 @@ function gitium_remote_disconnected_notice() {
 	<?php endif;
 }
 add_action( 'admin_notices', 'gitium_remote_disconnected_notice' );
+
+function gitium_pending_push_notice() {
+	if ( ! current_user_can( GITIUM_MANAGE_OPTIONS_CAPABILITY ) || ! gitium_has_pending_push() ) {
+		return;
+	}
+	?>
+	<div class="notice notice-warning">
+		<p><strong>Gitium: the changes of the last plugin or theme update were not pushed to the remote repository.</strong></p>
+		<p>The update was interrupted (e.g. the request took too long and was stopped by the server) or the push failed. If the update was interrupted, the plugin or theme files may be incomplete: run the update again to make sure they are complete, then push the changes from the Gitium status page.</p>
+		<p><a class="button-primary" href="<?php echo esc_url( network_admin_url( 'update-core.php' ) ); ?>">Go to the Updates page</a> <a class="button" href="<?php echo esc_url( network_admin_url( 'admin.php?page=gitium/gitium.php' ) ); ?>">Go to the Gitium status page</a></p>
+	</div>
+	<?php
+}
+add_action( GITIUM_ADMIN_NOTICES_ACTION, 'gitium_pending_push_notice' );
 
 /*
  * Create a commit when a plugin is deleted through WP CLI.

@@ -244,18 +244,20 @@ class Gitium_Submenu_Status extends Gitium_Menu {
         // Get local status and behind commits
         $local_status = $this->git->local_status();
         $behind_commits = count( $this->git->get_behind_commits() );
+        // local commits that were not pushed, e.g. by a plugin update that was interrupted
+        $ahead_commits = count( $this->git->get_ahead_commits() );
 
         // Determine button value based on conditions
-        if ( $behind_commits > 0 && !empty( $local_status[1] ) ) {
+        if ( $behind_commits > 0 && ( !empty( $local_status[1] ) || $ahead_commits > 0 ) ) {
             $button_value = 'Pull & Push changes';
         } else if ( $behind_commits > 0 ) {
             $button_value = 'Pull changes';
-        } else if ( !empty( $local_status[1] ) ) {
+        } else if ( !empty( $local_status[1] ) || $ahead_commits > 0 ) {
             $button_value = 'Push changes';
         }
 
         // Check if there are any changes to display the form
-        if ( !empty( $changes ) ) : ?>
+        if ( !empty( $changes ) || $ahead_commits > 0 ) : ?>
             <p>
                 <label for="save-changes"><?php echo 'Commit message'; ?>:</label>
                 <input type="text" name="commitmsg" id="save-changes" class="widefat" value="" placeholder="<?php printf( 'Merged changes from %s on %s', esc_url(get_site_url()), esc_html(date( 'm.d.Y' ) )); ?>" />

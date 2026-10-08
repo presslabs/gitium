@@ -263,7 +263,137 @@ function gitium_merge_and_push( $commits ) {
 
 	gitium_release_merge_lock( $lock );
 
-	return $git->push() && $merge_status;
+	$pushed = $git->push() && $merge_status;
+	if ( $pushed ) {
+		delete_option( 'gitium_push_pending' );
+	}
+	return $pushed;
+}
+
+/*
+ * WordPress puts the site in maintenance mode (the .maintenance file) while it updates plugins and themes.
+ * When the update request is killed (e.g. by the PHP-FPM request_terminate_timeout) the file is left behind
+ * and the site is unavailable for 10 minutes. While an update runs, the request holds a shared lock and the
+ * .maintenance file is rewritten to keep the maintenance mode only while a request holds that lock: the
+ * system releases the lock when the process dies, so the site is available again right away.
+ */
+define( 'GITIUM_MAINTENANCE_MARK', 'Written by Gitium' );
+
+function gitium_maintenance_lock_path() {
+	return GIT_DIR . '/.git/gitium-maintenance.lock';
+}
+
+// Holds the shared lock until this request ends
+function gitium_hold_maintenance_lock() {
+	global $gitium_maintenance_lock;
+	if ( $gitium_maintenance_lock ) {
+		return true;
+	}
+	if ( ! is_dir( GIT_DIR . '/.git' ) ) {
+		return false;
+	}
+	$handle = @fopen( gitium_maintenance_lock_path(), 'c' );
+	if ( ! $handle ) {
+		return false;
+	}
+	if ( ! flock( $handle, LOCK_SH ) ) {
+		fclose( $handle );
+		return false;
+	}
+	$gitium_maintenance_lock = $handle;
+	return true;
+}
+
+// Whether a request (an update) holding the lock is still running
+function gitium_maintenance_lock_is_held() {
+	$handle = @fopen( gitium_maintenance_lock_path(), 'r' );
+	if ( ! $handle ) {
+		return false;
+	}
+	$free = flock( $handle, LOCK_EX | LOCK_NB );
+	fclose( $handle );
+	return ! $free;
+}
+
+function gitium_maintenance_file_content( $upgrading ) {
+	return '<?php
+// ' . GITIUM_MAINTENANCE_MARK . ', the maintenance mode ends when no Gitium request that started it is running.
+$upgrading = ' . (int) $upgrading . ';
+$gitium_lock = @fopen( ' . var_export( gitium_maintenance_lock_path(), true ) . ', \'r\' );
+if ( ! $gitium_lock || flock( $gitium_lock, LOCK_EX | LOCK_NB ) ) {
+	$upgrading = 0;
+}
+if ( $gitium_lock ) {
+	fclose( $gitium_lock );
+}
+';
+}
+
+// Called when a plugin or theme update starts, after WordPress enabled the maintenance mode
+function gitium_protect_maintenance_mode() {
+	global $wp_filesystem;
+	static $marked = false;
+
+	if ( ! gitium_hold_maintenance_lock() ) {
+		return;
+	}
+	// the changes of the update are pushed when it completes, until then they are pending
+	if ( ! $marked ) {
+		update_option( 'gitium_push_pending', time() );
+		$marked = true;
+	}
+
+	$file = ABSPATH . '.maintenance';
+	clearstatcache( true, $file );
+	if ( ! file_exists( $file ) ) {
+		return;
+	}
+	$content = @file_get_contents( $file );
+	if ( false === $content || false !== strpos( $content, GITIUM_MAINTENANCE_MARK ) ) {
+		return;
+	}
+	$upgrading = preg_match( '/\$upgrading\s*=\s*(\d+)/', $content, $matches ) ? (int) $matches[1] : time();
+	$content   = gitium_maintenance_file_content( $upgrading );
+	// write it the way WordPress wrote it
+	if ( is_object( $wp_filesystem ) && $wp_filesystem->put_contents( $wp_filesystem->abspath() . '.maintenance', $content, FS_CHMOD_FILE ) ) {
+		return;
+	}
+	@file_put_contents( $file, $content );
+}
+
+// The .maintenance file left by a killed update doesn't block the site, remove it
+function gitium_remove_stale_maintenance_file() {
+	$file = ABSPATH . '.maintenance';
+	if ( ! file_exists( $file ) ) {
+		return;
+	}
+	$content = @file_get_contents( $file );
+	if ( false === $content || false === strpos( $content, GITIUM_MAINTENANCE_MARK ) || gitium_maintenance_lock_is_held() ) {
+		return;
+	}
+	if ( @unlink( $file ) ) {
+		// wp_maintenance() loaded the file and set $upgrading, WordPress would show the
+		// "An automated WordPress update has failed to complete" nag for it
+		unset( $GLOBALS['upgrading'] );
+	}
+}
+
+/*
+ * Whether the changes of the last plugin or theme update were not pushed: the update was interrupted
+ * or its push failed. Returns false while an update is running.
+ */
+function gitium_has_pending_push() {
+	global $git;
+
+	if ( ! get_option( 'gitium_push_pending' ) || gitium_maintenance_lock_is_held() ) {
+		return false;
+	}
+	if ( $git->get_remote_tracking_branch() && ( $git->get_ahead_commits() || $git->get_local_changes() ) ) {
+		return true;
+	}
+	// nothing left to push
+	delete_option( 'gitium_push_pending' );
+	return false;
 }
 
 function gitium_check_after_event( $plugin, $event = 'activation' ) {
