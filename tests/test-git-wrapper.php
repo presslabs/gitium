@@ -371,4 +371,61 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		);
 	}
 
+	/**
+	 * Test revert_commit() on a regular commit
+	 */
+	function test_revert_commit() {
+		global $git;
+
+		$this->_add_changes_locally( 'local', true );
+		$commit_hash = key( $git->get_last_commits( 1 ) );
+
+		$this->assertTrue( $git->revert_commit( $commit_hash ) );
+		$this->assertFalse( file_exists( $this->local_file ) );
+		$this->assertFalse( $git->is_dirty() );
+	}
+
+	/**
+	 * Test revert_commit() on a merge commit (needs `-m 1`)
+	 */
+	function test_revert_merge_commit() {
+		global $git;
+
+		$this->_add_changes_locally( 'local', true );
+		$repo = escapeshellarg( $git->repo_dir );
+		$git_cmd = "git -C $repo -c user.name=Gitium -c user.email=gitium@presslabs.com";
+		exec( "$git_cmd checkout -q -b side" );
+		file_put_contents( $git->repo_dir . '/side-file.txt', 'side' . PHP_EOL );
+		$this->delete_on_teardown[] = $git->repo_dir . '/side-file.txt';
+		exec( "$git_cmd add side-file.txt && $git_cmd commit -q -m 'side commit'" );
+		exec( "$git_cmd checkout -q - && $git_cmd merge -q --no-ff -m 'Merge branch side' side" );
+		$commit_hash = key( $git->get_last_commits( 1 ) );
+
+		$this->assertTrue( $git->revert_commit( $commit_hash ) );
+		$this->assertFalse( file_exists( $git->repo_dir . '/side-file.txt' ) );
+		$this->assertTrue( file_exists( $this->local_file ) );
+		$this->assertFalse( $git->is_dirty() );
+	}
+
+	/**
+	 * Test revert_commit() aborts the revert when it conflicts
+	 */
+	function test_revert_commit_with_conflict_is_aborted() {
+		global $git;
+
+		$this->_add_changes_locally( 'first', true );
+		$this->_add_changes_locally( 'second', true );
+		$this->_add_changes_locally( 'third', true );
+		$commits = array_keys( $git->get_last_commits( 2 ) );
+		$head_before = $commits[0];
+
+		// reverting 'second' conflicts with 'third', both changed the same line
+		$this->assertFalse( $git->revert_commit( $commits[1] ) );
+		$this->assertNotEmpty( $git->get_last_error() );
+		$this->assertFalse( file_exists( $git->repo_dir . '/.git/REVERT_HEAD' ) );
+		$this->assertFalse( $git->is_dirty() );
+		$this->assertEquals( $head_before, key( $git->get_last_commits( 1 ) ) );
+		$this->assertEquals( 'third' . PHP_EOL, file_get_contents( $this->local_file ) );
+	}
+
 }

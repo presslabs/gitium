@@ -89,6 +89,7 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 	}
 
 	public function page() {
+		$this->show_message();
 		?>
 		<div class="wrap">
 			<h2><?php printf( 'Last %s commits', esc_html( GITIUM_LAST_COMMITS ) ); ?></h2>
