@@ -254,6 +254,13 @@ function gitium_auto_push( $msg_prepend = '' ) {
 }
 add_action( 'upgrader_process_complete', 'gitium_auto_push', 11, 0 );
 
+/*
+ * Lets other plugins trigger a commit and push after they change files, e.g.
+ * do_action( 'gitium_push' ) or do_action( 'gitium_push', 'my-plugin' ).
+ * The optional argument is appended to the commit messages.
+ */
+add_action( 'gitium_push', 'gitium_auto_push', 10, 1 );
+
 function gitium_check_after_activate_modifications( $plugin ) {
 	gitium_check_after_event( $plugin );
 }
