@@ -1,19 +1,23 @@
+<?xml version="1.0"?>
 <phpunit
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
         bootstrap="tests/bootstrap.php"
         backupGlobals="false"
         colors="true"
         convertErrorsToExceptions="true"
         convertNoticesToExceptions="true"
         convertWarningsToExceptions="true"
+        convertDeprecationsToExceptions="true"
 >
     <testsuites>
-        <testsuite>
+        <testsuite name="gitium">
             <directory prefix="test-" suffix=".php">./tests/</directory>
         </testsuite>
     </testsuites>
-    <filter>
-        <whitelist>
+    <coverage>
+        <include>
             <directory suffix=".php">./gitium/</directory>
-        </whitelist>
-    </filter>
+        </include>
+    </coverage>
 </phpunit>

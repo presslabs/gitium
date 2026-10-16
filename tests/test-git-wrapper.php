@@ -133,7 +133,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 
 	function test_cleanup_with_dot_git() {
 		global $git;
-		$dot_git_dir = $git->repo_dir . '/.git';
+		$dot_git_dir = $git->get_repo_dir() . '/.git';
 
 		// make sure that .git dir is already initialized and it is a true .git dir
 		$this->assertFileExists( $dot_git_dir );
@@ -141,14 +141,14 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		$this->assertFileExists( $dot_git_dir . '/index' );
 
 		$this->assertTrue( $git->cleanup() );
-		$this->assertFileNotExists( $dot_git_dir );
-		$this->assertFileNotExists( $dot_git_dir . '/config' );
-		$this->assertFileNotExists( $dot_git_dir . '/index' );
+		$this->assertFileDoesNotExist( $dot_git_dir );
+		$this->assertFileDoesNotExist( $dot_git_dir . '/config' );
+		$this->assertFileDoesNotExist( $dot_git_dir . '/index' );
 	}
 
 	function test_cleanup_with_wrong_dot_git() {
 		global $git;
-		$wrong_dot_git_dir = $git->repo_dir . '/.git';
+		$wrong_dot_git_dir = $git->get_repo_dir() . '/.git';
 		$git->cleanup(); // remove the already initialized .git dir
 		mkdir( $wrong_dot_git_dir ); // create a fake .git dir
 		$this->assertFalse( $git->cleanup() );
@@ -213,7 +213,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 	function test_repo_dir_init() {
 		$repo_dir_name = '/my/repo/dir';
 		$wrapper = new Git_Wrapper( $repo_dir_name );
-		$this->assertEquals( $repo_dir_name, $wrapper->repo_dir );
+		$this->assertEquals( $repo_dir_name, $wrapper->get_repo_dir() );
 	}
 
 	function test_merge_initial_commit() {
@@ -281,11 +281,11 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		global $git;
 		$filename     = 'some-file.txt';
 		$new_filename = 'another-file.txt';
-		file_put_contents( $git->repo_dir . '/' . $filename, 'some content' . PHP_EOL );
+		file_put_contents( $git->get_repo_dir() . '/' . $filename, 'some content' . PHP_EOL );
 		$git->add();
 		$git->commit('Add some file');
-		$response = explode( "\n", shell_exec( "cd {$git->repo_dir} ; git mv {$filename} {$new_filename}" ) );
-		$this->delete_on_teardown[] = $git->repo_dir . '/' . $new_filename;
+		$this->delete_on_teardown[] = $git->get_repo_dir() . '/' . $new_filename;
+		exec( "cd {$git->get_repo_dir()} ; git mv {$filename} {$new_filename}" );
 
 		list( $branch_status, $changes ) = $git->local_status();
 
@@ -312,7 +312,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 	function test_git_dir_constant() {
 		global $git;
 		$this->assertTrue( defined( 'GIT_DIR' ) );
-		$this->assertEquals( GIT_DIR, $git->repo_dir );
+		$this->assertEquals( GIT_DIR, $git->get_repo_dir() );
 	}
 
 	/**
@@ -320,7 +320,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 	 */
 	function test_commit_path_with_whitespace() {
 		global $git;
-		$dir = $git->repo_dir . "/some dir/";
+		$dir = $git->get_repo_dir() . "/some dir/";
 		$this->delete_on_teardown[] = $dir;
 		try {
 			mkdir( $dir, 0777, true );
@@ -328,8 +328,8 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		file_put_contents( $dir . "some file", "ana are mere" );
 		$git->add();
 		$changeset = $git->commit( "add path with whitespace" );
-		// chdir( $git->repo_dir );
-		$output = explode( "\n", shell_exec( "cd {$git->repo_dir} ; git show --name-status $changeset" ) );
+		// chdir( $git->get_repo_dir() );
+		$output = explode( "\n", shell_exec( "cd {$git->get_repo_dir()} ; git show --name-status $changeset" ) );
 		$expected = array(
 			"    add path with whitespace",
 			"",
@@ -343,7 +343,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 	 */
 	function test_is_dirty_with_whitespace() {
 		global $git;
-		$dir = $git->repo_dir . "/some dir/";
+		$dir = $git->get_repo_dir() . "/some dir/";
 		$this->delete_on_teardown[] = $dir;
 		try {
 			mkdir( $dir, 0777, true );
@@ -357,7 +357,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 	 */
 	function test_get_local_changes_with_whitespace() {
 		global $git;
-		$dir = $git->repo_dir . "/some dir/";
+		$dir = $git->get_repo_dir() . "/some dir/";
 		$this->delete_on_teardown[] = $dir;
 		try {
 			mkdir( $dir, 0777, true );
@@ -392,17 +392,17 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		global $git;
 
 		$this->_add_changes_locally( 'local', true );
-		$repo = escapeshellarg( $git->repo_dir );
+		$repo = escapeshellarg( $git->get_repo_dir() );
 		$git_cmd = "git -C $repo -c user.name=Gitium -c user.email=gitium@presslabs.com";
 		exec( "$git_cmd checkout -q -b side" );
-		file_put_contents( $git->repo_dir . '/side-file.txt', 'side' . PHP_EOL );
-		$this->delete_on_teardown[] = $git->repo_dir . '/side-file.txt';
+		file_put_contents( $git->get_repo_dir() . '/side-file.txt', 'side' . PHP_EOL );
+		$this->delete_on_teardown[] = $git->get_repo_dir() . '/side-file.txt';
 		exec( "$git_cmd add side-file.txt && $git_cmd commit -q -m 'side commit'" );
 		exec( "$git_cmd checkout -q - && $git_cmd merge -q --no-ff -m 'Merge branch side' side" );
 		$commit_hash = key( $git->get_last_commits( 1 ) );
 
 		$this->assertTrue( $git->revert_commit( $commit_hash ) );
-		$this->assertFalse( file_exists( $git->repo_dir . '/side-file.txt' ) );
+		$this->assertFalse( file_exists( $git->get_repo_dir() . '/side-file.txt' ) );
 		$this->assertTrue( file_exists( $this->local_file ) );
 		$this->assertFalse( $git->is_dirty() );
 	}
@@ -422,7 +422,7 @@ class Test_Git_Wrapper extends Gitium_UnitTestCase {
 		// reverting 'second' conflicts with 'third', both changed the same line
 		$this->assertFalse( $git->revert_commit( $commits[1] ) );
 		$this->assertNotEmpty( $git->get_last_error() );
-		$this->assertFalse( file_exists( $git->repo_dir . '/.git/REVERT_HEAD' ) );
+		$this->assertFalse( file_exists( $git->get_repo_dir() . '/.git/REVERT_HEAD' ) );
 		$this->assertFalse( $git->is_dirty() );
 		$this->assertEquals( $head_before, key( $git->get_last_commits( 1 ) ) );
 		$this->assertEquals( 'third' . PHP_EOL, file_get_contents( $this->local_file ) );
