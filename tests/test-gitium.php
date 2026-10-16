@@ -29,7 +29,8 @@ class Test_Gitium extends WP_UnitTestCase {
 	var $user_id;
 	var $factory;
 
-	function setup() {
+	function set_up() {
+		parent::set_up();
 		$this->factory = new WP_UnitTest_Factory();
 		$this->test_gitium_is_activated = is_plugin_active( $this->plugin );
 

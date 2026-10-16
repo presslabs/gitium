@@ -11,8 +11,13 @@
       "php": ">=7.3",
       "composer/installers": "^1.0"
     },
+    "config": {
+      "allow-plugins": {
+        "composer/installers": true
+      }
+    },
     "require-dev": {
-        "codeclimate/php-test-reporter": "dev-master",
-        "phpunit/phpunit": "~5.0"
+        "phpunit/phpunit": "^9.6",
+        "yoast/phpunit-polyfills": "^2.0"
     }
 }

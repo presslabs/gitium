@@ -75,7 +75,7 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		if ( isset( $meaning[ $change ] ) ) {
 			return $meaning[ $change ];
 		}
-		if ( 0 === strpos( $change, 'R ' ) ) {
+		if ( is_string( $change ) && 0 === strpos( $change, 'R ' ) ) {
 			$old_filename = substr( $change, 2 );
 			$change = sprintf( 'renamed from `%s`', $old_filename );
 		}

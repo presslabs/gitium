@@ -26,7 +26,7 @@ require_once 'gitium-unittestcase.php';
 class Test_Gitium_Init_Process extends Gitium_UnitTestCase {
 	function test_repo_dir() {
 		global $git;
-		$this->assertEquals( $git->repo_dir, dirname( WP_CONTENT_DIR ) );
+		$this->assertEquals( $git->get_repo_dir(), dirname( WP_CONTENT_DIR ) );
 	}
 
 	function gitium_init_process() {

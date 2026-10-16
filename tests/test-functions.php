@@ -23,12 +23,10 @@
 
 class Test_Functions extends WP_UnitTestCase
 {
-	function setup() {
+	function set_up() {
+		parent::set_up();
 		set_transient( 'gitium_remote_tracking_branch', 'some_branch' );
 		set_transient( 'gitium_is_status_working', true );
-	}
-
-	function teardown() {
 	}
 
 	function test_gitium_get_remote_tracking_branch() {

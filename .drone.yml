@@ -28,13 +28,17 @@ clone:
 
 pipeline:
   test-gitium:
-    image: presslabs/pl-test-containers:php-${PHP_VERSION}
+    image: php:${PHP_VERSION}-cli
     pull: true
     group: build
     commands:
+      - apt-get -qq update && apt-get -qq install -y git subversion unzip curl default-mysql-client > /dev/null
+      - docker-php-ext-install mysqli > /dev/null
+      - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+      - git config --global user.email gitium@presslabs.com && git config --global user.name Gitium
       - bash bin/install-wp-tests.sh wordpress_test root root_pass database ${WP_VERSION} true
       - composer install --no-progress
-      - dockerize --wait tcp://database:3306 -timeout 10s
+      - until mysqladmin ping -h database -uroot -proot_pass --silent; do sleep 1; done
       - make test
     environment:
       - WP_TESTS_DIR=/tmp/wordpress-tests-lib-${WP_VERSION}/
@@ -70,7 +74,7 @@ pipeline:
 
 services:
   database:
-    image: mysql
+    image: mysql:8.0
     environment:
       - MYSQL_DATABASE=wordpress_test
       - MYSQL_ROOT_PASSWORD=root_pass
@@ -81,7 +85,7 @@ workspace:
 
 matrix:
   WP_VERSION:
-    - 4.9.7
+    - latest
   PHP_VERSION:
-    - 7.1
-    - 7.2
+    - 8.3
+    - 8.4

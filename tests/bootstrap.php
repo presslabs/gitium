@@ -28,6 +28,11 @@ ini_set('display_startup_errors', '1');
 $_tests_dir = getenv( 'WP_TESTS_DIR' );
 if ( ! $_tests_dir ) $_tests_dir = '/tmp/wordpress-tests-lib';
 
+// The WordPress test suite (5.9+) requires the Yoast PHPUnit Polyfills.
+if ( ! defined( 'WP_TESTS_PHPUNIT_POLYFILLS_PATH' ) ) {
+	define( 'WP_TESTS_PHPUNIT_POLYFILLS_PATH', dirname( __DIR__ ) . '/vendor/yoast/phpunit-polyfills' );
+}
+
 define( 'WP_PLUGIN_DIR', dirname( __DIR__ ) );
 
 $GLOBALS['wp_tests_options'] = array(

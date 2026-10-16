@@ -107,6 +107,10 @@ class Git_Wrapper {
 		$this->repo_dir = $repo_dir;
 	}
 
+	function get_repo_dir() {
+		return $this->repo_dir;
+	}
+
 	function _rrmdir( $dir ) {
 		if ( empty( $dir ) || ! is_dir( $dir ) ) {
 			return false;
