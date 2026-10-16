@@ -37,22 +37,11 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 		}
 		check_admin_referer( 'gitium-admin' );
 
-		$commits = $this->git->get_last_commits( 1 );
-		if ( empty( $commits ) ) {
-			$this->redirect( 'No commits to revert.', false, $this->commits_menu_slug );
-		}
+		// the commit the user confirmed, it's reverted only if it's still the last one
+		$expected_hash = (string) filter_input( INPUT_POST, 'gitium_commit_hash', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 
-		$commit_hash = key( $commits );
-
-		if ( ! $this->git->revert_commit( $commit_hash ) ) {
-			$this->redirect( 'Could not revert commit: ' . $this->git->get_last_error(), false, $this->commits_menu_slug );
-		}
-
-		if ( ! $this->git->push() ) {
-			$this->redirect( 'Revert commit created locally but push failed: ' . $this->git->get_last_error(), false, $this->commits_menu_slug );
-		}
-
-		$this->success_redirect( 'Commit `' . $commit_hash . '` reverted and pushed successfully.', $this->commits_menu_slug );
+		list( $success, $message ) = gitium_revert_last_commit( $expected_hash );
+		$this->redirect( $message, $success, $this->commits_menu_slug );
 	}
 
 	public function admin_menu() {
@@ -146,6 +135,7 @@ class Gitium_Submenu_Commits extends Gitium_Menu {
 							<?php if ( $first ) : ?>
 							<form method="POST" style="display:inline;">
 								<?php wp_nonce_field( 'gitium-admin' ); ?>
+								<input type="hidden" name="gitium_commit_hash" value="<?php echo esc_attr( $commit_id ); ?>" />
 								<input type="submit"
 									name="GitiumSubmitRevertLastCommit"
 									class="button button-secondary"

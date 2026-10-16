@@ -266,6 +266,53 @@ function gitium_merge_and_push( $commits ) {
 	return $git->push() && $merge_status;
 }
 
+/*
+ * Reverts the last commit and pushes the revert, only if the last commit is still the one the user
+ * confirmed ($expected_hash): new commits (webhook merges, auto-push) can land after the page was loaded.
+ * Runs under the merge lock, so it doesn't touch the repo while a merge is in progress.
+ * Returns array( $success, $message ).
+ */
+function gitium_revert_last_commit( $expected_hash ) {
+	global $git;
+
+	$expected_hash = (string) $expected_hash;
+	if ( '' === $expected_hash ) {
+		return array( false, 'No commit to revert was given.' );
+	}
+
+	$lock = gitium_acquire_merge_lock();
+	if ( ! $lock ) {
+		return array( false, 'Another Gitium operation is in progress, please try again.' );
+	}
+
+	$commits = $git->get_last_commits( 1 );
+	if ( empty( $commits ) ) {
+		gitium_release_merge_lock( $lock );
+		return array( false, 'No commits to revert.' );
+	}
+
+	// cast: an all-digit short hash becomes an int array key
+	$commit_hash = (string) key( $commits );
+	if ( ! hash_equals( $commit_hash, $expected_hash ) ) {
+		gitium_release_merge_lock( $lock );
+		return array( false, 'The latest commit changed since the page was loaded. Please review and try again.' );
+	}
+
+	$reverted = $git->revert_commit( $commit_hash );
+	$pushed   = $reverted && $git->push();
+	$error    = $git->get_last_error();
+
+	gitium_release_merge_lock( $lock );
+
+	if ( ! $reverted ) {
+		return array( false, 'Could not revert commit: ' . $error );
+	}
+	if ( ! $pushed ) {
+		return array( false, 'Revert commit created locally but push failed: ' . $error );
+	}
+	return array( true, 'Commit `' . $commit_hash . '` reverted and pushed successfully.' );
+}
+
 function gitium_check_after_event( $plugin, $event = 'activation' ) {
 	global $git;
 
