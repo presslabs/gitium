@@ -210,7 +210,7 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 			$counter++;
 			echo ( 0 != $counter % 2 ) ? '<tr class="alternate">' : '<tr>';
 			echo '<td><strong>' . esc_html( $path ) . '</strong>';
-			echo '<div class="row-actions"><span class="edit"><a href="#" onclick="add_path_and_submit(\'' . esc_html($path) . '\');">' . 'Add this file to the `.gitignore` list.' . '</a></span></div></td>';
+			echo '<div class="row-actions"><span class="edit"><a href="#" onclick="add_path_and_submit(\'' . esc_js( $path ) . '\');">' . 'Add this file to the `.gitignore` list.' . '</a></span></div></td>';
 			echo '<td>';
 			if ( is_dir( ABSPATH . '/' . $path ) && is_dir( ABSPATH . '/' . trailingslashit( $path ) . '.git' ) ) { // test if is submodule
 				echo 'Submodules are not supported in this version.';
