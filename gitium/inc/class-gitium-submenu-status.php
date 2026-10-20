@@ -83,11 +83,13 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 	}
 
 	public function save_ignorelist() {
-	    $gitium_ignore_path = filter_input(INPUT_POST, 'GitiumIgnorePath', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+		// the raw path: it's written to .gitignore, HTML entities would not match the file name
+		$gitium_ignore_path = filter_input( INPUT_POST, 'GitiumIgnorePath', FILTER_UNSAFE_RAW );
 		if ( ! isset( $gitium_ignore_path ) ) {
 			return;
 		} else {
-			$path = $gitium_ignore_path;
+			// a single .gitignore line
+			$path = str_replace( array( "\r", "\n" ), '', $gitium_ignore_path );
 		}
 		check_admin_referer( 'gitium-admin' );
 
@@ -210,7 +212,7 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 			$counter++;
 			echo ( 0 != $counter % 2 ) ? '<tr class="alternate">' : '<tr>';
 			echo '<td><strong>' . esc_html( $path ) . '</strong>';
-			echo '<div class="row-actions"><span class="edit"><a href="#" onclick="add_path_and_submit(\'' . esc_html($path) . '\');">' . 'Add this file to the `.gitignore` list.' . '</a></span></div></td>';
+			echo '<div class="row-actions"><span class="edit"><a href="#" onclick="add_path_and_submit(\'' . esc_js( $path ) . '\');">' . 'Add this file to the `.gitignore` list.' . '</a></span></div></td>';
 			echo '<td>';
 			if ( is_dir( ABSPATH . '/' . $path ) && is_dir( ABSPATH . '/' . trailingslashit( $path ) . '.git' ) ) { // test if is submodule
 				echo 'Submodules are not supported in this version.';
