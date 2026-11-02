@@ -219,6 +219,31 @@ function gitium_commit_and_push_gitignore_file( $path = '' ) {
 	gitium_merge_and_push( $commit );
 }
 
+/*
+ * Escapes a file path as a .gitignore line that matches only that file: the pattern characters
+ * (`\`, `*`, `?`, `[`), a leading `!` or `#` and the trailing spaces are escaped with a backslash.
+ */
+function gitium_gitignore_escape( $path ) {
+	$line = addcslashes( $path, '\\*?[' );
+	if ( '' !== $line && ( '!' === $line[0] || '#' === $line[0] ) ) {
+		$line = '\\' . $line;
+	}
+	$trimmed = rtrim( $line, ' ' );
+	return $trimmed . str_repeat( '\\ ', strlen( $line ) - strlen( $trimmed ) );
+}
+
+// Adds the file to .gitignore, removes it from version control and pushes the change
+function gitium_ignore_path( $path ) {
+	global $git;
+
+	$line = gitium_gitignore_escape( $path );
+	if ( ! $git->set_gitignore( join( "\n", array_unique( array_merge( explode( "\n", $git->get_gitignore() ), array( $line ) ) ) ) ) ) {
+		return false;
+	}
+	gitium_commit_and_push_gitignore_file( $path );
+	return true;
+}
+
 if ( ! function_exists( 'gitium_acquire_merge_lock' ) ) :
 	function gitium_acquire_merge_lock() {
 		$gitium_lock_path   = apply_filters( 'gitium_lock_path', sys_get_temp_dir().'/.gitium-lock' );
