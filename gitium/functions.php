@@ -245,11 +245,13 @@ function gitium_ignore_path( $path ) {
 }
 
 if ( ! function_exists( 'gitium_acquire_merge_lock' ) ) :
-	function gitium_acquire_merge_lock() {
+	// $timeout: seconds to wait for the lock, by default the request's max_execution_time - 5 (at least 10)
+	function gitium_acquire_merge_lock( $timeout = null ) {
 		$gitium_lock_path   = apply_filters( 'gitium_lock_path', sys_get_temp_dir().'/.gitium-lock' );
 		$gitium_lock_handle = fopen( $gitium_lock_path, 'w+' );
 
-		$lock_timeout    = intval( ini_get( 'max_execution_time' ) ) > 10 ? intval( ini_get( 'max_execution_time' ) ) - 5 : 10;
+		$lock_timeout    = ( null !== $timeout ) ? (int) $timeout
+			: ( intval( ini_get( 'max_execution_time' ) ) > 10 ? intval( ini_get( 'max_execution_time' ) ) - 5 : 10 );
 		$lock_timeout_ms = 10;
 		$lock_retries    = 0;
 		while ( ! flock( $gitium_lock_handle, LOCK_EX | LOCK_NB ) ) {
@@ -305,7 +307,8 @@ function gitium_revert_last_commit( $expected_hash ) {
 		return array( false, 'No commit to revert was given.' );
 	}
 
-	$lock = gitium_acquire_merge_lock();
+	// a short wait: the revert and the push must finish before the web request is killed
+	$lock = gitium_acquire_merge_lock( 10 );
 	if ( ! $lock ) {
 		return array( false, 'Another Gitium operation is in progress, please try again.' );
 	}

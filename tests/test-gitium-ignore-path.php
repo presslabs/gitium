@@ -87,6 +87,7 @@ class Test_Gitium_Ignore_Path extends Gitium_UnitTestCase {
 		$this->_put_file( "{$this->test_dir}/good/b.php" );
 		$git->add();
 		$git->commit( 'Add tracked files' );
+		$this->assertTrue( $git->push() );
 		$this->_put_file( "{$this->test_dir}/*", 'planted' );
 
 		$this->assertTrue( gitium_ignore_path( "{$this->test_dir}/*" ) );
@@ -108,6 +109,7 @@ class Test_Gitium_Ignore_Path extends Gitium_UnitTestCase {
 		$this->_put_file( "{$this->test_dir}/other.txt" );
 		$git->add();
 		$git->commit( 'Add tracked files' );
+		$this->assertTrue( $git->push() );
 
 		$this->assertTrue( gitium_ignore_path( "{$this->test_dir}/x');alert(1);('.txt" ) );
 

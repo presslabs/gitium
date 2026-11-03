@@ -89,10 +89,22 @@ class Test_Gitium_Revert extends Gitium_UnitTestCase {
 		$lock_handle = fopen( $lock_path, 'w+' );
 		$this->assertTrue( flock( $lock_handle, LOCK_EX | LOCK_NB ) );
 
-		list( $success, $message ) = gitium_revert_last_commit( $commit_hash );
+		// like a web request: the default lock wait would be 60 - 5 = 55s
+		$max_execution_time = ini_get( 'max_execution_time' );
+		ini_set( 'max_execution_time', 60 );
+		$start = microtime( true );
+		try {
+			list( $success, $message ) = gitium_revert_last_commit( $commit_hash );
+		} finally {
+			$elapsed = microtime( true ) - $start;
+			ini_set( 'max_execution_time', $max_execution_time );
+			flock( $lock_handle, LOCK_UN );
+			fclose( $lock_handle );
+		}
 
-		flock( $lock_handle, LOCK_UN );
-		fclose( $lock_handle );
+		// the revert gives up after about 10s, not max_execution_time - 5
+		$this->assertGreaterThanOrEqual( 9, $elapsed );
+		$this->assertLessThan( 20, $elapsed );
 
 		$this->assertFalse( $success );
 		$this->assertTrue( false !== strpos( $message, 'Another Gitium operation is in progress' ), $message );
