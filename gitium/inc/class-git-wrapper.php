@@ -652,6 +652,59 @@ class Git_Wrapper {
 		return ( $return == 0 );
 	}
 
+	/**
+	 * Remove the `.git/index.lock` left behind by a git process that was killed with its request
+	 * (e.g. by the PHP-FPM request_terminate_timeout): while it exists every git command that writes
+	 * the index fails with "Unable to create '.../index.lock': File exists".
+	 *
+	 * It's removed only if it's older than $max_age seconds and no git process is running in the repo,
+	 * so a git command that is still working keeps its lock. Returns true if the lock was removed.
+	 */
+	function remove_stale_index_lock( $max_age = 300 ) {
+		$index_lock = $this->repo_dir . '/.git/index.lock';
+		clearstatcache( true, $index_lock );
+		if ( ! file_exists( $index_lock ) ) {
+			return false;
+		}
+
+		$age = time() - filemtime( $index_lock );
+		if ( $age < $max_age || $this->is_git_running() ) {
+			return false;
+		}
+
+		if ( ! unlink( $index_lock ) ) {
+			return false;
+		}
+		error_log( "gitium: removed the stale '$index_lock' ({$age}s old), left by a git process that was killed" );
+		return true;
+	}
+
+	/**
+	 * Is a git process running with its working directory in the repo? It reads /proc, so on a system
+	 * without it (not Linux) it returns false and only the age of the lock is checked.
+	 */
+	function is_git_running() {
+		$repo_dir = realpath( $this->repo_dir );
+		if ( false === $repo_dir ) {
+			return false;
+		}
+		foreach ( glob( '/proc/[0-9]*', GLOB_ONLYDIR ) ?: array() as $proc ) {
+			if ( 'git' !== trim( (string) @file_get_contents( "$proc/comm" ) ) ) {
+				continue;
+			}
+			// a zombie has exited, it holds no lock (in a container nobody may ever reap it)
+			if ( preg_match( '/^State:\s*Z/m', (string) @file_get_contents( "$proc/status" ) ) ) {
+				continue;
+			}
+			$cwd = @readlink( "$proc/cwd" );
+			// a git process whose directory can't be read (another user) may be working in the repo
+			if ( false === $cwd || $cwd === $repo_dir || 0 === strpos( $cwd, $repo_dir . '/' ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	function revert_commit( $commit_hash ) {
 		list( $return, $response ) = $this->_call( 'rev-list', '--parents', '-n', '1', $commit_hash );
 		if ( 0 !== $return || empty( $response ) ) {
