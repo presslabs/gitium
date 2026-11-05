@@ -398,6 +398,7 @@ function gitium_pending_push_notice() {
 	<div class="notice notice-warning">
 		<p><strong>Gitium: the changes of the last plugin or theme update were not pushed to the remote repository.</strong></p>
 		<p>The update was interrupted (e.g. the request took too long and was stopped by the server) or the push failed. If the update was interrupted, the plugin or theme files may be incomplete: run the update again to make sure they are complete, then push the changes from the Gitium status page.</p>
+		<p>If the plugin or theme already shows the new version and there is no update to run again, reinstall it: upload its zip file from Plugins &rarr; Add New Plugin &rarr; Upload Plugin (or Themes &rarr; Add New Theme &rarr; Upload Theme) and choose to replace the current version, or run <code>wp plugin install &lt;plugin&gt; --force</code> (or <code>wp theme install &lt;theme&gt; --force</code>).</p>
 		<p><a class="button-primary" href="<?php echo esc_url( network_admin_url( 'update-core.php' ) ); ?>">Go to the Updates page</a> <a class="button" href="<?php echo esc_url( network_admin_url( 'admin.php?page=gitium/gitium.php' ) ); ?>">Go to the Gitium status page</a></p>
 	</div>
 	<?php
