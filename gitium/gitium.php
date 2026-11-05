@@ -92,9 +92,11 @@ function gitium_uninstall_hook() {
 	delete_transient( 'gitium_versions' );
 	delete_transient( 'gitium_menu_bubble' );
 	delete_transient( 'gitium_is_status_working' );
+	delete_transient( 'gitium_push_pending_check' );
 
 	delete_option( 'gitium_keypair' );
 	delete_option( 'gitium_webhook_key' );
+	delete_option( 'gitium_push_pending' );
 }
 register_uninstall_hook( __FILE__, 'gitium_uninstall_hook' );
 

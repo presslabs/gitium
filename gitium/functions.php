@@ -266,6 +266,7 @@ function gitium_merge_and_push( $commits ) {
 	$pushed = $git->push() && $merge_status;
 	if ( $pushed ) {
 		delete_option( 'gitium_push_pending' );
+		delete_transient( 'gitium_push_pending_check' );
 	}
 	return $pushed;
 }
@@ -340,6 +341,7 @@ function gitium_protect_maintenance_mode() {
 	// the changes of the update are pushed when it completes, until then they are pending
 	if ( ! $marked ) {
 		update_option( 'gitium_push_pending', time() );
+		delete_transient( 'gitium_push_pending_check' );
 		$marked = true;
 	}
 
@@ -380,7 +382,8 @@ function gitium_remove_stale_maintenance_file() {
 
 /*
  * Whether the changes of the last plugin or theme update were not pushed: the update was interrupted
- * or its push failed. Returns false while an update is running.
+ * or its push failed. Returns false while an update is running. It's called on every admin page, so
+ * the result of the git commands is cached for a minute.
  */
 function gitium_has_pending_push() {
 	global $git;
@@ -388,11 +391,17 @@ function gitium_has_pending_push() {
 	if ( ! get_option( 'gitium_push_pending' ) || gitium_maintenance_lock_is_held() ) {
 		return false;
 	}
-	if ( $git->get_remote_tracking_branch() && ( $git->get_ahead_commits() || $git->get_local_changes() ) ) {
+	$pending = get_transient( 'gitium_push_pending_check' );
+	if ( false === $pending ) {
+		$pending = ( $git->get_remote_tracking_branch() && ( $git->get_ahead_commits() || $git->get_local_changes() ) ) ? 1 : 0;
+		set_transient( 'gitium_push_pending_check', $pending, MINUTE_IN_SECONDS );
+	}
+	if ( $pending ) {
 		return true;
 	}
 	// nothing left to push
 	delete_option( 'gitium_push_pending' );
+	delete_transient( 'gitium_push_pending_check' );
 	return false;
 }
 
