@@ -235,6 +235,12 @@ if ( ! function_exists( 'gitium_acquire_merge_lock' ) ) :
 			}
 		}
 		gitium_error_log( __FUNCTION__ );
+
+		// a git process killed with an earlier request can leave the index locked, clean it up first
+		global $git;
+		if ( isset( $git ) ) {
+			$git->remove_stale_index_lock( (int) apply_filters( 'gitium_stale_index_lock_age', 300 ) );
+		}
 		return array( $gitium_lock_path, $gitium_lock_handle );
 	}
 endif;
