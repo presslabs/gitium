@@ -648,7 +648,8 @@ class Git_Wrapper {
 	 * Remove files in .gitignore from version control
 	 */
 	function rm_cached( $path ) {
-		list( $return, ) = $this->_call( 'rm', '--cached', $path );
+		// the path is a file name, not a pathspec: no globs (`*`, `?`, `[`), no options after `--`
+		list( $return, ) = $this->_call( 'rm', '--cached', '--', ':(literal)' . $path );
 		return ( $return == 0 );
 	}
 

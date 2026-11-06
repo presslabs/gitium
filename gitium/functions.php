@@ -219,12 +219,39 @@ function gitium_commit_and_push_gitignore_file( $path = '' ) {
 	gitium_merge_and_push( $commit );
 }
 
+/*
+ * Escapes a file path as a .gitignore line that matches only that file: the pattern characters
+ * (`\`, `*`, `?`, `[`), a leading `!` or `#` and the trailing spaces are escaped with a backslash.
+ */
+function gitium_gitignore_escape( $path ) {
+	$line = addcslashes( $path, '\\*?[' );
+	if ( '' !== $line && ( '!' === $line[0] || '#' === $line[0] ) ) {
+		$line = '\\' . $line;
+	}
+	$trimmed = rtrim( $line, ' ' );
+	return $trimmed . str_repeat( '\\ ', strlen( $line ) - strlen( $trimmed ) );
+}
+
+// Adds the file to .gitignore, removes it from version control and pushes the change
+function gitium_ignore_path( $path ) {
+	global $git;
+
+	$line = gitium_gitignore_escape( $path );
+	if ( ! $git->set_gitignore( join( "\n", array_unique( array_merge( explode( "\n", $git->get_gitignore() ), array( $line ) ) ) ) ) ) {
+		return false;
+	}
+	gitium_commit_and_push_gitignore_file( $path );
+	return true;
+}
+
 if ( ! function_exists( 'gitium_acquire_merge_lock' ) ) :
-	function gitium_acquire_merge_lock() {
+	// $timeout: seconds to wait for the lock, by default the request's max_execution_time - 5 (at least 10)
+	function gitium_acquire_merge_lock( $timeout = null ) {
 		$gitium_lock_path   = apply_filters( 'gitium_lock_path', sys_get_temp_dir().'/.gitium-lock' );
 		$gitium_lock_handle = fopen( $gitium_lock_path, 'w+' );
 
-		$lock_timeout    = intval( ini_get( 'max_execution_time' ) ) > 10 ? intval( ini_get( 'max_execution_time' ) ) - 5 : 10;
+		$lock_timeout    = ( null !== $timeout ) ? (int) $timeout
+			: ( intval( ini_get( 'max_execution_time' ) ) > 10 ? intval( ini_get( 'max_execution_time' ) ) - 5 : 10 );
 		$lock_timeout_ms = 10;
 		$lock_retries    = 0;
 		while ( ! flock( $gitium_lock_handle, LOCK_EX | LOCK_NB ) ) {
@@ -403,6 +430,54 @@ function gitium_has_pending_push() {
 	delete_option( 'gitium_push_pending' );
 	delete_transient( 'gitium_push_pending_check' );
 	return false;
+}
+
+/*
+ * Reverts the last commit and pushes the revert, only if the last commit is still the one the user
+ * confirmed ($expected_hash): new commits (webhook merges, auto-push) can land after the page was loaded.
+ * Runs under the merge lock, so it doesn't touch the repo while a merge is in progress.
+ * Returns array( $success, $message ).
+ */
+function gitium_revert_last_commit( $expected_hash ) {
+	global $git;
+
+	$expected_hash = (string) $expected_hash;
+	if ( '' === $expected_hash ) {
+		return array( false, 'No commit to revert was given.' );
+	}
+
+	// a short wait: the revert and the push must finish before the web request is killed
+	$lock = gitium_acquire_merge_lock( 10 );
+	if ( ! $lock ) {
+		return array( false, 'Another Gitium operation is in progress, please try again.' );
+	}
+
+	$commits = $git->get_last_commits( 1 );
+	if ( empty( $commits ) ) {
+		gitium_release_merge_lock( $lock );
+		return array( false, 'No commits to revert.' );
+	}
+
+	// cast: an all-digit short hash becomes an int array key
+	$commit_hash = (string) key( $commits );
+	if ( ! hash_equals( $commit_hash, $expected_hash ) ) {
+		gitium_release_merge_lock( $lock );
+		return array( false, 'The latest commit changed since the page was loaded. Please review and try again.' );
+	}
+
+	$reverted = $git->revert_commit( $commit_hash );
+	$pushed   = $reverted && $git->push();
+	$error    = $git->get_last_error();
+
+	gitium_release_merge_lock( $lock );
+
+	if ( ! $reverted ) {
+		return array( false, 'Could not revert commit: ' . $error );
+	}
+	if ( ! $pushed ) {
+		return array( false, 'Revert commit created locally but push failed: ' . $error );
+	}
+	return array( true, 'Commit `' . $commit_hash . '` reverted and pushed successfully.' );
 }
 
 function gitium_check_after_event( $plugin, $event = 'activation' ) {

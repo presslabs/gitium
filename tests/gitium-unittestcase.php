@@ -83,6 +83,13 @@ class Gitium_UnitTestCase extends WP_UnitTestCase {
 		return $config->init_process( $this->remote_repo );
 	}
 
+	// Git_Wrapper::$repo_dir is private
+	protected function _get_repo_dir( $wrapper ) {
+		$property = new ReflectionProperty( 'Git_Wrapper', 'repo_dir' );
+		$property->setAccessible( true );
+		return $property->getValue( $wrapper );
+	}
+
 	public function setup() {
 		// create file with unique file name and with 0600 access permission
 		$dir = tempnam( sys_get_temp_dir(), 'gitium-' );
