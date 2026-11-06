@@ -92,9 +92,11 @@ function gitium_uninstall_hook() {
 	delete_transient( 'gitium_versions' );
 	delete_transient( 'gitium_menu_bubble' );
 	delete_transient( 'gitium_is_status_working' );
+	delete_transient( 'gitium_push_pending_check' );
 
 	delete_option( 'gitium_keypair' );
 	delete_option( 'gitium_webhook_key' );
+	delete_option( 'gitium_push_pending' );
 }
 register_uninstall_hook( __FILE__, 'gitium_uninstall_hook' );
 
@@ -233,12 +235,23 @@ function gitium_upgrader_post_install( $res, $hook_extra, $result ) {
 		$name = $result['destination_name'];
 	}
 	$commit_message = _gitium_format_message( $name,$version,"$action $type" );
-	$commit = _gitium_commit_changes( $commit_message, $git_dir, false );
-	gitium_merge_and_push( $commit );
+	// Only commit, the site may be in maintenance mode now. The commit is pushed by gitium_auto_push()
+	// when the update completes, after WordPress disabled the maintenance mode.
+	_gitium_commit_changes( $commit_message, $git_dir, false );
 
 	return $res;
 }
 add_filter( 'upgrader_post_install', 'gitium_upgrader_post_install', 10, 3 );
+
+// An update starts (the package is downloaded or uploaded)
+function gitium_upgrader_start( $reply ) {
+	gitium_protect_maintenance_mode();
+	return $reply;
+}
+add_filter( 'upgrader_pre_download', 'gitium_upgrader_start', 1 );
+add_filter( 'upgrader_pre_install', 'gitium_upgrader_start', 1 );
+
+add_action( 'init', 'gitium_remove_stale_maintenance_file', 1 );
 
 // Checks for local changes, tries to group them by plugin/theme and pushes the changes
 function gitium_auto_push( $msg_prepend = '' ) {
@@ -378,6 +391,21 @@ function gitium_remote_disconnected_notice() {
 	<?php endif;
 }
 add_action( 'admin_notices', 'gitium_remote_disconnected_notice' );
+
+function gitium_pending_push_notice() {
+	if ( ! current_user_can( GITIUM_MANAGE_OPTIONS_CAPABILITY ) || ! gitium_has_pending_push() ) {
+		return;
+	}
+	?>
+	<div class="notice notice-warning">
+		<p><strong>Gitium: the changes of the last plugin or theme update were not pushed to the remote repository.</strong></p>
+		<p>The update was interrupted (e.g. the request took too long and was stopped by the server) or the push failed. If the update was interrupted, the plugin or theme files may be incomplete: run the update again to make sure they are complete, then push the changes from the Gitium status page.</p>
+		<p>If the plugin or theme already shows the new version and there is no update to run again, reinstall it: upload its zip file from Plugins &rarr; Add New Plugin &rarr; Upload Plugin (or Themes &rarr; Add New Theme &rarr; Upload Theme) and choose to replace the current version, or run <code>wp plugin install &lt;plugin&gt; --force</code> (or <code>wp theme install &lt;theme&gt; --force</code>).</p>
+		<p><a class="button-primary" href="<?php echo esc_url( network_admin_url( 'update-core.php' ) ); ?>">Go to the Updates page</a> <a class="button" href="<?php echo esc_url( network_admin_url( 'admin.php?page=gitium/gitium.php' ) ); ?>">Go to the Gitium status page</a></p>
+	</div>
+	<?php
+}
+add_action( GITIUM_ADMIN_NOTICES_ACTION, 'gitium_pending_push_notice' );
 
 /*
  * Create a commit when a plugin is deleted through WP CLI.
