@@ -81,8 +81,37 @@ register_activation_hook( __FILE__, '_gitium_make_ssh_git_file_exe' );
 
 function gitium_deactivation() {
 	delete_transient( 'gitium_git_version' );
+	wp_clear_scheduled_hook( 'gitium_remove_stale_index_lock' );
 }
 register_deactivation_hook( __FILE__, 'gitium_deactivation' );
+
+/*
+ * A stale .git/index.lock is removed before every git command. The cron removes it too, so it's gone
+ * even when no git command runs for a while (e.g. nobody opens the Gitium pages and no webhook comes).
+ */
+function gitium_cron_schedules( $schedules ) {
+	$schedules['gitium_ten_minutes'] = array(
+		'interval' => 600,
+		'display'  => 'Every 10 minutes (Gitium)',
+	);
+	return $schedules;
+}
+add_filter( 'cron_schedules', 'gitium_cron_schedules' );
+
+// scheduled on init, not on activation: the sites that update the plugin don't activate it again
+function gitium_schedule_remove_stale_index_lock() {
+	if ( ! wp_next_scheduled( 'gitium_remove_stale_index_lock' ) ) {
+		wp_schedule_event( time(), 'gitium_ten_minutes', 'gitium_remove_stale_index_lock' );
+	}
+}
+add_action( 'init', 'gitium_schedule_remove_stale_index_lock' );
+
+function gitium_remove_stale_index_lock() {
+	global $git;
+
+	$git->remove_stale_index_lock();
+}
+add_action( 'gitium_remove_stale_index_lock', 'gitium_remove_stale_index_lock' );
 
 function gitium_uninstall_hook() {
 	delete_transient( 'gitium_remote_tracking_branch' );
