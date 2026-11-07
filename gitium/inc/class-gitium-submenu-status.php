@@ -129,14 +129,22 @@ class Gitium_Submenu_Status extends Gitium_Menu {
 		$local_status = $this->git->local_status();
 		$behind_commits = count( $this->git->get_behind_commits() );
         
+		// another Gitium request (webhook, auto-push) may be writing the index too
+		$lock = gitium_acquire_merge_lock();
+		if ( ! $lock ) {
+			gitium_disable_maintenance_mode();
+			$this->redirect( 'Another Gitium operation is in progress, please try again.' );
+		}
 		if ( $this->git->is_dirty() && $this->git->add() > 0 ) {
 			$commit = $this->git->commit( $commitmsg, $current_user->display_name, $current_user->user_email );
 			if ( ! $commit ) {
+				gitium_release_merge_lock( $lock );
 				gitium_disable_maintenance_mode();
 				$this->redirect( 'Could not commit!');
 			}
 			$commits[] = $commit;
 		}
+		gitium_release_merge_lock( $lock );
 
 		$merge_success = gitium_merge_and_push( $commits );
 		

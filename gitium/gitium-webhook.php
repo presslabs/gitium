@@ -70,9 +70,12 @@ if ( ! empty ( $webhook_key ) && isset( $get_key ) && $webhook_key == $get_key )
 	$commits   = array();
 	$commitmsg = sprintf( 'Merged changes from %s on %s', $_SERVER['SERVER_NAME'], date( 'm.d.Y' ) );
 	
+	// another Gitium request (Save changes, auto-push) may be writing the index too
+	$lock = gitium_acquire_merge_lock() or trigger_error( 'Timeout when gitium lock was acquired', E_USER_ERROR );
 	if ( $git->is_dirty() && $git->add() > 0 ) {
 		$commits[] = $git->commit( $commitmsg ) or trigger_error( 'Could not commit local changes!', E_USER_ERROR );
 	}
+	gitium_release_merge_lock( $lock );
 	gitium_merge_and_push( $commits ) or trigger_error( 'Failed merge & push: ' . esc_html(serialize( $git->get_last_error() ) ), E_USER_ERROR );
 
 	wp_die( esc_html($commitmsg) , 'Pull done!', array( 'response' => 200 ) );
