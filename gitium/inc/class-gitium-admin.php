@@ -39,6 +39,7 @@ class Gitium_Admin {
 				new Gitium_Submenu_Commits();
 				new Gitium_Submenu_Settings();
 				new Gitium_Menu_Bubble();
+				new Gitium_Index_Lock_Notice();
 			} else {
 				new Gitium_Submenu_Configure();
 			}

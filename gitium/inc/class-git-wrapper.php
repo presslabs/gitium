@@ -663,14 +663,27 @@ class Git_Wrapper {
 	 * Gitium runs git from PHP requests, which are ended long before $min_age seconds, so a lock
 	 * that old has no running git behind it. Returns true if the lock was removed.
 	 */
-	function remove_stale_index_lock( $min_age = 600 ) {
-		$index_lock = $this->repo_dir . '/.git/index.lock';
+	function get_index_lock_path() {
+		return $this->repo_dir . '/.git/index.lock';
+	}
+
+	// the age in seconds of the .git/index.lock, false if there is none
+	function get_index_lock_age() {
+		$index_lock = $this->get_index_lock_path();
 		clearstatcache( true, $index_lock );
 		if ( ! file_exists( $index_lock ) ) {
 			return false;
 		}
+		return time() - filemtime( $index_lock );
+	}
 
-		$age = time() - filemtime( $index_lock );
+	function remove_stale_index_lock( $min_age = 600 ) {
+		$age = $this->get_index_lock_age();
+		if ( false === $age ) {
+			return false;
+		}
+
+		$index_lock = $this->get_index_lock_path();
 		if ( $age < $min_age || ! @unlink( $index_lock ) ) {
 			return false;
 		}
