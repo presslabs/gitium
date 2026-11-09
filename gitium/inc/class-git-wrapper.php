@@ -165,6 +165,9 @@ class Git_Wrapper {
 	}
 
 	protected function _call(...$args) {
+		// a git process killed with an earlier request can leave the index locked
+		$this->remove_stale_index_lock();
+
 		$args     = join( ' ', array_map( 'escapeshellarg', $args ) );
 		$return   = -1;
 		$response = array();
@@ -650,6 +653,29 @@ class Git_Wrapper {
 	function rm_cached( $path ) {
 		list( $return, ) = $this->_call( 'rm', '--cached', $path );
 		return ( $return == 0 );
+	}
+
+	/**
+	 * Remove the `.git/index.lock` left behind by a git process that was killed with its request
+	 * (e.g. by the PHP-FPM request_terminate_timeout): while it exists every git command that writes
+	 * the index fails with "Unable to create '.../index.lock': File exists".
+	 *
+	 * Gitium runs git from PHP requests, which are ended long before $min_age seconds, so a lock
+	 * that old has no running git behind it. Returns true if the lock was removed.
+	 */
+	function remove_stale_index_lock( $min_age = 600 ) {
+		$index_lock = $this->repo_dir . '/.git/index.lock';
+		clearstatcache( true, $index_lock );
+		if ( ! file_exists( $index_lock ) ) {
+			return false;
+		}
+
+		$age = time() - filemtime( $index_lock );
+		if ( $age < $min_age || ! @unlink( $index_lock ) ) {
+			return false;
+		}
+		error_log( "gitium: removed the stale '$index_lock' ({$age}s old), left by a git process that was killed" );
+		return true;
 	}
 
 	function revert_commit( $commit_hash ) {
