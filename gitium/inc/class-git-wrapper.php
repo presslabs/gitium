@@ -165,8 +165,8 @@ class Git_Wrapper {
 	}
 
 	protected function _call(...$args) {
-		// a git process killed with an earlier request can leave the index locked
-		$this->remove_stale_index_lock();
+		// a git process killed with an earlier request can leave the index or a ref locked
+		$this->remove_stale_locks();
 
 		$args     = join( ' ', array_map( 'escapeshellarg', $args ) );
 		$return   = -1;
@@ -383,16 +383,36 @@ class Git_Wrapper {
 		// get the local branch
 		$local_branch  = $this->get_local_branch();
 
+		if ( ! $remote_branch || ! $local_branch ) {
+			return false;
+		}
+
+		// a 'merge_local' left by a merge that was killed would block the rename below: keep it aside
+		if ( 'merge_local' != $local_branch && $this->_branch_exists( 'merge_local' ) ) {
+			$backup = 'merge_local-' . gmdate( 'YmdHis' );
+			$this->_call( 'branch', '-m', 'merge_local', $backup );
+			error_log( "gitium: renamed the 'merge_local' branch left by a killed merge to '$backup'" );
+		}
+
 		// rename the local branch to 'merge_local'
-		$this->_call( 'branch', '-m', 'merge_local' );
+		list( $return, ) = $this->_call( 'branch', '-m', 'merge_local' );
+		if ( $return != 0 ) {
+			// going on would leave the local branch as it is, maybe behind the remote one,
+			// and its push would be rejected as non-fast-forward, hiding this error
+			return false;
+		}
 
 		// local branch set up to track remote branch
-		$this->_call( 'branch', $local_branch, $remote_branch );
+		list( $return, ) = $this->_call( 'branch', $local_branch, $remote_branch );
+		if ( $return != 0 ) {
+			$this->_restore_local_branch( $local_branch );
+			return false;
+		}
 
 		// checkout to the $local_branch
 		list( $return, ) = $this->_call( 'checkout', $local_branch );
 		if ( $return != 0 ) {
-			$this->_call( 'branch', '-M', $local_branch );
+			$this->_restore_local_branch( $local_branch );
 			return false;
 		}
 
@@ -406,11 +426,25 @@ class Git_Wrapper {
 			$this->_call( 'branch', '-D', 'merge_local' );
 			return true;
 		} else {
+			$last_error = $this->last_error ?: __( 'Could not resolve the merge conflicts', 'gitium' );
 			$this->_call( 'cherry-pick', '--abort' );
 			$this->_call( 'checkout', '-b', 'merge_local' );
 			$this->_call( 'branch', '-M', $local_branch );
+			$this->last_error = $last_error;
 			return false;
 		}
+	}
+
+	// rename 'merge_local' back to $local_branch after a failed merge, keeping the error that stopped it
+	private function _restore_local_branch( $local_branch ) {
+		$last_error = $this->last_error;
+		$this->_call( 'branch', '-M', $local_branch );
+		$this->last_error = $last_error;
+	}
+
+	private function _branch_exists( $branch ) {
+		list( $return, ) = $this->_call( 'rev-parse', '--verify', '--quiet', "refs/heads/$branch" );
+		return ( 0 == $return );
 	}
 
 	function successfully_merged() {
@@ -665,17 +699,47 @@ class Git_Wrapper {
 	 * that old has no running git behind it. Returns true if the lock was removed.
 	 */
 	function remove_stale_index_lock( $min_age = 600 ) {
-		$index_lock = $this->repo_dir . '/.git/index.lock';
-		clearstatcache( true, $index_lock );
-		if ( ! file_exists( $index_lock ) ) {
+		return $this->_remove_stale_lock( $this->repo_dir . '/.git/index.lock', $min_age );
+	}
+
+	/**
+	 * Remove all the stale `*.lock` files that a killed git process can leave behind: besides the
+	 * index, git locks every ref and file it rewrites (HEAD, branches, remote-tracking branches,
+	 * packed-refs, config). A stale `refs/heads/merge_local.lock`, for example, makes the
+	 * `git branch -m merge_local` of every merge fail, so the site never gets the remote changes.
+	 *
+	 * Returns the number of removed locks.
+	 */
+	function remove_stale_locks( $min_age = 600 ) {
+		$git_dir = $this->repo_dir . '/.git';
+		$locks   = array();
+		foreach ( array( 'index', 'HEAD', 'ORIG_HEAD', 'config', 'packed-refs', 'shallow' ) as $file ) {
+			$locks[] = "$git_dir/$file.lock";
+		}
+		foreach ( array( 'refs/heads/*.lock', 'refs/remotes/*/*.lock' ) as $pattern ) {
+			$locks = array_merge( $locks, glob( "$git_dir/$pattern" ) ?: array() );
+		}
+
+		$removed = 0;
+		foreach ( $locks as $lock ) {
+			if ( $this->_remove_stale_lock( $lock, $min_age ) ) {
+				$removed++;
+			}
+		}
+		return $removed;
+	}
+
+	private function _remove_stale_lock( $lock, $min_age ) {
+		clearstatcache( true, $lock );
+		if ( ! file_exists( $lock ) ) {
 			return false;
 		}
 
-		$age = time() - filemtime( $index_lock );
-		if ( $age < $min_age || ! @unlink( $index_lock ) ) {
+		$age = time() - filemtime( $lock );
+		if ( $age < $min_age || ! @unlink( $lock ) ) {
 			return false;
 		}
-		error_log( "gitium: removed the stale '$index_lock' ({$age}s old), left by a git process that was killed" );
+		error_log( "gitium: removed the stale '$lock' ({$age}s old), left by a git process that was killed" );
 		return true;
 	}
 

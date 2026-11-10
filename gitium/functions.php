@@ -290,7 +290,8 @@ function gitium_merge_and_push( $commits ) {
 
 	gitium_release_merge_lock( $lock );
 
-	$pushed = $git->push() && $merge_status;
+	// don't push a branch that wasn't merged: it would be rejected and hide the merge error
+	$pushed = $merge_status && $git->push();
 	if ( $pushed ) {
 		delete_option( 'gitium_push_pending' );
 		delete_transient( 'gitium_push_pending_check' );
