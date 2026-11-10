@@ -35,6 +35,18 @@ class Test_Gitium_Auto_Push extends Gitium_UnitTestCase {
 		$this->assertEmpty( $git->get_uncommited_changes() );
 	}
 
+	function test_gitium_push_action() {
+		global $git;
+		$this->_add_changes_locally();
+		$this->assertCount( 1, $git->get_uncommited_changes() );
+
+		do_action( 'gitium_push', 'my-plugin' );
+
+		$this->assertEmpty( $git->get_uncommited_changes() );
+		$last_commit = current( $git->get_last_commits( 1 ) );
+		$this->assertStringEndsWith( '(my-plugin)', $last_commit['subject'] );
+	}
+
 	function test_gitium_status() {
 		global $git;
 
