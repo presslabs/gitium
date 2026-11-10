@@ -95,4 +95,52 @@ class Test_Gitium_Index_Lock extends Gitium_UnitTestCase {
 		$this->assertTrue( file_exists( $this->index_lock ) );
 		unlink( $this->index_lock );
 	}
+
+	private function _notice() {
+		$notice = new Gitium_Index_Lock_Notice();
+		ob_start();
+		$notice->admin_notices();
+		return ob_get_clean();
+	}
+
+	function test_index_lock_age() {
+		global $git;
+
+		$this->assertFalse( $git->get_index_lock_age() );
+		$this->_put_index_lock( 120 );
+		$this->assertGreaterThanOrEqual( 120, $git->get_index_lock_age() );
+		$this->assertEquals( $this->index_lock, $git->get_index_lock_path() );
+		unlink( $this->index_lock );
+	}
+
+	function test_no_notice_without_index_lock() {
+		$this->assertEmpty( $this->_notice() );
+	}
+
+	// a git command may still be running
+	function test_no_notice_for_recent_index_lock() {
+		$this->_put_index_lock( 10 );
+		$this->assertEmpty( $this->_notice() );
+		unlink( $this->index_lock );
+	}
+
+	function test_notice_for_index_lock_older_than_a_minute() {
+		global $git;
+
+		$this->_put_index_lock( 120 );
+		$notice = $this->_notice();
+		$this->assertStringContainsString( 'GitiumSubmitRemoveIndexLock', $notice );
+		$this->assertStringContainsString( 'removes it by itself', $notice );
+
+		// what the button does
+		$this->assertTrue( $git->remove_stale_index_lock( Gitium_Index_Lock_Notice::MIN_AGE ) );
+		$this->assertEmpty( $this->_notice() );
+	}
+
+	// no git command ran since the lock got 10 minutes old: the notice removes it
+	function test_notice_removes_old_index_lock() {
+		$this->_put_index_lock( 900 );
+		$this->assertEmpty( $this->_notice() );
+		$this->assertFalse( file_exists( $this->index_lock ) );
+	}
 }
