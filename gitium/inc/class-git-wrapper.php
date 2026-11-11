@@ -103,6 +103,12 @@ class Git_Wrapper {
 	private $repo_dir = '';
 	private $private_key = '';
 
+	// stale locks are looked for once per request and again when a git command can't take a lock
+	private $locks_checked = false;
+
+	// the local branch before a merge, kept until the merge is done (see merge_with_accept_mine)
+	const PRE_MERGE_REF = 'refs/gitium/pre-merge';
+
 	function __construct( $repo_dir ) {
 		$this->repo_dir = $repo_dir;
 	}
@@ -166,8 +172,27 @@ class Git_Wrapper {
 
 	protected function _call(...$args) {
 		// a git process killed with an earlier request can leave the index or a ref locked
-		$this->remove_stale_locks();
+		if ( ! $this->locks_checked ) {
+			$this->locks_checked = true;
+			$this->remove_stale_locks();
+		}
 
+		list( $return, $response ) = $this->_run( $args );
+
+		// a lock left after the first check: retry once if it was stale and got removed
+		if ( 0 != $return && $this->strpos_haystack_array( $response, ".lock': File exists" ) && $this->remove_stale_locks() > 0 ) {
+			list( $return, $response ) = $this->_run( $args );
+		}
+
+		if ( 0 != $return ) {
+			$this->last_error = join( "\n", $response );
+		} else {
+			$this->last_error = null;
+		}
+		return array( $return, $response );
+	}
+
+	private function _run( $args ) {
 		$args     = join( ' ', array_map( 'escapeshellarg', $args ) );
 		$return   = -1;
 		$response = array();
@@ -196,11 +221,6 @@ class Git_Wrapper {
 		$this->_log( "$return $cmd", join( "\n", $response ) );
 		if ( ! defined( 'GIT_KEY_FILE' ) && isset( $env['GIT_KEY_FILE'] ) ) {
 			unlink( $env['GIT_KEY_FILE'] );
-		}
-		if ( 0 != $return ) {
-			$this->last_error = join( "\n", $response );
-		} else {
-			$this->last_error = null;
 		}
 		return array( $return, $response );
 	}
@@ -363,6 +383,15 @@ class Git_Wrapper {
 		}
 	}
 
+	/**
+	 * Merge the remote branch with the local commits, keeping the local version on conflicts:
+	 * the local branch is moved on the remote one and the local commits are cherry-picked on it.
+	 *
+	 * The local branch is saved in PRE_MERGE_REF until the merge is done, so a merge killed with
+	 * its request leaves no state the next merge can't handle: HEAD is never on a temporary branch,
+	 * and the next merge picks up the local commits from that ref. On failure the local branch is
+	 * left as it was.
+	 */
 	function merge_with_accept_mine(...$commits) {
 		do_action( 'gitium_before_merge_with_accept_mine' );
 
@@ -370,49 +399,54 @@ class Git_Wrapper {
 			$commits = $commits[0];
 		}
 
-		// get ahead commits
-		$ahead_commits = $this->get_ahead_commits();
+		$local_branch = $this->get_local_branch();
+		if ( ! $local_branch ) {
+			return false;
+		}
 
-		// combine all commits with the ahead commits
-		$commits = array_unique( array_merge( array_reverse( $commits ), $ahead_commits ) );
-		$commits = array_reverse( $commits );
-
-		// get the remote branch
+		// the remote branch, e.g. origin/master
 		$remote_branch = $this->get_remote_tracking_branch();
+		if ( ! $remote_branch ) {
+			return false; // the error of `git rev-parse @{u}` is kept, e.g. "no upstream configured"
+		}
 
-		// get the local branch
-		$local_branch  = $this->get_local_branch();
+		// HEAD left on 'merge_local' by a merge of an older Gitium that was killed:
+		// the real local branch is the one of the upstream (origin/master -> master)
+		$on_merge_local = ( 'merge_local' == $local_branch );
+		if ( $on_merge_local ) {
+			$local_branch = preg_replace( '#^[^/]+/#', '', $remote_branch );
+		}
 
-		if ( ! $remote_branch || ! $local_branch ) {
+		list( $return, $response ) = $this->_call( 'rev-parse', 'HEAD' );
+		if ( 0 != $return ) {
 			return false;
 		}
+		$head = $response[0];
 
-		// a 'merge_local' left by a merge that was killed would block the rename below: keep it aside
-		if ( 'merge_local' != $local_branch && $this->_branch_exists( 'merge_local' ) ) {
-			$backup = 'merge_local-' . gmdate( 'YmdHis' );
-			$this->_call( 'branch', '-m', 'merge_local', $backup );
-			error_log( "gitium: renamed the 'merge_local' branch left by a killed merge to '$backup'" );
+		// the ref of a merge that was killed holds local commits that were maybe not merged yet
+		$pre_merge = $this->_rev_parse_verify( self::PRE_MERGE_REF );
+		if ( ! $pre_merge ) {
+			list( $return, ) = $this->_call( 'update-ref', self::PRE_MERGE_REF, $head );
+			if ( 0 != $return ) {
+				return false;
+			}
 		}
 
-		// rename the local branch to 'merge_local'
-		list( $return, ) = $this->_call( 'branch', '-m', 'merge_local' );
-		if ( $return != 0 ) {
-			// going on would leave the local branch as it is, maybe behind the remote one,
-			// and its push would be rejected as non-fast-forward, hiding this error
-			return false;
-		}
+		// a 'merge_local' branch left by an older Gitium can also hold local commits
+		$merge_local = $on_merge_local || $this->_rev_parse_verify( 'refs/heads/merge_local' );
 
-		// local branch set up to track remote branch
-		list( $return, ) = $this->_call( 'branch', $local_branch, $remote_branch );
-		if ( $return != 0 ) {
-			$this->_restore_local_branch( $local_branch );
-			return false;
+		// the local commits that aren't on the remote branch, oldest first
+		$local_commits = array();
+		foreach ( array_filter( array( $pre_merge ? self::PRE_MERGE_REF : '', $merge_local ? 'refs/heads/merge_local' : '', 'HEAD' ) ) as $rev ) {
+			list( , $revs ) = $this->_call( 'rev-list', '--reverse', "$remote_branch..$rev" );
+			$local_commits = array_merge( $local_commits, $revs );
 		}
+		$commits = array_values( array_unique( array_merge( $local_commits, $commits ) ) );
 
-		// checkout to the $local_branch
-		list( $return, ) = $this->_call( 'checkout', $local_branch );
-		if ( $return != 0 ) {
-			$this->_restore_local_branch( $local_branch );
+		// move the local branch on the remote one: if it fails nothing has changed
+		list( $return, ) = $this->_call( 'checkout', '-B', $local_branch, $remote_branch );
+		if ( 0 != $return ) {
+			$this->_end_merge( $pre_merge );
 			return false;
 		}
 
@@ -422,29 +456,37 @@ class Git_Wrapper {
 		}
 
 		if ( $this->successfully_merged() ) { // git status without states: AA, DD, UA, AU ...
-			// delete the 'merge_local' branch
-			$this->_call( 'branch', '-D', 'merge_local' );
+			$this->_call( 'update-ref', '-d', self::PRE_MERGE_REF );
+			if ( $merge_local ) {
+				$this->_call( 'branch', '-D', 'merge_local' );
+			}
 			return true;
-		} else {
-			$last_error = $this->last_error ?: __( 'Could not resolve the merge conflicts', 'gitium' );
-			$this->_call( 'cherry-pick', '--abort' );
-			$this->_call( 'checkout', '-b', 'merge_local' );
-			$this->_call( 'branch', '-M', $local_branch );
-			$this->last_error = $last_error;
-			return false;
 		}
+
+		// put the local branch back as it was
+		$last_error = $this->last_error ?: __( 'Could not resolve the merge conflicts', 'gitium' );
+		$this->_call( 'cherry-pick', '--abort' );
+		list( $return, ) = $this->_call( 'checkout', '-B', $local_branch, $head );
+		if ( 0 == $return ) {
+			$this->_end_merge( $pre_merge );
+		} // else the local commits stay in the pre-merge ref for the next merge
+		$this->last_error = $last_error;
+		return false;
 	}
 
-	// rename 'merge_local' back to $local_branch after a failed merge, keeping the error that stopped it
-	private function _restore_local_branch( $local_branch ) {
+	// after a failed merge, remove the pre-merge ref unless it was left by a killed merge
+	private function _end_merge( $pre_merge ) {
 		$last_error = $this->last_error;
-		$this->_call( 'branch', '-M', $local_branch );
+		if ( ! $pre_merge ) {
+			$this->_call( 'update-ref', '-d', self::PRE_MERGE_REF );
+		}
 		$this->last_error = $last_error;
 	}
 
-	private function _branch_exists( $branch ) {
-		list( $return, ) = $this->_call( 'rev-parse', '--verify', '--quiet', "refs/heads/$branch" );
-		return ( 0 == $return );
+	private function _rev_parse_verify( $ref ) {
+		list( $return, $response ) = $this->_call( 'rev-parse', '--verify', '--quiet', $ref );
+		$this->last_error = null;
+		return ( 0 == $return && ! empty( $response ) ) ? $response[0] : false;
 	}
 
 	function successfully_merged() {
@@ -704,11 +746,18 @@ class Git_Wrapper {
 
 	/**
 	 * Remove all the stale `*.lock` files that a killed git process can leave behind: besides the
-	 * index, git locks every ref and file it rewrites (HEAD, branches, remote-tracking branches,
-	 * packed-refs, config). A stale `refs/heads/merge_local.lock`, for example, makes the
-	 * `git branch -m merge_local` of every merge fail, so the site never gets the remote changes.
+	 * index, git locks every ref and file it rewrites (HEAD, branches, tags, remote-tracking
+	 * branches, packed-refs, config, shallow), and while such a lock exists every git command
+	 * that needs it fails with "Unable to create '...lock': File exists".
 	 *
-	 * Returns the number of removed locks.
+	 * Like for the index, a lock is stale when it's older than $min_age. This assumes that no git
+	 * command runs longer than that (a very slow fetch from WP-CLI or cron could), and two requests
+	 * that don't hold the merge lock could both find the same lock stale, the second one removing
+	 * the lock a new git process has just taken. Both are unlikely and much less harmful than a
+	 * stale lock that blocks every merge until someone removes it by hand.
+	 *
+	 * Runs once per request and again when a git command fails on a lock. Returns the number of
+	 * removed locks.
 	 */
 	function remove_stale_locks( $min_age = 600 ) {
 		$git_dir = $this->repo_dir . '/.git';
@@ -716,8 +765,13 @@ class Git_Wrapper {
 		foreach ( array( 'index', 'HEAD', 'ORIG_HEAD', 'config', 'packed-refs', 'shallow' ) as $file ) {
 			$locks[] = "$git_dir/$file.lock";
 		}
-		foreach ( array( 'refs/heads/*.lock', 'refs/remotes/*/*.lock' ) as $pattern ) {
-			$locks = array_merge( $locks, glob( "$git_dir/$pattern" ) ?: array() );
+		if ( is_dir( "$git_dir/refs" ) ) {
+			$files = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( "$git_dir/refs", FilesystemIterator::SKIP_DOTS ) );
+			foreach ( $files as $file ) {
+				if ( '.lock' == substr( $file->getFilename(), -5 ) ) {
+					$locks[] = $file->getPathname();
+				}
+			}
 		}
 
 		$removed = 0;
