@@ -543,6 +543,7 @@ function _gitium_status( $update_transient = false ) {
 	if ( $git->is_status_working() && $git->get_remote_tracking_branch() ) {
 		if ( ! $git->fetch_ref() ) {
 			set_transient( 'gitium_remote_disconnected', $git->get_last_error() );
+			gitium_schedule_remote_recheck();
 		} else {
 			delete_transient( 'gitium_remote_disconnected' );
 		}
@@ -555,6 +556,25 @@ function _gitium_status( $update_transient = false ) {
 	set_transient( 'gitium_uncommited_changes', $changes, 12 * 60 * 60 ); // cache changes for half-a-day
 	return $changes;
 }
+
+// The "Could not connect to remote repository" notice is only refreshed when
+// someone opens the Gitium status page, so a short remote outage would keep it
+// (and the disabled "Save changes" button) around forever. While the notice is
+// set, retry the fetch from WP-Cron until it works again.
+function gitium_schedule_remote_recheck() {
+	if ( ! wp_next_scheduled( 'gitium_remote_recheck' ) ) {
+		wp_schedule_single_event( time() + GITIUM_REMOTE_RECHECK_INTERVAL, 'gitium_remote_recheck' );
+	}
+}
+
+function gitium_remote_recheck() {
+	if ( false === get_transient( 'gitium_remote_disconnected' ) ) {
+		return;
+	}
+	// a failed fetch sets the notice again and schedules the next recheck
+	_gitium_status( true );
+}
+add_action( 'gitium_remote_recheck', 'gitium_remote_recheck' );
 
 function _gitium_ssh_encode_buffer( $buffer ) {
 	$len = strlen( $buffer );
