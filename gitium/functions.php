@@ -434,6 +434,39 @@ function gitium_has_pending_push() {
 }
 
 /*
+ * The commits of an interrupted merge that were not merged are kept on a 'merge_local-<UTC time>'
+ * branch (see Git_Wrapper::merge_with_accept_mine): remember the branch for the admin notice.
+ */
+function gitium_remember_kept_merge_commits( $branch, $count ) {
+	$kept            = get_option( 'gitium_kept_merge_commits', array() );
+	$kept[ $branch ] = (int) $count;
+	update_option( 'gitium_kept_merge_commits', $kept, false );
+}
+add_action( 'gitium_kept_interrupted_merge_commits', 'gitium_remember_kept_merge_commits', 10, 2 );
+
+/*
+ * The branches with kept commits of interrupted merges that still exist, as array( branch => count ).
+ * A branch that was deleted is forgotten.
+ */
+function gitium_get_kept_merge_commits() {
+	global $git;
+
+	$kept = get_option( 'gitium_kept_merge_commits', array() );
+	if ( empty( $kept ) ) {
+		return array();
+	}
+	$branches = $git->get_branches();
+	if ( false === $branches ) {
+		return $kept;
+	}
+	$existing = array_intersect_key( $kept, array_flip( $branches ) );
+	if ( count( $existing ) != count( $kept ) ) {
+		update_option( 'gitium_kept_merge_commits', $existing, false );
+	}
+	return $existing;
+}
+
+/*
  * Reverts the last commit and pushes the revert, only if the last commit is still the one the user
  * confirmed ($expected_hash): new commits (webhook merges, auto-push) can land after the page was loaded.
  * Runs under the merge lock, so it doesn't touch the repo while a merge is in progress.

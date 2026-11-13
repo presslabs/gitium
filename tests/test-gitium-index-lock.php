@@ -74,6 +74,7 @@ class Test_Gitium_Index_Lock extends Gitium_UnitTestCase {
 
 		file_put_contents( $this->local_file, 'local' . PHP_EOL );
 		$this->_put_index_lock( 900 );
+		$this->_start_new_request();
 
 		$this->assertGreaterThan( 0, $git->add() );
 		$this->assertNotEmpty( $git->commit( 'Commit after a stale index.lock' ) );

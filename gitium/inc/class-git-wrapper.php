@@ -103,7 +103,7 @@ class Git_Wrapper {
 	private $repo_dir = '';
 	private $private_key = '';
 
-	// stale locks are looked for once per request and again when a git command can't take a lock
+	// stale locks are looked for once per request, before the first git command
 	private $locks_checked = false;
 
 	function __construct( $repo_dir ) {
@@ -174,22 +174,6 @@ class Git_Wrapper {
 			$this->remove_stale_locks();
 		}
 
-		list( $return, $response ) = $this->_run( $args );
-
-		// a lock left after the first check: retry once if it was stale and got removed
-		if ( 0 != $return && $this->strpos_haystack_array( $response, ".lock': File exists" ) && $this->remove_stale_locks() > 0 ) {
-			list( $return, $response ) = $this->_run( $args );
-		}
-
-		if ( 0 != $return ) {
-			$this->last_error = join( "\n", $response );
-		} else {
-			$this->last_error = null;
-		}
-		return array( $return, $response );
-	}
-
-	private function _run( $args ) {
 		$args     = join( ' ', array_map( 'escapeshellarg', $args ) );
 		$return   = -1;
 		$response = array();
@@ -218,6 +202,11 @@ class Git_Wrapper {
 		$this->_log( "$return $cmd", join( "\n", $response ) );
 		if ( ! defined( 'GIT_KEY_FILE' ) && isset( $env['GIT_KEY_FILE'] ) ) {
 			unlink( $env['GIT_KEY_FILE'] );
+		}
+		if ( 0 != $return ) {
+			$this->last_error = join( "\n", $response );
+		} else {
+			$this->last_error = null;
 		}
 		return array( $return, $response );
 	}
@@ -387,23 +376,21 @@ class Git_Wrapper {
 			$commits = $commits[0];
 		}
 
+		// get the remote branch, e.g. origin/master
+		$remote_branch = $this->get_remote_tracking_branch();
+		if ( ! $remote_branch ) {
+			return false; // the error of `git rev-parse @{u}` is kept, e.g. "no upstream configured"
+		}
+
+		// a merge killed with its request can leave a state that would make every merge fail
+		if ( ! $this->_recover_interrupted_merge( $remote_branch ) ) {
+			return false;
+		}
+
 		// get the local branch
 		$local_branch = $this->get_local_branch();
 		if ( ! $local_branch ) {
 			return false;
-		}
-
-		// a merge killed with its request can leave HEAD on 'merge_local', or a 'merge_local' branch
-		// that may hold local commits: don't guess what to do with it
-		if ( 'merge_local' == $local_branch || $this->_branch_exists( 'merge_local' ) ) {
-			$this->last_error = __( "A 'merge_local' branch was left by an interrupted merge; it needs to be checked by hand", 'gitium' );
-			return false;
-		}
-
-		// get the remote branch
-		$remote_branch = $this->get_remote_tracking_branch();
-		if ( ! $remote_branch ) {
-			return false; // the error of `git rev-parse @{u}` is kept, e.g. "no upstream configured"
 		}
 
 		// get ahead commits
@@ -438,6 +425,9 @@ class Git_Wrapper {
 			$this->cherry_pick( $commits );
 		}
 
+		// successfully_merged() runs `git status`, which clears the error of the merge
+		$merge_error = $this->last_error;
+
 		if ( $this->successfully_merged() ) { // git status without states: AA, DD, UA, AU ...
 			// delete the 'merge_local' branch
 			list( $return, ) = $this->_call( 'branch', '-D', 'merge_local' );
@@ -447,12 +437,95 @@ class Git_Wrapper {
 			return true;
 		}
 
-		$last_error = $this->last_error ?: __( 'Could not resolve the merge conflicts', 'gitium' );
+		// put the local branch back, without -f so that uncommitted edits are kept
 		$this->_call( 'cherry-pick', '--abort' );
-		$this->_call( 'checkout', '-f', 'merge_local' );
+		$this->_call( 'checkout', 'merge_local' );
 		$this->_call( 'branch', '-M', $local_branch );
-		$this->last_error = $last_error;
+		$this->last_error = $merge_error ?: __( 'Could not resolve the merge conflicts', 'gitium' );
 		return false;
+	}
+
+	/**
+	 * Clean up what a merge killed with its request (or a merge conflict on older versions) can leave,
+	 * so that the site doesn't need someone to fix it by hand, without losing local commits:
+	 *
+	 * - an interrupted cherry-pick is aborted
+	 * - HEAD left on 'merge_local' right after the rename: the rename back to the local branch is done
+	 * - a 'merge_local' branch whose commits are all merged is deleted
+	 * - a 'merge_local' branch with commits that aren't merged is renamed to 'merge_local-<UTC time>'
+	 *   and reported with the 'gitium_kept_interrupted_merge_commits' action. Its commits are not
+	 *   replayed: old commits merged with accept-mine could overwrite newer files of the remote.
+	 */
+	private function _recover_interrupted_merge( $remote_branch ) {
+		// an interrupted cherry-pick: every merge would fail on its conflicts
+		if ( file_exists( $this->repo_dir . '/.git/CHERRY_PICK_HEAD' ) ) {
+			$this->_call( 'cherry-pick', '--abort' );
+			error_log( 'gitium: aborted an interrupted cherry-pick' );
+		}
+		if ( ! $this->successfully_merged() ) {
+			list( $return, ) = $this->_call( 'reset', '--merge' );
+			if ( $return != 0 ) {
+				return false;
+			}
+		}
+
+		// HEAD left on 'merge_local' right after `git branch -m merge_local`
+		if ( 'merge_local' == $this->get_local_branch() ) {
+			$local_branch = preg_replace( '#^[^/]+/#', '', $remote_branch ); // origin/master -> master
+			// the local branch may already be created from the remote one, with nothing of its own
+			if ( $this->_branch_exists( $local_branch ) && count( $this->_unmerged_commits( $local_branch, $remote_branch ) ) > 0 ) {
+				$this->last_error = sprintf( __( "HEAD is on the 'merge_local' branch of an interrupted merge and the '%s' branch has commits that are not on the remote", 'gitium' ), $local_branch );
+				return false;
+			}
+			list( $return, ) = $this->_call( 'branch', '-M', $local_branch );
+			if ( $return != 0 ) {
+				return false;
+			}
+			error_log( "gitium: renamed the 'merge_local' branch of an interrupted merge back to '$local_branch'" );
+		}
+
+		if ( ! $this->_branch_exists( 'merge_local' ) ) {
+			return true;
+		}
+
+		$unmerged = $this->_unmerged_commits( 'merge_local', 'HEAD', $remote_branch );
+		if ( empty( $unmerged ) ) {
+			list( $return, ) = $this->_call( 'branch', '-D', 'merge_local' );
+			if ( $return == 0 ) {
+				error_log( "gitium: deleted the 'merge_local' branch of an interrupted merge, its commits are merged" );
+			}
+			return ( $return == 0 );
+		}
+
+		$backup = 'merge_local-' . gmdate( 'YmdHis' );
+		list( $return, ) = $this->_call( 'branch', '-m', 'merge_local', $backup );
+		if ( $return != 0 ) {
+			return false;
+		}
+		error_log( sprintf( "gitium: kept %d local commits of an interrupted merge on the '%s' branch", count( $unmerged ), $backup ) );
+		do_action( 'gitium_kept_interrupted_merge_commits', $backup, count( $unmerged ) );
+		return true;
+	}
+
+	// the commits of $branch that have no equivalent (same patch) in any of the other branches
+	private function _unmerged_commits( $branch, ...$others ) {
+		$unmerged = null;
+		foreach ( $others as $other ) {
+			$commits = array();
+			list( $return, $response ) = $this->_call( 'cherry', $other, $branch );
+			if ( 0 == $return ) {
+				foreach ( $response as $line ) {
+					if ( '+ ' == substr( $line, 0, 2 ) ) {
+						$commits[] = substr( $line, 2 );
+					}
+				}
+			} else {
+				// can't compare the patches: count every commit that isn't on $other
+				list( , $commits ) = $this->_call( 'rev-list', "$other..$branch" );
+			}
+			$unmerged = ( null === $unmerged ) ? $commits : array_intersect( $unmerged, $commits );
+		}
+		return array_values( (array) $unmerged );
 	}
 
 	// rename 'merge_local' back to $local_branch after a failed merge, keeping the error that stopped it
@@ -460,6 +533,12 @@ class Git_Wrapper {
 		$last_error = $this->last_error;
 		$this->_call( 'branch', '-M', $local_branch );
 		$this->last_error = $last_error;
+	}
+
+	// the local branches, or false on error
+	function get_branches() {
+		list( $return, $response ) = $this->_call( 'for-each-ref', '--format=%(refname:short)', 'refs/heads' );
+		return ( 0 == $return ) ? $response : false;
 	}
 
 	private function _branch_exists( $branch ) {
@@ -735,8 +814,7 @@ class Git_Wrapper {
 	 * the lock a new git process has just taken. Both are unlikely and much less harmful than a
 	 * stale lock that blocks every merge until someone removes it by hand.
 	 *
-	 * Runs once per request and again when a git command fails on a lock. Returns the number of
-	 * removed locks.
+	 * Runs once per request, before the first git command. Returns the number of removed locks.
 	 */
 	function remove_stale_locks( $min_age = 600 ) {
 		$git_dir = $this->repo_dir . '/.git';

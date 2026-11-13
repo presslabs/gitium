@@ -407,6 +407,19 @@ function gitium_pending_push_notice() {
 }
 add_action( GITIUM_ADMIN_NOTICES_ACTION, 'gitium_pending_push_notice' );
 
+function gitium_kept_merge_commits_notice() {
+	if ( ! current_user_can( GITIUM_MANAGE_OPTIONS_CAPABILITY ) ) {
+		return;
+	}
+	foreach ( gitium_get_kept_merge_commits() as $branch => $count ) : ?>
+		<div class="notice notice-warning">
+			<p><strong>Gitium: <?php echo esc_html( sprintf( _n( '%d local commit from an interrupted merge was kept on the branch %s.', '%d local commits from an interrupted merge were kept on the branch %s.', $count, 'gitium' ), $count, $branch ) ); ?></strong></p>
+			<p>They were not merged automatically, because old commits could overwrite newer files from the remote repository. Check them (e.g. <code>git log -p HEAD..<?php echo esc_html( $branch ); ?></code>), apply by hand what is still needed, then delete the branch to remove this notice.</p>
+		</div>
+	<?php endforeach;
+}
+add_action( GITIUM_ADMIN_NOTICES_ACTION, 'gitium_kept_merge_commits_notice' );
+
 /*
  * Create a commit when a plugin is deleted through WP CLI.
  */
