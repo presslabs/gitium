@@ -290,7 +290,8 @@ function gitium_merge_and_push( $commits ) {
 
 	gitium_release_merge_lock( $lock );
 
-	$pushed = $git->push() && $merge_status;
+	// don't push a branch that wasn't merged: it would be rejected and hide the merge error
+	$pushed = $merge_status && $git->push();
 	if ( $pushed ) {
 		delete_option( 'gitium_push_pending' );
 		delete_transient( 'gitium_push_pending_check' );
@@ -430,6 +431,39 @@ function gitium_has_pending_push() {
 	delete_option( 'gitium_push_pending' );
 	delete_transient( 'gitium_push_pending_check' );
 	return false;
+}
+
+/*
+ * The commits of an interrupted merge that were not merged are kept on a 'merge_local-<UTC time>'
+ * branch (see Git_Wrapper::merge_with_accept_mine): remember the branch for the admin notice.
+ */
+function gitium_remember_kept_merge_commits( $branch, $count ) {
+	$kept            = get_option( 'gitium_kept_merge_commits', array() );
+	$kept[ $branch ] = (int) $count;
+	update_option( 'gitium_kept_merge_commits', $kept, false );
+}
+add_action( 'gitium_kept_interrupted_merge_commits', 'gitium_remember_kept_merge_commits', 10, 2 );
+
+/*
+ * The branches with kept commits of interrupted merges that still exist, as array( branch => count ).
+ * A branch that was deleted is forgotten.
+ */
+function gitium_get_kept_merge_commits() {
+	global $git;
+
+	$kept = get_option( 'gitium_kept_merge_commits', array() );
+	if ( empty( $kept ) ) {
+		return array();
+	}
+	$branches = $git->get_branches();
+	if ( false === $branches ) {
+		return $kept;
+	}
+	$existing = array_intersect_key( $kept, array_flip( $branches ) );
+	if ( count( $existing ) != count( $kept ) ) {
+		update_option( 'gitium_kept_merge_commits', $existing, false );
+	}
+	return $existing;
 }
 
 /*
