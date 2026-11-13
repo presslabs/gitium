@@ -34,6 +34,7 @@
 define( 'GITIUM_LAST_COMMITS', 20 );
 define( 'GITIUM_MIN_GIT_VER', '1.7' );
 define( 'GITIUM_MIN_PHP_VER', '5.6' );
+define( 'GITIUM_REMOTE_RECHECK_INTERVAL', 15 * MINUTE_IN_SECONDS );
 
 if ( is_multisite() ) {
 	define( 'GITIUM_ADMIN_MENU_ACTION', 'network_admin_menu' );
@@ -81,6 +82,7 @@ register_activation_hook( __FILE__, '_gitium_make_ssh_git_file_exe' );
 
 function gitium_deactivation() {
 	delete_transient( 'gitium_git_version' );
+	wp_clear_scheduled_hook( 'gitium_remote_recheck' );
 }
 register_deactivation_hook( __FILE__, 'gitium_deactivation' );
 
@@ -93,6 +95,7 @@ function gitium_uninstall_hook() {
 	delete_transient( 'gitium_menu_bubble' );
 	delete_transient( 'gitium_is_status_working' );
 	delete_transient( 'gitium_push_pending_check' );
+	wp_clear_scheduled_hook( 'gitium_remote_recheck' );
 
 	delete_option( 'gitium_keypair' );
 	delete_option( 'gitium_webhook_key' );
@@ -381,7 +384,11 @@ function gitium_options_page_check() {
 }
 
 function gitium_remote_disconnected_notice() {
-	if ( current_user_can( GITIUM_MANAGE_OPTIONS_CAPABILITY ) && $message = get_transient( 'gitium_remote_disconnected' ) ) : ?>
+	$message = get_transient( 'gitium_remote_disconnected' );
+	if ( $message ) {
+		gitium_schedule_remote_recheck(); // notices set before the recheck existed
+	}
+	if ( current_user_can( GITIUM_MANAGE_OPTIONS_CAPABILITY ) && $message ) : ?>
 		<div class="error-nag error">
 			<p>
 				Could not connect to remote repository.
