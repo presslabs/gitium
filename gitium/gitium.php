@@ -34,7 +34,7 @@
 define( 'GITIUM_LAST_COMMITS', 20 );
 define( 'GITIUM_MIN_GIT_VER', '1.7' );
 define( 'GITIUM_MIN_PHP_VER', '5.6' );
-define( 'GITIUM_REMOTE_RECHECK_INTERVAL', 15 * MINUTE_IN_SECONDS );
+define( 'GITIUM_REMOTE_RECHECK_INTERVAL', 5 * MINUTE_IN_SECONDS );
 
 if ( is_multisite() ) {
 	define( 'GITIUM_ADMIN_MENU_ACTION', 'network_admin_menu' );
@@ -394,10 +394,32 @@ function gitium_remote_disconnected_notice() {
 				Could not connect to remote repository.
 				<pre><?php echo esc_html( $message ); ?></pre>
 			</p>
+			<p>
+				This can be a temporary error of the git server. Gitium checks the connection again every
+				<?php echo esc_html( (int) ( GITIUM_REMOTE_RECHECK_INTERVAL / MINUTE_IN_SECONDS ) ); ?> minutes
+				and removes this message once it works.
+			</p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<input type="hidden" name="action" value="gitium_recheck_remote" />
+				<?php wp_nonce_field( 'gitium_recheck_remote' ); ?>
+				<p><input type="submit" class="button" value="Check again now" /></p>
+			</form>
 		</div>
 	<?php endif;
 }
 add_action( 'admin_notices', 'gitium_remote_disconnected_notice' );
+
+// "Check again now" button of the notice above
+function gitium_recheck_remote_action() {
+	if ( ! current_user_can( GITIUM_MANAGE_OPTIONS_CAPABILITY ) ) {
+		wp_die( 'Sorry, you are not allowed to do this.', 403 );
+	}
+	check_admin_referer( 'gitium_recheck_remote' );
+	_gitium_status( true );
+	wp_safe_redirect( wp_get_referer() ? wp_get_referer() : admin_url() );
+	exit;
+}
+add_action( 'admin_post_gitium_recheck_remote', 'gitium_recheck_remote_action' );
 
 function gitium_pending_push_notice() {
 	if ( ! current_user_can( GITIUM_MANAGE_OPTIONS_CAPABILITY ) || ! gitium_has_pending_push() ) {

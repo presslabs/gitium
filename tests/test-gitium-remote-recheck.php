@@ -137,4 +137,79 @@ class Test_Gitium_Remote_Recheck extends Gitium_UnitTestCase {
 
 		$this->assertFalse( wp_next_scheduled( 'gitium_remote_recheck' ) );
 	}
+
+	// runs the "Check again now" handler; the redirect is turned into an exception instead of exit
+	private function _run_recheck_button( $nonce ) {
+		$_REQUEST['_wpnonce'] = $nonce;
+		$_POST['_wpnonce']    = $nonce;
+		$throw = function () {
+			throw new Exception( 'redirected' );
+		};
+		// the test library of old WordPress versions exits in wp_die()
+		$die_handler = function () {
+			return function ( $message ) {
+				throw new WPDieException( is_string( $message ) ? $message : 'wp_die' );
+			};
+		};
+		add_filter( 'wp_redirect', $throw );
+		add_filter( 'wp_die_handler', $die_handler, 99 );
+		try {
+			gitium_recheck_remote_action();
+		} catch ( WPDieException $e ) {
+			throw $e;
+		} catch ( Exception $e ) {
+			$this->assertEquals( 'redirected', $e->getMessage() );
+		} finally {
+			remove_filter( 'wp_redirect', $throw );
+			remove_filter( 'wp_die_handler', $die_handler, 99 );
+			unset( $_REQUEST['_wpnonce'], $_POST['_wpnonce'] );
+		}
+	}
+
+	function test_notice_shows_recheck_button() {
+		wp_set_current_user( $this->factory->user->create( array( 'role' => 'administrator' ) ) );
+		set_transient( 'gitium_remote_disconnected', 'fatal: Could not read from remote repository.' );
+
+		ob_start();
+		gitium_remote_disconnected_notice();
+		$html = ob_get_clean();
+
+		$this->assertContains( 'name="action" value="gitium_recheck_remote"', $html );
+		$this->assertContains( 'Check again now', $html );
+		$this->assertContains( 'every', $html );
+	}
+
+	function test_recheck_button_clears_notice_when_remote_is_back() {
+		wp_set_current_user( $this->factory->user->create( array( 'role' => 'administrator' ) ) );
+		$this->_remote_down();
+		_gitium_status( true );
+		$this->assertNotEmpty( get_transient( 'gitium_remote_disconnected' ) );
+		$this->_remote_up();
+
+		$this->_run_recheck_button( wp_create_nonce( 'gitium_recheck_remote' ) );
+
+		$this->assertFalse( get_transient( 'gitium_remote_disconnected' ) );
+	}
+
+	function test_recheck_button_keeps_notice_while_down() {
+		wp_set_current_user( $this->factory->user->create( array( 'role' => 'administrator' ) ) );
+		$this->_remote_down();
+		_gitium_status( true );
+
+		$this->_run_recheck_button( wp_create_nonce( 'gitium_recheck_remote' ) );
+
+		$this->assertNotEmpty( get_transient( 'gitium_remote_disconnected' ) );
+	}
+
+	function test_recheck_button_needs_capability() {
+		wp_set_current_user( $this->factory->user->create( array( 'role' => 'editor' ) ) );
+		$this->expectException( 'WPDieException' );
+		$this->_run_recheck_button( wp_create_nonce( 'gitium_recheck_remote' ) );
+	}
+
+	function test_recheck_button_needs_nonce() {
+		wp_set_current_user( $this->factory->user->create( array( 'role' => 'administrator' ) ) );
+		$this->expectException( 'WPDieException' );
+		$this->_run_recheck_button( 'bad-nonce' );
+	}
 }
