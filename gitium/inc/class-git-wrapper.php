@@ -382,15 +382,20 @@ class Git_Wrapper {
 			return false; // the error of `git rev-parse @{u}` is kept, e.g. "no upstream configured"
 		}
 
-		// a merge killed with its request can leave a state that would make every merge fail
-		if ( ! $this->_recover_interrupted_merge( $remote_branch ) ) {
-			return false;
-		}
-
 		// get the local branch
 		$local_branch = $this->get_local_branch();
 		if ( ! $local_branch ) {
 			return false;
+		}
+
+		// a 'merge_local' left by a merge that was killed would block the rename below: keep it aside
+		if ( 'merge_local' != $local_branch && $this->_branch_exists( 'merge_local' ) ) {
+			$backup = 'merge_local-' . gmdate( 'YmdHis' );
+			list( $return, ) = $this->_call( 'branch', '-m', 'merge_local', $backup );
+			if ( $return != 0 ) {
+				return false;
+			}
+			error_log( "gitium: renamed the 'merge_local' branch left by a killed merge to '$backup'" );
 		}
 
 		// get ahead commits
@@ -445,100 +450,11 @@ class Git_Wrapper {
 		return false;
 	}
 
-	/**
-	 * Clean up what a merge killed with its request (or a merge conflict on older versions) can leave,
-	 * so that the site doesn't need someone to fix it by hand, without losing local commits:
-	 *
-	 * - an interrupted cherry-pick is aborted
-	 * - HEAD left on 'merge_local' right after the rename: the rename back to the local branch is done
-	 * - a 'merge_local' branch whose commits are all merged is deleted
-	 * - a 'merge_local' branch with commits that aren't merged is renamed to 'merge_local-<UTC time>'
-	 *   and reported with the 'gitium_kept_interrupted_merge_commits' action. Its commits are not
-	 *   replayed: old commits merged with accept-mine could overwrite newer files of the remote.
-	 */
-	private function _recover_interrupted_merge( $remote_branch ) {
-		// an interrupted cherry-pick: every merge would fail on its conflicts
-		if ( file_exists( $this->repo_dir . '/.git/CHERRY_PICK_HEAD' ) ) {
-			$this->_call( 'cherry-pick', '--abort' );
-			error_log( 'gitium: aborted an interrupted cherry-pick' );
-		}
-		if ( ! $this->successfully_merged() ) {
-			list( $return, ) = $this->_call( 'reset', '--merge' );
-			if ( $return != 0 ) {
-				return false;
-			}
-		}
-
-		// HEAD left on 'merge_local' right after `git branch -m merge_local`
-		if ( 'merge_local' == $this->get_local_branch() ) {
-			$local_branch = preg_replace( '#^[^/]+/#', '', $remote_branch ); // origin/master -> master
-			// the local branch may already be created from the remote one, with nothing of its own
-			if ( $this->_branch_exists( $local_branch ) && count( $this->_unmerged_commits( $local_branch, $remote_branch ) ) > 0 ) {
-				$this->last_error = sprintf( __( "HEAD is on the 'merge_local' branch of an interrupted merge and the '%s' branch has commits that are not on the remote", 'gitium' ), $local_branch );
-				return false;
-			}
-			list( $return, ) = $this->_call( 'branch', '-M', $local_branch );
-			if ( $return != 0 ) {
-				return false;
-			}
-			error_log( "gitium: renamed the 'merge_local' branch of an interrupted merge back to '$local_branch'" );
-		}
-
-		if ( ! $this->_branch_exists( 'merge_local' ) ) {
-			return true;
-		}
-
-		$unmerged = $this->_unmerged_commits( 'merge_local', 'HEAD', $remote_branch );
-		if ( empty( $unmerged ) ) {
-			list( $return, ) = $this->_call( 'branch', '-D', 'merge_local' );
-			if ( $return == 0 ) {
-				error_log( "gitium: deleted the 'merge_local' branch of an interrupted merge, its commits are merged" );
-			}
-			return ( $return == 0 );
-		}
-
-		$backup = 'merge_local-' . gmdate( 'YmdHis' );
-		list( $return, ) = $this->_call( 'branch', '-m', 'merge_local', $backup );
-		if ( $return != 0 ) {
-			return false;
-		}
-		error_log( sprintf( "gitium: kept %d local commits of an interrupted merge on the '%s' branch", count( $unmerged ), $backup ) );
-		do_action( 'gitium_kept_interrupted_merge_commits', $backup, count( $unmerged ) );
-		return true;
-	}
-
-	// the commits of $branch that have no equivalent (same patch) in any of the other branches
-	private function _unmerged_commits( $branch, ...$others ) {
-		$unmerged = null;
-		foreach ( $others as $other ) {
-			$commits = array();
-			list( $return, $response ) = $this->_call( 'cherry', $other, $branch );
-			if ( 0 == $return ) {
-				foreach ( $response as $line ) {
-					if ( '+ ' == substr( $line, 0, 2 ) ) {
-						$commits[] = substr( $line, 2 );
-					}
-				}
-			} else {
-				// can't compare the patches: count every commit that isn't on $other
-				list( , $commits ) = $this->_call( 'rev-list', "$other..$branch" );
-			}
-			$unmerged = ( null === $unmerged ) ? $commits : array_intersect( $unmerged, $commits );
-		}
-		return array_values( (array) $unmerged );
-	}
-
 	// rename 'merge_local' back to $local_branch after a failed merge, keeping the error that stopped it
 	private function _restore_local_branch( $local_branch ) {
 		$last_error = $this->last_error;
 		$this->_call( 'branch', '-M', $local_branch );
 		$this->last_error = $last_error;
-	}
-
-	// the local branches, or false on error
-	function get_branches() {
-		list( $return, $response ) = $this->_call( 'for-each-ref', '--format=%(refname:short)', 'refs/heads' );
-		return ( 0 == $return ) ? $response : false;
 	}
 
 	private function _branch_exists( $branch ) {
