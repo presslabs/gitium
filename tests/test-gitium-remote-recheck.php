@@ -212,4 +212,71 @@ class Test_Gitium_Remote_Recheck extends Gitium_UnitTestCase {
 		$this->expectException( 'WPDieException' );
 		$this->_run_recheck_button( 'bad-nonce' );
 	}
+
+	private function _git_property( $name ) {
+		global $git;
+		$property = new ReflectionProperty( 'Git_Wrapper', $name );
+		$property->setAccessible( true );
+		return $property;
+	}
+
+	// WP-Cron is not an admin request, so the recheck has to load the deploy key itself
+	function test_recheck_loads_deploy_key() {
+		global $git;
+		if ( defined( 'GIT_KEY_FILE' ) ) {
+			$this->markTestSkipped( 'GIT_KEY_FILE is defined' );
+		}
+		update_option( 'gitium_keypair', array( 'ssh-rsa PUBLIC', 'PRIVATE KEY FOR TEST' ), false );
+		$this->_git_property( 'private_key' )->setValue( $git, '' );
+		set_transient( 'gitium_remote_disconnected', 'fatal: Could not read from remote repository.' );
+
+		do_action( 'gitium_remote_recheck' );
+
+		$this->assertEquals( 'PRIVATE KEY FOR TEST', $this->_git_property( 'private_key' )->getValue( $git ) );
+		$this->_git_property( 'private_key' )->setValue( $git, '' );
+	}
+
+	function test_recheck_does_not_generate_a_key() {
+		global $git;
+		delete_option( 'gitium_keypair' );
+		$this->_git_property( 'private_key' )->setValue( $git, '' );
+		set_transient( 'gitium_remote_disconnected', 'fatal: Could not read from remote repository.' );
+
+		do_action( 'gitium_remote_recheck' );
+
+		$this->assertFalse( get_option( 'gitium_keypair', false ) );
+	}
+
+	// a save or a merge holds the lock: don't wait for it, try again later
+	function test_recheck_skips_when_merge_lock_is_taken() {
+		$this->_remote_down();
+		_gitium_status( true );
+		wp_clear_scheduled_hook( 'gitium_remote_recheck' );
+		$this->_remote_up();
+
+		$lock = gitium_acquire_merge_lock();
+		$this->assertNotFalse( $lock );
+		do_action( 'gitium_remote_recheck' );
+		gitium_release_merge_lock( $lock );
+
+		$this->assertNotEmpty( get_transient( 'gitium_remote_disconnected' ), 'Recheck ran under a taken lock' );
+		$this->assertNotFalse( wp_next_scheduled( 'gitium_remote_recheck' ) );
+
+		$this->_run_recheck_event();
+		$this->assertFalse( get_transient( 'gitium_remote_disconnected' ) );
+	}
+
+	// an empty message would hide the notice but keep the rechecks running
+	function test_empty_fetch_error_gets_a_message() {
+		global $git;
+		$this->_git_property( 'last_error' )->setValue( $git, '' );
+		$this->assertEquals( 'git fetch origin failed', gitium_fetch_error_message() );
+
+		$this->_git_property( 'last_error' )->setValue( $git, 'fatal: boom' );
+		$this->assertEquals( 'fatal: boom', gitium_fetch_error_message() );
+	}
+
+	function test_notice_uses_gitium_notices_action() {
+		$this->assertGreaterThan( 0, has_action( GITIUM_ADMIN_NOTICES_ACTION, 'gitium_remote_disconnected_notice' ) );
+	}
 }

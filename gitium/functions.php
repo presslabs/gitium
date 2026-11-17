@@ -542,7 +542,7 @@ function _gitium_status( $update_transient = false ) {
 
 	if ( $git->is_status_working() && $git->get_remote_tracking_branch() ) {
 		if ( ! $git->fetch_ref() ) {
-			set_transient( 'gitium_remote_disconnected', $git->get_last_error() );
+			set_transient( 'gitium_remote_disconnected', gitium_fetch_error_message() );
 			gitium_schedule_remote_recheck();
 		} else {
 			delete_transient( 'gitium_remote_disconnected' );
@@ -567,12 +567,60 @@ function gitium_schedule_remote_recheck() {
 	}
 }
 
-function gitium_remote_recheck() {
-	if ( false === get_transient( 'gitium_remote_disconnected' ) ) {
-		return;
+// the notice and the Save button treat an empty message as "connected"
+function gitium_fetch_error_message() {
+	global $git;
+	$error = $git->get_last_error();
+	return $error ? $error : 'git fetch origin failed';
+}
+
+// The deploy key is loaded by Gitium_Admin, which only exists on admin
+// requests. WP-Cron and admin-post.php (on multisite) need to load it here.
+function gitium_load_deploy_key() {
+	global $git;
+	if ( defined( 'GIT_KEY_FILE' ) && GIT_KEY_FILE ) {
+		return; // the key file is used directly
 	}
-	// a failed fetch sets the notice again and schedules the next recheck
-	_gitium_status( true );
+	// get_option() rather than gitium_get_keypair(): never generate a new key here
+	$keypair = get_option( 'gitium_keypair', false );
+	if ( $keypair ) {
+		$git->set_key( $keypair[1] );
+	}
+}
+
+// Fetches once to see whether the remote is back. Returns true when the notice is gone.
+function gitium_recheck_remote_connection() {
+	global $git;
+
+	if ( ! get_transient( 'gitium_remote_disconnected' ) ) {
+		return true;
+	}
+	if ( ! $git->get_remote_tracking_branch() ) { // the repository is no longer configured
+		delete_transient( 'gitium_remote_disconnected' );
+		return true;
+	}
+	gitium_load_deploy_key();
+
+	$lock = gitium_acquire_merge_lock( 0 ); // never wait: a save or a merge is more important
+	if ( ! $lock ) {
+		gitium_schedule_remote_recheck();
+		return false;
+	}
+	$fetched = $git->fetch_ref();
+	$error   = gitium_fetch_error_message();
+	gitium_release_merge_lock( $lock );
+
+	if ( ! $fetched ) {
+		set_transient( 'gitium_remote_disconnected', $error );
+		gitium_schedule_remote_recheck();
+		return false;
+	}
+	_gitium_status( true ); // the remote is back: clear the notice and refresh the changes once
+	return true;
+}
+
+function gitium_remote_recheck() {
+	gitium_recheck_remote_connection();
 }
 add_action( 'gitium_remote_recheck', 'gitium_remote_recheck' );
 

@@ -407,7 +407,7 @@ function gitium_remote_disconnected_notice() {
 		</div>
 	<?php endif;
 }
-add_action( 'admin_notices', 'gitium_remote_disconnected_notice' );
+add_action( GITIUM_ADMIN_NOTICES_ACTION, 'gitium_remote_disconnected_notice' );
 
 // "Check again now" button of the notice above
 function gitium_recheck_remote_action() {
@@ -415,7 +415,7 @@ function gitium_recheck_remote_action() {
 		wp_die( 'Sorry, you are not allowed to do this.', 403 );
 	}
 	check_admin_referer( 'gitium_recheck_remote' );
-	_gitium_status( true );
+	gitium_recheck_remote_connection();
 	wp_safe_redirect( wp_get_referer() ? wp_get_referer() : admin_url() );
 	exit;
 }
