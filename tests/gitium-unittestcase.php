@@ -83,6 +83,15 @@ class Gitium_UnitTestCase extends WP_UnitTestCase {
 		return $config->init_process( $this->remote_repo );
 	}
 
+	// stale locks are removed before the first git command of a request: start a new one
+	protected function _start_new_request() {
+		global $git;
+
+		$property = new ReflectionProperty( 'Git_Wrapper', 'locks_checked' );
+		$property->setAccessible( true );
+		$property->setValue( $git, false );
+	}
+
 	// Git_Wrapper::$repo_dir is private
 	protected function _get_repo_dir( $wrapper ) {
 		$property = new ReflectionProperty( 'Git_Wrapper', 'repo_dir' );
