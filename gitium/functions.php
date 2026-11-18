@@ -64,10 +64,17 @@ function _gitium_commit_changes( $message, $dir = '.' ) {
 		return false;
 	$git->set_key( $git_private_key );
 
+	// another Gitium request (webhook, auto-push) may be writing the index too
+	$lock = gitium_acquire_merge_lock();
+	if ( ! $lock ) {
+		return false;
+	}
 	$git->add( $dir );
 	gitium_update_versions();
 	$current_user = wp_get_current_user();
-	return $git->commit( $message, $current_user->display_name, $current_user->user_email );
+	$commit = $git->commit( $message, $current_user->display_name, $current_user->user_email );
+	gitium_release_merge_lock( $lock );
+	return $commit;
 }
 
 function _gitium_format_message( $name, $version = false, $prefix = '' ) {
@@ -213,9 +220,14 @@ function gitium_commit_and_push_gitignore_file( $path = '' ) {
 	global $git;
 
 	$current_user = wp_get_current_user();
+	$lock = gitium_acquire_merge_lock();
+	if ( ! $lock ) {
+		return false;
+	}
 	if ( ! empty( $path ) ) { $git->rm_cached( $path ); }
 	$git->add( '.gitignore' );
 	$commit = $git->commit( 'Update the `.gitignore` file', $current_user->display_name, $current_user->user_email );
+	gitium_release_merge_lock( $lock );
 	gitium_merge_and_push( $commit );
 }
 
