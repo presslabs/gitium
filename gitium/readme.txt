@@ -109,6 +109,10 @@ The behavior in case of conflicts is to overwrite the changes on the `origin` re
 
 You can ping the webhook url after a push to automatically deploy the new code. The webhook url can be found under `Gitium` menu, `Settings` section. This url also plays well with Github or Bitbucket webhooks.
 
+= Can another plugin trigger a commit and push? =
+
+Yes. After your plugin writes files inside `wp-content`, call `do_action( 'gitium_push' );`. You can pass a label that is appended to the commit messages: `do_action( 'gitium_push', 'my-plugin' );`. Fire it after the files are written to disk; the push runs synchronously, so the request waits for it to finish.
+
 = Does it works on multi site setups? =
 
 Gitium does not support multisite setups at the moment.
