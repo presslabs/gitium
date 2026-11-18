@@ -34,6 +34,7 @@
 define( 'GITIUM_LAST_COMMITS', 20 );
 define( 'GITIUM_MIN_GIT_VER', '1.7' );
 define( 'GITIUM_MIN_PHP_VER', '5.6' );
+define( 'GITIUM_REMOTE_RECHECK_INTERVAL', 5 * MINUTE_IN_SECONDS );
 
 if ( is_multisite() ) {
 	define( 'GITIUM_ADMIN_MENU_ACTION', 'network_admin_menu' );
@@ -81,6 +82,7 @@ register_activation_hook( __FILE__, '_gitium_make_ssh_git_file_exe' );
 
 function gitium_deactivation() {
 	delete_transient( 'gitium_git_version' );
+	wp_clear_scheduled_hook( 'gitium_remote_recheck' );
 }
 register_deactivation_hook( __FILE__, 'gitium_deactivation' );
 
@@ -93,6 +95,7 @@ function gitium_uninstall_hook() {
 	delete_transient( 'gitium_menu_bubble' );
 	delete_transient( 'gitium_is_status_working' );
 	delete_transient( 'gitium_push_pending_check' );
+	wp_clear_scheduled_hook( 'gitium_remote_recheck' );
 
 	delete_option( 'gitium_keypair' );
 	delete_option( 'gitium_webhook_key' );
@@ -381,16 +384,42 @@ function gitium_options_page_check() {
 }
 
 function gitium_remote_disconnected_notice() {
-	if ( current_user_can( GITIUM_MANAGE_OPTIONS_CAPABILITY ) && $message = get_transient( 'gitium_remote_disconnected' ) ) : ?>
+	$message = get_transient( 'gitium_remote_disconnected' );
+	if ( $message ) {
+		gitium_schedule_remote_recheck(); // notices set before the recheck existed
+	}
+	if ( current_user_can( GITIUM_MANAGE_OPTIONS_CAPABILITY ) && $message ) : ?>
 		<div class="error-nag error">
 			<p>
 				Could not connect to remote repository.
 				<pre><?php echo esc_html( $message ); ?></pre>
 			</p>
+			<p>
+				This can be a temporary error of the git server. Gitium checks the connection again every
+				<?php echo esc_html( (int) ( GITIUM_REMOTE_RECHECK_INTERVAL / MINUTE_IN_SECONDS ) ); ?> minutes
+				and removes this message once it works.
+			</p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<input type="hidden" name="action" value="gitium_recheck_remote" />
+				<?php wp_nonce_field( 'gitium_recheck_remote' ); ?>
+				<p><input type="submit" class="button" value="Check again now" /></p>
+			</form>
 		</div>
 	<?php endif;
 }
-add_action( 'admin_notices', 'gitium_remote_disconnected_notice' );
+add_action( GITIUM_ADMIN_NOTICES_ACTION, 'gitium_remote_disconnected_notice' );
+
+// "Check again now" button of the notice above
+function gitium_recheck_remote_action() {
+	if ( ! current_user_can( GITIUM_MANAGE_OPTIONS_CAPABILITY ) ) {
+		wp_die( 'Sorry, you are not allowed to do this.', 403 );
+	}
+	check_admin_referer( 'gitium_recheck_remote' );
+	gitium_recheck_remote_connection();
+	wp_safe_redirect( wp_get_referer() ? wp_get_referer() : admin_url() );
+	exit;
+}
+add_action( 'admin_post_gitium_recheck_remote', 'gitium_recheck_remote_action' );
 
 function gitium_pending_push_notice() {
 	if ( ! current_user_can( GITIUM_MANAGE_OPTIONS_CAPABILITY ) || ! gitium_has_pending_push() ) {
