@@ -32,9 +32,31 @@ function wp_content_is_versioned() {
 
 if ( ! function_exists( 'gitium_enable_maintenance_mode' ) ) :
 	function gitium_enable_maintenance_mode() {
+		global $gitium_maintenance_lock;
 		$file = ABSPATH . '/.maintenance';
 
-		if ( false === file_put_contents( $file, '<?php $upgrading = ' . time() .';' ) ) {
+		// The maintenance mode lasts only while a Gitium request holds a (shared) lock. If the PHP process
+		// is killed (e.g. by a PHP-FPM timeout) the system releases the lock and the site is available
+		// again, instead of being unavailable for 10 minutes.
+		$lock_file = dirname( WP_CONTENT_DIR ) . '/.git/gitium-maintenance.lock';
+		$gitium_maintenance_lock = @fopen( $lock_file, 'c' );
+		if ( $gitium_maintenance_lock && flock( $gitium_maintenance_lock, LOCK_SH ) ) {
+			$content = '<?php
+// Written by Gitium, the maintenance mode ends when no Gitium request that started it is running.
+$upgrading = ' . time() . ';
+$gitium_lock = @fopen( ' . var_export( $lock_file, true ) . ', \'r\' );
+if ( ! $gitium_lock || flock( $gitium_lock, LOCK_EX | LOCK_NB ) ) {
+	$upgrading = 0;
+}
+if ( $gitium_lock ) {
+	fclose( $gitium_lock );
+}
+';
+		} else {
+			$content = '<?php $upgrading = ' . time() . ';';
+		}
+
+		if ( false === file_put_contents( $file, $content ) ) {
 			return false;
 		} else {
 			return true;
@@ -44,7 +66,14 @@ endif;
 
 if ( ! function_exists( 'gitium_disable_maintenance_mode' ) ) :
 	function gitium_disable_maintenance_mode() {
-		return unlink( ABSPATH . '/.maintenance' );
+		global $gitium_maintenance_lock;
+		$removed = unlink( ABSPATH . '/.maintenance' );
+		if ( $gitium_maintenance_lock ) {
+			flock( $gitium_maintenance_lock, LOCK_UN );
+			fclose( $gitium_maintenance_lock );
+			$gitium_maintenance_lock = null;
+		}
+		return $removed;
 	}
 endif;
 
