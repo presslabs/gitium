@@ -382,10 +382,28 @@ class Git_Wrapper {
 			return false; // the error of `git rev-parse @{u}` is kept, e.g. "no upstream configured"
 		}
 
+		// a merge killed in the middle of a cherry-pick leaves it in progress: every checkout would fail
+		if ( file_exists( $this->repo_dir . '/.git/CHERRY_PICK_HEAD' ) ) {
+			list( $return, ) = $this->_call( 'cherry-pick', '--abort' );
+			if ( $return != 0 ) {
+				return false;
+			}
+			error_log( 'gitium: aborted the cherry-pick left by a killed merge' );
+		}
+
 		// get the local branch
 		$local_branch = $this->get_local_branch();
 		if ( ! $local_branch ) {
 			return false;
+		}
+
+		// a merge killed right after `git branch -m merge_local` leaves HEAD on 'merge_local': every
+		// merge would fail on it, so give the local branch its name back
+		if ( 'merge_local' == $local_branch ) {
+			$local_branch = $this->_recover_local_branch( $remote_branch );
+			if ( ! $local_branch ) {
+				return false;
+			}
 		}
 
 		// a 'merge_local' left by a merge that was killed would block the rename below: keep it aside
@@ -455,6 +473,34 @@ class Git_Wrapper {
 		$last_error = $this->last_error;
 		$this->_call( 'branch', '-M', $local_branch );
 		$this->last_error = $last_error;
+	}
+
+	/**
+	 * Rename 'merge_local' (HEAD) back to the local branch of $remote_branch (origin/main -> main).
+	 * The killed merge may have already created that branch from the remote one: it's replaced only
+	 * if it has no commits of its own, otherwise it's left for someone to check by hand.
+	 * Returns the name of the local branch, or false.
+	 */
+	private function _recover_local_branch( $remote_branch ) {
+		$local_branch = preg_replace( '#^[^/]+/#', '', $remote_branch );
+
+		if ( $this->_branch_exists( $local_branch ) ) {
+			list( $return, $response ) = $this->_call( 'rev-list', '--count', "$remote_branch..$local_branch" );
+			if ( $return != 0 ) {
+				return false;
+			}
+			if ( 0 != (int) $response[0] ) {
+				$this->last_error = sprintf( __( "HEAD is on the 'merge_local' branch of an interrupted merge and the '%s' branch has commits that are not on the remote; it needs to be checked by hand", 'gitium' ), $local_branch );
+				return false;
+			}
+		}
+
+		list( $return, ) = $this->_call( 'branch', '-M', $local_branch );
+		if ( $return != 0 ) {
+			return false;
+		}
+		error_log( "gitium: renamed the 'merge_local' branch left by a killed merge back to '$local_branch'" );
+		return $local_branch;
 	}
 
 	private function _branch_exists( $branch ) {

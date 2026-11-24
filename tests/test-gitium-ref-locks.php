@@ -190,4 +190,82 @@ class Test_Gitium_Ref_Locks extends Gitium_UnitTestCase {
 		$this->assertEquals( array( 'master' ), $this->_local_branches() );
 		$this->assertStringEqualsFile( $edited, 'edited' . PHP_EOL );
 	}
+	private function _git( $args ) {
+		exec( 'git -C ' . escapeshellarg( dirname( WP_CONTENT_DIR ) ) . " $args 2>&1", $output, $return );
+		return $return;
+	}
+
+	/**
+	 * A merge killed after `git branch -m merge_local` and `git branch master origin/master` left
+	 * HEAD on 'merge_local': every merge failed and the remote changes never got on the site
+	 */
+	function test_merge_with_head_left_on_merge_local() {
+		global $git;
+
+		$this->_add_changes_remotely( 'remote', true );
+		$this->_add_changes_locally( 'local', true );
+		$git->fetch_ref();
+		$this->_git( 'branch -m merge_local' );
+		$this->_git( 'branch master origin/master' );
+		$this->assertEquals( 'merge_local', $git->get_local_branch() );
+
+		$this->assertTrue( gitium_merge_and_push( array() ), 'Merge & push failed: ' . $git->get_last_error() );
+		$this->assertEquals( 'master', $git->get_local_branch() );
+		$this->assertEquals( array( 'master' ), $this->_local_branches() );
+		$this->assertStringEqualsFile( $this->local_file, 'local' . PHP_EOL ); // accept mine
+		$this->assertEquals( $this->_rev_parse( $this->remote_repo, 'master' ), $this->_rev_parse( dirname( WP_CONTENT_DIR ), 'HEAD' ) );
+	}
+
+	/**
+	 * Killed right after `git branch -m merge_local`, before the local branch was created again
+	 */
+	function test_merge_with_head_left_on_merge_local_without_local_branch() {
+		global $git;
+
+		$this->_add_changes_remotely( 'remote', true );
+		$this->_git( 'branch -m merge_local' );
+
+		$this->assertTrue( gitium_merge_and_push( array() ), 'Merge & push failed: ' . $git->get_last_error() );
+		$this->assertEquals( array( 'master' ), $this->_local_branches() );
+		$this->assertStringEqualsFile( $this->local_file, 'remote' . PHP_EOL );
+	}
+
+	/**
+	 * A local branch with commits of its own next to a 'merge_local' HEAD isn't replaced
+	 */
+	function test_merge_stops_when_local_branch_has_own_commits() {
+		global $git;
+
+		$this->_add_changes_locally( 'local', true );
+		$this->_git( 'branch -m merge_local' );
+		$this->_git( 'checkout -q -b master origin/master' );
+		$this->_add_changes_locally( 'other', true );
+		$master = $this->_rev_parse( dirname( WP_CONTENT_DIR ), 'master' );
+		$this->_git( 'checkout -q merge_local' );
+		$merge_local = $this->_rev_parse( dirname( WP_CONTENT_DIR ), 'merge_local' );
+
+		$this->assertFalse( $git->merge_with_accept_mine() );
+		$this->assertContains( 'checked by hand', $git->get_last_error() );
+		$this->assertEquals( 'merge_local', $git->get_local_branch() );
+		$this->assertEquals( $master, $this->_rev_parse( dirname( WP_CONTENT_DIR ), 'master' ) );
+		$this->assertEquals( $merge_local, $this->_rev_parse( dirname( WP_CONTENT_DIR ), 'merge_local' ) );
+	}
+
+	/**
+	 * A cherry-pick left in progress with conflicts made every checkout, so every merge, fail
+	 */
+	function test_merge_with_interrupted_cherry_pick() {
+		global $git;
+
+		$this->_add_changes_remotely( 'remote', true );
+		$this->_add_changes_locally( 'local', true );
+		$git->fetch_ref();
+		$this->assertNotEquals( 0, $this->_git( 'cherry-pick origin/master' ) );
+		$this->assertFileExists( dirname( WP_CONTENT_DIR ) . '/.git/CHERRY_PICK_HEAD' );
+
+		$this->assertTrue( gitium_merge_and_push( array() ), 'Merge & push failed: ' . $git->get_last_error() );
+		$this->assertFileNotExists( dirname( WP_CONTENT_DIR ) . '/.git/CHERRY_PICK_HEAD' );
+		$this->assertEquals( array( 'master' ), $this->_local_branches() );
+		$this->assertStringEqualsFile( $this->local_file, 'local' . PHP_EOL );
+	}
 }
